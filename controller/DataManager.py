@@ -1,3 +1,4 @@
+from common.Error import Error
 from common.StatusMessage import StatusMessage
 from model.OptionContract import OptionContract
 from os import error, stat
@@ -10,7 +11,8 @@ from app import app, db
 from model.StockData import StockData
 from model.StockSymbol import StockSymbol
 from model.OptionContract import OptionContract
-from common.MarketAPI import MarketApi, Quote, Stats
+from common.api.MarketAPI import MarketAPI, Stats
+from common.api.Quote import Quote
 from common.Response import Response
 import common.Converter as Converter
 import common.Markets as Markets
@@ -27,29 +29,43 @@ class DataManager:
             self.status.error(msg="No se puede obtener el último precio porque no se ha indicado ningún símbolo")
             return
 
-        current_date = date.today().isoformat()
-        quote = None
+        symbolobj = db.session.query(
+            StockSymbol
+        ).filter(
+            StockSymbol.symbol==symbol
+        ).first()
+
+        asset_type = symbolobj.asset_type
+
+        quote, error = MarketAPI().get_last_quote({"symbol":symbol,"asset_type":asset_type})
+        if error is not None:
+            return (None, Error)
+
+        #current_date = date.today().isoformat()
+        #quote = None
 
         #get stats
         #stats = self.__get_symbol_stats(symbol)
 
+        """
         if Markets.is_intraday():
             quote = self.get_last_intraday(symbol=symbol, current_date=current_date)
         else:
             quote, msg, errors = self.get_last_daily_quote(symbol=symbol, current_date=current_date)
             if quote is None:
                 return (None, msg, errors)
+        """
 
         #guardar las estadisticas de la cotización
-        success, msg = Stats().save(quote)        
-        if success == False:                       
-            return (None, msg)
+        error = Stats().save(quote)        
+        if error is not None:                       
+            return (None, error)
 
-        return quote
+        return (quote, None)
 
     def get_last_intraday(self, symbol="", current_date=""):
         stats = Stats().get(symbol)
-        quote = MarketApi().get_last_intraday({"symbol":symbol})
+        quote = MarketAPI().get_last_intraday({"symbol":symbol})
 
         last_update = ""
         if stats is not None:
@@ -71,7 +87,7 @@ class DataManager:
  
     def load_daily_data(self, symbol, since):
         last_loaded_date = self.get_max_loaded_daily_price(symbol)
-        last_quote, quotes = MarketApi().get_daily_data_since(symbol=symbol, since=since)   
+        last_quote, quotes = MarketAPI().get_daily_data_since(symbol=symbol, since=since)   
 
         if last_quote is None:
             return None
@@ -103,7 +119,7 @@ class DataManager:
         if  last_update == current_date:            
             quote = Quote().from_stats(stats)            
         else:
-            quote, error = MarketApi().get_last_daily_quote({"symbol":symbol})
+            quote, error = MarketAPI().get_last_daily_quote({"symbol":symbol})
              
         return (quote, error)
 
