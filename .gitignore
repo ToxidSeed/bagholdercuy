@@ -130,6 +130,7 @@ dmypy.json
 
 #specialfiles
 config.py
+test.py
 
 # code files
 .vscode/
