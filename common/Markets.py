@@ -15,4 +15,3 @@ def is_intraday():
         return False
 
     return True
-

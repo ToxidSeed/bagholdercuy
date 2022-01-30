@@ -1,5 +1,5 @@
 class Quote:   
-    def __init__(self, asset_type="", symbol="", price_date="", open=0,high=0,low=0,close=0,volume=0,last_update="",last_price_date="", prev_close=0):        
+    def __init__(self, asset_type="", symbol="", price_date="", open=0,high=0,low=0,close=0,volume=0,last_update="",last_price_date="", prev_close=0, latest_price=0):        
         self.asset_type = asset_type
         self.symbol = symbol
         self.price_date = price_date        
@@ -12,6 +12,7 @@ class Quote:
         self.last_price_date = last_price_date
         self.prev_close = prev_close
         self.prev_price_date = ""
+        self.latest_price = latest_price
 
     def from_stats(self, stats={}):
         for key, value in stats.items():

@@ -27,13 +27,15 @@ class iexcloud:
         response = requests.get(endpoint,params=params, headers=headers)
         result = response.json()
         latestUpdate = datetime.fromtimestamp(int(result["latestUpdate"]/1000)).date()
+             
         quote = Quote(
             symbol=symbol,
             price_date=latestUpdate,
             open=result["open"],
             high=result["high"],
             low=result["low"],
-            close=result["latestPrice"],
+            close=result["close"],            
+            latest_price = result["latestPrice"],
             volume=result["latestVolume"]
         )
         return quote    
@@ -48,16 +50,18 @@ class iexcloud:
 
         if "asset_type" not in args:
             error.add("asset type is mandatory")
+
+        asset_type = args["asset_type"].upper()
         
         error.msg = "Se han encontrado errores al obtnener la última cotización para el symbol {} : ".format(symbol)
 
         if len(error.errors) > 0:
             return (None, error)
         
-        if args["asset_type"] in ["Stock","ETF"]:
+        if asset_type in ["STOCK","ETF"]:
             return (self.get_quote(args), None)
 
-        if args["asset_type"] == "options":
+        if asset_type == "OPTIONS":
             return (self.get_option_eod_data(args), None)
         
     def get_contracts(self, symbol=""):
@@ -73,6 +77,7 @@ class iexcloud:
         return requestResponse.json()
 
     def get_quote(self, args={}):
+        close = 0
         symbol = args["symbol"]
         headers = {
             'Content-Type': 'application/json'
@@ -86,8 +91,14 @@ class iexcloud:
         response = requests.get(endpoint,params=params, headers=headers)
         result = response.json()
 
+        close = result["close"]
+
         last_price_date = datetime.fromtimestamp(int(result["latestUpdate"])/1000).date()
         last_update = date.today()
+        
+        if close is None:
+            close = result["latestPrice"]
+
 
         quote = Quote(
             asset_type="Stock",
@@ -96,8 +107,9 @@ class iexcloud:
             open=result["open"],
             high=result["high"],
             low=result["low"],
-            close=result["iexClose"],
+            close=close,
             volume=result["latestVolume"],
+            latest_price = result["latestPrice"],
             last_update=last_update,
             last_price_date=last_price_date,
             prev_close=result["previousClose"]

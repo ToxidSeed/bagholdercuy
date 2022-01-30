@@ -11,4 +11,10 @@ class Error:
             return True
         else:
             return False
+
+def is_error(object=None):
+    if object is None:
+        return False
+    if type(object) is Error:
+        return True
         

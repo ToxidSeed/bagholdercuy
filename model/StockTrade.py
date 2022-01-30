@@ -21,3 +21,4 @@ class StockTrade(db.Model):
     realized_gl = db.Column(db.Numeric(17,3))
     register_date = db.Column(db.Numeric(17,3))
     register_time = db.Column(db.Time)
+    user_id = db.Column(db.Integer)

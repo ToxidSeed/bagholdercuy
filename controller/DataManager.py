@@ -258,13 +258,13 @@ class Symbol:
 
     def search(self, args={}):
         search_text="%{}%".format(args["symbol"])
-        asset_type =args["asset_type"]
+        #asset_type =args["asset_type"]
 
         symbol_list = db.session.query(
             StockSymbol
         ).filter(
-            StockSymbol.symbol.ilike(search_text),
-            StockSymbol.asset_type == asset_type
+            StockSymbol.symbol.ilike(search_text)#,
+            #StockSymbol.asset_type == asset_type
         ).all()
 
         return Response(input_data=symbol_list).get()

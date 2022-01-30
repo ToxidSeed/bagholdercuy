@@ -9,12 +9,16 @@
                 dense
                 class="text-grey"
                 active-color="primary"                
-            >            
+            >         
+                <q-tab name="overview" icon="fas fa-chart-pie" label="Overview" />   
                 <q-tab name="holdings" icon="fas fa-cubes" label="Holdings" />                    
                 <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />                
             </q-tabs>
             <q-separator />
             <q-tab-panels v-model="tabmodel">
+                <q-tab-panel name="overview">
+                    <PanelOverview />
+                </q-tab-panel>
                 <q-tab-panel name="holdings">                    
                     <q-table
                     title="Posiciones"
@@ -76,6 +80,7 @@
                 v-bind:asset_type="order.asset_type"
                 v-bind:order_type="order.order_type"
                 v-bind:update="order.update"
+                v-on:cerrar="open_panel_order=false"                
             />   
             </div>                     
         </div>
@@ -84,16 +89,18 @@
 <script>
 import PanelTrade from './PanelTrade.vue';
 import PanelOptionsChain from './PanelOptionsChain.vue';
+import PanelOverview from './PanelOverview.vue';
 
 export default {
     name:"PanelHoldings",
     components:{
         PanelTrade,
-        PanelOptionsChain
+        PanelOptionsChain,
+        PanelOverview
     },
     data:() =>{
         return {
-            tabmodel:"holdings",
+            tabmodel:"overview",
             order:{
                 symbol:"",
                 asset_type:"",

@@ -68,7 +68,7 @@
                 <q-separator />
                 <q-card-actions >
                     <q-btn  color="green" @click="save">Guardar</q-btn>
-                    <q-btn flat>Cerrar</q-btn>
+                    <q-btn flat @click="cerrar">Cerrar</q-btn>
                 </q-card-actions>
                 <MessageBox ref="msgbox"/>
             </q-card>
@@ -237,6 +237,9 @@ export default {
 
             //determine if it is buy or sell
             this.do_order();
+        },
+        cerrar:function(){
+            this.$emit("cerrar")
         },
         option_selected:function(option){
             console.log(option)

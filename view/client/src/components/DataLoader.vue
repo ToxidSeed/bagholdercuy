@@ -6,7 +6,7 @@
                 <!--@filter="filterFn"-->
             <q-card class="col-3 q-pa-sm">                
                 <q-card-section class="q-pa-none">                    
-                    <div class="text-h6">Series</div>        
+                    <div class="text-h6">Series</div>                    
                     <q-select                                        
                         label="Symbol"
                         v-model="symbol"  
@@ -21,6 +21,8 @@
                         clearable                    
                     >                                   
                     </q-select>
+                    <div class="q-gutter-sm">     
+                    </div>
                     <q-select 
                     v-model="frequency" 
                     :options="options" 

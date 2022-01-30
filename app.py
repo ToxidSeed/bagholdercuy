@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_file, session
 from flask_restful import Resource, Api
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-#from flask.ext.session import Session
+from flask_session import Session
 
 import traceback
 import sys, os
@@ -12,6 +12,8 @@ import json
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 SESSION_TYPE = 'redis'
+
+print("Colocado para solo para pruebas un user_id")
 
 app.config.from_object("config")
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
