@@ -12,8 +12,8 @@
             >         
                 <q-tab name="overview" icon="fas fa-chart-pie" label="Overview" />   
                 <q-tab name="holdings" icon="fas fa-cubes" label="Holdings" />                    
-                <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />                
-            </q-tabs>
+                <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />    <div class="text-primary">Cash: 10300.75 USD</div>                
+            </q-tabs>            
             <q-separator />
             <q-tab-panels v-model="tabmodel">
                 <q-tab-panel name="overview">

@@ -26,6 +26,9 @@ class MarketAPI:
     def get_option_contracts(self, symbol=""):
         self.engine = iexcloud()
         return self.engine.get_contracts(symbol="")
+    
+    def get_historical_prices(self, symbol=""):
+        return self.engine.get_historical_prices(symbol)
 
 
 class Stats:

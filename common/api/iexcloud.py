@@ -155,3 +155,18 @@ class iexcloud:
             return Response(input_data=quote).get()
 
         return quote
+
+    def get_historical_prices(self, symbol):        
+        endpoint = "{0}/stock/{1}/chart/max".format(self.base_endpoint, symbol)
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        params = {
+            "token":self.key
+        }        
+
+        rsp = requests.get(endpoint,params=params, headers=headers)
+        data = rsp.json()
+
+        return data
+            

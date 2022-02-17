@@ -9,18 +9,18 @@ from common.Response import Response
 from common.StatusMessage import StatusMessage
 from pytz import HOUR, timezone
 from datetime import datetime, date
+from config import APP_DEC_PREC
 #from controller.StockDataProvider import StockDataProvider
 import common.Markets as Markets
+
 
 
 class HoldingsManager:
     def __init__(self):
         self.status = StatusMessage()        
 
-    def get_list(self, args={}):
-        dm = DataManager()
-        
-        active_holdings = db.session.query(
+    def __get_active_holdings(self):
+        holdings = db.session.query(
             StockTrade.symbol,
             StockTrade.asset_type,
             func.min(StockTrade.trade_date).label('holding_since'),
@@ -34,12 +34,17 @@ class HoldingsManager:
         ).group_by(StockTrade.symbol)\
         .all()
 
+        return holdings
+
+    def get_list(self, args={}):
+        dm = DataManager()
+        
+        active_holdings = self.__get_active_holdings()
+
         #shares_balance * current_price
         results = []
         for elem in active_holdings:       
             elem_dict = Converter.to_dict(elem) 
-
-            
 
             quote, error = dm.get_last_quote(elem.symbol)
             if error is not None:
@@ -64,38 +69,38 @@ class HoldingsManager:
     def __options_price(self,holding={},quote=None):
         sum_shares_balance = float(holding["sum_shares_balance"])
         sum_buy_price_per_trade = float(holding["sum_buy_price_per_trade"])
-        avg_buy_price = round(sum_buy_price_per_trade/sum_shares_balance,2)
+        avg_buy_price = round(sum_buy_price_per_trade/sum_shares_balance,APP_DEC_PREC)
         
-        market_value = round((sum_shares_balance * quote.close)*100, 2)
+        market_value = round((sum_shares_balance * quote.close)*100, APP_DEC_PREC)
         prev_close = quote.open
-        daily_change = round(((quote.close - prev_close)/prev_close)*100,2)
+        daily_change = round(((quote.close - prev_close)/prev_close)*100,APP_DEC_PREC)
 
-        total_change = round(((quote.close - avg_buy_price)/avg_buy_price)*100,2)
-        total_pl = round(market_value - sum_buy_price_per_trade,2)
+        total_change = round(((quote.close - avg_buy_price)/avg_buy_price)*100,APP_DEC_PREC)
+        total_pl = round(market_value - sum_buy_price_per_trade,APP_DEC_PREC)
 
         #holding["sum_trade_buy_price"] = "{0}(x100)".format(holding["sum_trade_buy_price"]) 
         holding["sum_shares_balance"] = "{0}(x100)".format(int(holding["sum_shares_balance"]))
-        holding["avg_buy_price"] = avg_buy_price
-        holding["daily_change"] = daily_change
-        holding["total_change"] = total_change
-        holding["total_pl"] = total_pl
+        holding["avg_buy_price"] = "{:.2f}".format(avg_buy_price)
+        holding["daily_change"] = "{:.2f}".format(daily_change)
+        holding["total_change"] = "{:.2f}".format(total_change)
+        holding["total_pl"] = "{:.2f}".format(total_pl)
         holding["last_price_date"] = quote.price_date            
-        holding["last_price"] = quote.close
-        holding["market_value"] = market_value
+        holding["last_price"] = "{:.2f}".format(quote.close)
+        holding["market_value"] = "{:.2f}".format(market_value)
 
         return holding
 
     def __stocks_price(self, holding={}, quote=None):
         sum_shares_balance = float(holding["sum_shares_balance"])
         sum_buy_price_per_trade = float(holding["sum_buy_price_per_trade"])            
-        avg_buy_price = round(sum_buy_price_per_trade/sum_shares_balance,3)
+        avg_buy_price = round(sum_buy_price_per_trade/sum_shares_balance,APP_DEC_PREC)
         
-        market_value = round(sum_shares_balance * quote.close, 3)
+        market_value = round(sum_shares_balance * quote.close, APP_DEC_PREC)
         prev_close = quote.prev_close
-        daily_change = round(((quote.close - prev_close)/prev_close)*100,3)
+        daily_change = round(((quote.close - prev_close)/prev_close)*100,APP_DEC_PREC)
 
-        total_change = round(((quote.close - avg_buy_price)/avg_buy_price)*100,3)
-        total_pl = round(market_value - sum_buy_price_per_trade,3)
+        total_change = round(((quote.close - avg_buy_price)/avg_buy_price)*100,APP_DEC_PREC)
+        total_pl = round(market_value - sum_buy_price_per_trade,APP_DEC_PREC)
 
         holding["avg_buy_price"] = avg_buy_price
         holding["daily_change"] = daily_change
@@ -106,3 +111,4 @@ class HoldingsManager:
         holding["market_value"] = market_value
 
         return holding
+

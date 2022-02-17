@@ -4,32 +4,49 @@
             <!--<q-card  class="col-3 q-mt-xs q-ml-md">-->
                 <!--<q-input v-model="symbol" label="Symbol" dense />-->
                 <!--@filter="filterFn"-->
-            <q-card class="col-3 q-pa-sm">                
-                <q-card-section class="q-pa-none">                    
+            <q-card class="col-3 q-pa-sm">
+                <q-card-section class="q-pa-xs">
                     <div class="text-h6">Series</div>                    
-                    <q-select                                        
-                        label="Symbol"
-                        v-model="symbol"  
-                        use-input
-                        hide-selected                                      
-                        fill-input
-                        input-debounce="1000"
-                        @filter="filterFn"
-                        @input="sel_symbol"
-                        :options="symbol_list"
-                        dense                    
-                        clearable                    
-                    >                                   
-                    </q-select>
-                    <div class="q-gutter-sm">     
-                    </div>
+                </q-card-section>
+                <q-card bordered>
+                    <q-card-section>
+                        <div color="indigo">Buscar</div>                    
+                        <q-select                                        
+                            label="Symbol"
+                            v-model="symbol"  
+                            use-input
+                            hide-selected                                      
+                            fill-input
+                            input-debounce="1000"
+                            @filter="filterFn"
+                            @input="sel_symbol"
+                            :options="symbol_list"
+                            dense                    
+                            clearable                    
+                        >                                   
+                        </q-select>
+                        <div>
+                            <q-checkbox v-model="asset_type.stock" label="Stock"/>
+                            <q-checkbox v-model="asset_type.etf" label="ETF"/>
+                            <q-checkbox v-model="asset_type.options" label="Options"/>
+                        </div>
+                    </q-card-section>
+                </q-card>                
+                <q-card-section class="q-pa-none">                                        
                     <q-select 
                     v-model="frequency" 
                     :options="options" 
                     label="Frequency" 
                     dense 
                     />
+                    <q-select 
+                    v-model="method" 
+                    :options="methods" 
+                    label="Method" 
+                    dense 
+                    />
                     <q-btn color="primary" label="Load" class="q-mt-xs" @click="load"/>
+                    <q-btn color="primary" label="Reset" class="q-mt-xs q-ml-xs" @click="load"/>
                 </q-card-section>
             </q-card >
             <DataloaderOptions class="col-3"/>
@@ -53,7 +70,14 @@ export default {
             selected_symbol:{},
             symbol_list:[],
             options:['daily', 'weekly', 'monthly', 'yearly'],
-            loading:false
+            methods:['replace','append'],
+            method:"append",
+            loading:false,
+            asset_type:{
+                stock:true,
+                etf:true,
+                options:true
+            }
         }
     },    
     mounted:function(){
@@ -86,7 +110,8 @@ export default {
             }else{
                 this.$http.post(
                 this.$backend_url+'DataManager/Symbol/search',{
-                    symbol:val
+                    symbol:val,
+                    asset_type:this.asset_type
                 }).then(httpresponse => {
                     var appresponse = httpresponse.data
                     //console.log(appresponse.data)

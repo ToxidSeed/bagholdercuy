@@ -1,4 +1,5 @@
 from sqlalchemy import inspect
+from common.AppException import AppException
 from common.Transformer import Transformer
 import common.Converter as Converter
 from flask import jsonify
@@ -6,47 +7,69 @@ import json
 
 
 class Response:
-    def __init__(self,success=True, code=0, data=None, msg="", input_data=None, formatter=None, extradata={}):
+    def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata={},errors=[]):
         self.answer = {
             "success":success,
             "code":code,
             "data":data,            
             "message":msg,
-            "extradata":extradata
+            "extradata":extradata,
+            "errors":errors
         }
-        self.input_data = input_data
+        self.raw_data = raw_data
         self.formatter = formatter
 
+    def from_raw_data(self, rawdata=None):
+        if rawdata is not None:
+            self.raw_data = rawdata
+            self.__process()
+        return self.answer
+
     def from_error(self,error=None):
-        self.answer["extradata"] = error.errors
+        self.answer["errors"] = error.errors
         self.answer["message"] = error.msg
         return self.answer
-        
+
+    def from_errors_list(self, errors=[]):
+        self.answer["success"] = False
+        self.answer["errors"] = errors
+        return self.answer        
+
+    def from_exception(self, exception = None):
+        if type(exception) is AppException:
+            self.answer["success"] = False
+            self.answer["message"] = exception.msg
+            self.answer["errors"] = exception.errors
+        if type(exception) is Exception:
+            print("in development")
+            pass
+
+        return self.answer
 
     def add_extradata(self, key, value):
         self.answer["extradata"][key] = value
     
     def get(self):
-        if self.input_data is not None:
+        if self.raw_data is not None:
             self.__process()
         return self.answer
     
     def __process(self):
         #Si se ingresa un formateador 
         if self.formatter is not None:
-            self.answer["data"] = self.formatter.format(self.input_data)
+            self.answer["data"] = self.formatter.format(self.raw_data)
         else:             
-            if any("Model" == base.__name__ for base in self.input_data.__class__.__bases__):
-                self.answer["data"] = self.__process_model(self.input_data)
+            if any("Model" == base.__name__ for base in self.raw_data.__class__.__bases__):
+                self.answer["data"] = self.__process_model(self.raw_data)
 
-            if type(self.input_data).__name__ in ["dict"]:
-                self.answer["data"] = self.input_data
+            if type(self.raw_data).__name__ in ["dict"]:
+                self.answer["data"] = self.raw_data
 
-            if type(self.input_data).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
+            if type(self.raw_data).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
                 self.answer["data"] = self.__process_list()
 
-            if type(self.input_data).__name__ in ["Row"]:
-                self.answer["data"] = self.__process_element(self.input_data)    
+            if type(self.raw_data).__name__ in ["Row"]:
+                self.answer["data"] = self.__process_element(self.raw_data)    
 
     def __process_model(self, element=None):
         #return {c.key: str(getattr(element, c.key)) for c in inspect(element).mapper.column_attrs}
@@ -56,7 +79,7 @@ class Response:
 
     def __process_list(self):
         data = []
-        for element in self.input_data:
+        for element in self.raw_data:
             record = self.__process_element(element)
             data.append(record)
         return data

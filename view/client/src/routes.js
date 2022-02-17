@@ -7,12 +7,15 @@ import PanelTrade from './components/PanelTrade.vue';
 import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
 import PanelHoldings from './components/PanelHoldings.vue';
+import PanelFunds from './components/PanelFunds.vue'
 
 Vue.use(VueRouter);
 
 const routes =  [
     {
       path:'/', component:PanelSimulationDataEntry,     
+    },{
+      path:'/funds', component:PanelFunds
     },{
       path:'/tradelist', component:PanelTradeList
     },{

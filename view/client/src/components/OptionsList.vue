@@ -3,6 +3,11 @@
         <q-list separator>
             <q-item 
             active-class="my-menu-link"
+            to="/funds">
+                <q-item-section>Funds</q-item-section>
+            </q-item>            
+            <q-item 
+            active-class="my-menu-link"
             to="/">
                 <q-item-section>Simulation</q-item-section>
             </q-item>

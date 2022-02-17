@@ -4,7 +4,7 @@ class StockTrade(db.Model):
     __tablename__="tb_stock_trade"
 
     id = db.Column(db.Integer, primary_key=True)
-    trade_group_id = db.Column(db.String(20))
+    order_id = db.Column(db.String(20))
     asset_type = db.Column(db.String(20))
     symbol	= db.Column(db.String(20))
     ref_trade_id = db.Column(db.Integer)

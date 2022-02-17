@@ -5,7 +5,7 @@ from os import error, stat
 from re import S
 import requests, json, csv
 from pytz import  timezone
-from sqlalchemy import func
+from sqlalchemy import func, true
 from datetime import date, datetime
 from app import app, db
 from model.StockData import StockData
@@ -20,6 +20,11 @@ from datetime import datetime, date
 
 
 class DataManager:
+
+    ASSET_TYPE_STOCK = "Stock"
+    ASSET_TYPE_ETF = "ETF"
+    ASSET_TYPE_OPTIONS = "options"
+
     def __init__(self):
         self.status = StatusMessage()        
         pass
@@ -39,7 +44,7 @@ class DataManager:
 
         quote, error = MarketAPI().get_last_quote({"symbol":symbol,"asset_type":asset_type})
         if error is not None:
-            return (None, Error)
+            return (None, error)
 
         #current_date = date.today().isoformat()
         #quote = None
@@ -176,7 +181,7 @@ class DataManager:
         endpoint = "https://www.alphavantage.co/query"
         params = {
             "function":function,
-            "symbol":symbol,
+            "symbol":symbol,    
             "outputsize":"full",
             "apikey":key
         }
@@ -258,13 +263,24 @@ class Symbol:
 
     def search(self, args={}):
         search_text="%{}%".format(args["symbol"])
-        #asset_type =args["asset_type"]
+
+        asset_type_args =args["asset_type"]
+        asset_type = []
+
+        if asset_type_args["stock"]:
+            asset_type.append(DataManager.ASSET_TYPE_STOCK)
+
+        if asset_type_args["etf"]:
+            asset_type.append(DataManager.ASSET_TYPE_ETF)
+        
+        if asset_type_args["options"]:
+            asset_type.append(DataManager.ASSET_TYPE_OPTIONS)
 
         symbol_list = db.session.query(
             StockSymbol
         ).filter(
-            StockSymbol.symbol.ilike(search_text)#,
-            #StockSymbol.asset_type == asset_type
+            StockSymbol.symbol.ilike(search_text),
+            StockSymbol.asset_type.in_(asset_type)
         ).all()
 
         return Response(input_data=symbol_list).get()

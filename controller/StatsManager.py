@@ -29,3 +29,4 @@ class Change:
             weekly_data.append(weekly_elem)
 
         return Response(input_data=weekly_data).get()
+
