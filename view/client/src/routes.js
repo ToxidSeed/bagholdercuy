@@ -8,6 +8,8 @@ import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
 import PanelHoldings from './components/PanelHoldings.vue';
 import PanelFunds from './components/PanelFunds.vue'
+import MainPanelCurrencyExchange from './components/MainPanelCurrencyExchange.vue'
+import MainPanelCurrency from './components/MainPanelCurrency.vue'
 
 Vue.use(VueRouter);
 
@@ -16,6 +18,8 @@ const routes =  [
       path:'/', component:PanelSimulationDataEntry,     
     },{
       path:'/funds', component:PanelFunds
+    },{
+      path:'/currencyexchange', component:MainPanelCurrencyExchange
     },{
       path:'/tradelist', component:PanelTradeList
     },{
@@ -28,6 +32,8 @@ const routes =  [
       path:'/dataloader', component:DataLoader
     },{
       path:'/holdings', component:PanelHoldings
+    },{
+      path:'/currency', component:MainPanelCurrency
     }
 ]
 

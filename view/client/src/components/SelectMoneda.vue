@@ -8,8 +8,7 @@
         input-debounce="1000"
         @filter="filter_fn"
         @input="sel_moneda"
-        :options="list"
-        dense                    
+        :options="list"                            
         clearable                    
     />
 </template>
@@ -39,9 +38,11 @@ export default {
         }
     },
     methods:{
-        sel_moneda:function(selected){            
-            this.moneda = selected         
-            console.log(this.moneda)   
+        sel_moneda:function(selected){        
+            console.log(selected)    
+            this.moneda = selected    
+            console.log(this.moneda)     
+            this.$emit('moneda-select',this.moneda) 
         },
         filter_fn:function(val, update){
            if (val == ''){
@@ -49,7 +50,7 @@ export default {
                    this.list = []
                })
            }else{
-               this.$http.post('MonedaManager/MonedaManager/get_list',{
+               this.$http.post('CurrencyManager/CurrencyManager/get_list',{
                    search_text:val
                }).then(httpresponse => {
                    
@@ -57,9 +58,9 @@ export default {
                    var options = []
                    for (let elem of appresponse.data){
                        options.push({
-                           "value":elem["symbol"],
-                           "label":elem["symbol"],
-                           "moneda_id":elem["moneda_id"]
+                           "value":elem["currency_symbol"],
+                           "label":elem["currency_symbol"],
+                           "moneda_id":elem["currency_id"]
                        })
                    }
 

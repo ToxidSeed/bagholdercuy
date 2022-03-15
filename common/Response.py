@@ -1,3 +1,4 @@
+import traceback, sys
 from sqlalchemy import inspect
 from common.AppException import AppException
 from common.Transformer import Transformer
@@ -7,19 +8,22 @@ import json
 
 
 class Response:
-    def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata={},errors=[]):
+    def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata={},errors=[], stacktrace=None):
         self.answer = {
             "success":success,
             "code":code,
             "data":data,            
             "message":msg,
             "extradata":extradata,
-            "errors":errors
+            "errors":errors,
+            "stacktrace":stacktrace
         }
         self.raw_data = raw_data
         self.formatter = formatter
+        self.formats = {}
 
-    def from_raw_data(self, rawdata=None):
+    def from_raw_data(self, rawdata=None, formats={}):
+        self.formats = formats
         if rawdata is not None:
             self.raw_data = rawdata
             self.__process()
@@ -40,9 +44,11 @@ class Response:
             self.answer["success"] = False
             self.answer["message"] = exception.msg
             self.answer["errors"] = exception.errors
-        if type(exception) is Exception:
-            print("in development")
-            pass
+
+        else:        
+            self.answer["success"] = False
+            self.answer["message"] = "Error no controlado, msg: {0}".format(exception)
+            self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])        
 
         return self.answer
 
@@ -75,6 +81,11 @@ class Response:
         #return {c.key: str(getattr(element, c.key)) for c in inspect(element).mapper.column_attrs}
         element_dict = element.__dict__
         element_dict.pop('_sa_instance_state')
+
+        if len(self.formats) > 0:
+            for colname , fmt in self.formats:
+                element_dict[colname+"_fmt"] = fmt.format(element_dict[colname])
+                
         return element_dict
 
     def __process_list(self):
@@ -89,11 +100,11 @@ class Response:
         if any("Model" == base.__name__ for base in element.__class__.__bases__):
             record = self.__process_model(element)            
         if element.__class__.__name__ in ['result','LegacyRow', 'Row']:
-            record = Transformer(element._asdict()).to_parseable_json_dict()
+            record = Transformer(element._asdict()).to_parseable_json_dict(formats=self.formats)
         if element.__class__.__name__ == 'RowProxy':
-            record = Transformer(dict(element.items())).to_parseable_json_dict()
+            record = Transformer(dict(element.items())).to_parseable_json_dict(formats=self.formats)
         if element.__class__.__name__ == 'dict':            
-            record = Converter.to_clean_dict(element)
+            record = Converter.to_clean_dict(element=element,formats=self.formats)
         
         return record
         

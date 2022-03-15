@@ -11,11 +11,11 @@ import json
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
-SESSION_TYPE = 'redis'
-
-print("Colocado para solo para pruebas un user_id")
 
 app.config.from_object("config")
+#app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
+
+
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
 
 db = SQLAlchemy(app)
@@ -28,8 +28,10 @@ class EntryAPI(Resource):
         response.headers["file_name"] = obj_loader.response['file_name']
         return response
 
-    def post(self, module_name, class_name, method_name):
-        #data = request.json
+    def post(self, module_name, class_name, method_name):        
+        #solo para probar se poneuser_id        
+        print(app)        
+        session["user_id"] = 1
 
         data = None
 

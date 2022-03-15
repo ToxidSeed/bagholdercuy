@@ -24,12 +24,17 @@ def model_to_dict(model):
     element_dict.pop('_sa_instance_state')
     return element_dict
 
-def to_clean_dict(element):
+def to_clean_dict(element, formats={}):
     for key, value in element.items():
         if value.__class__.__name__ == "Decimal":
             element[key] = float(value)
         if value.__class__.__name__ == "date":
             element[key] = value.isoformat()
+
+    if len(formats) > 0:
+        for colname, fmt in formats.items():
+            element[colname+"_fmt"] = fmt.format(element[colname])
+        
     return element
 
 def process_list(inlist=[]):

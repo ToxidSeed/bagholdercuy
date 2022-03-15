@@ -2,12 +2,14 @@
     <div>
         <q-card>
             <q-card-section>
-                Conversion
+                <div class="text-h6">Currency Exchange Rate</div>
             </q-card-section>                
             <q-card-section>
-                <SelectMoneda v-bind:label="'Moneda Base'"/>
-                <q-input v-model="importe" label="Importe"/>
+                <q-input v-model="fecha_cambio" label="Fecha Cambio"/>
+                <SelectMoneda v-bind:label="'Moneda Base'"/>                
                 <SelectMoneda v-bind:label="'Moneda Referencia'"/>
+                <q-input v-model="importe_compra" label="Compra"/>
+                <q-input v-model="importe_venta" label="Venta"/>
             </q-card-section>
             <q-card-section>
                 <q-btn color="primary" label="Guardar"/>
@@ -20,13 +22,15 @@
 import SelectMoneda from './SelectMoneda.vue'
 
 export default {
-    name:"PanelConversionMoneda",
+    name:"PanelCurrencyExchangeRate",
     components:{
         SelectMoneda
     },
     data:() => {
         return {
-            importe: 0
+            fecha_cambio:"",
+            importe_compra:0,
+            importe_venta: 0
         }
     },
     methods:{

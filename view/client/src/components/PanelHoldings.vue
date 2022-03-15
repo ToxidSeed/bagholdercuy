@@ -178,8 +178,7 @@ export default {
     methods:{
         get_list:function(){
             this.$http.post(
-            this.$backend_url+'HoldingsManager/HoldingsManager/get_list',{
-
+            'HoldingsManager/HoldingsManager/get_list',{
             }).then(httpresp =>{
                 console.log(httpresp);
                 var appresp = httpresp.data

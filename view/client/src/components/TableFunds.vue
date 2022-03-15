@@ -24,18 +24,21 @@ export default {
             },{
                 label:"Importe",
                 align:"left",
-                field:"importe",
+                field:"importe_fmt",
                 name:"importe"
             }]
         }
     },
     mounted:function(){
-        //this.get_list()
+        this.get_funds()
     },
     methods:{
-        get_list:function(){
-            this.$http.post('FundsManager/FundsManager/get_funds').then(httpresp => {
-                console.log(httpresp)
+        get_funds:function(){
+            this.$http.post('FundsManager/FundsManager/get_funds',{
+                symbol:""
+            }).then(httpresp => {
+                var appresponse = httpresp.data
+                this.data = appresponse.data
             })
         }
     }

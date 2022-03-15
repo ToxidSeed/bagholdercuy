@@ -64,7 +64,7 @@ class HoldingsManager:
                     continue
                 
 
-        return Response(input_data=results).get()
+        return Response().from_raw_data(results)
 
     def __options_price(self,holding={},quote=None):
         sum_shares_balance = float(holding["sum_shares_balance"])

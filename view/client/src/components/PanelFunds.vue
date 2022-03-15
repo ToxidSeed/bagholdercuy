@@ -3,13 +3,12 @@
         <div>
             <q-btn color="green" label="Deposit" @click="deposit"/>
             <q-btn color="red" label="Withdraw" @click="withdraw"/>
-            <q-btn color="primary" label="Convert" @click="convert"/>
+            <q-btn color="primary" label="Convert" @click="convert" class="hidden"/>
         </div>
         <div class="row" >
             <div v-if="panel_show==true" class="col-3">                
                 <PanelDeposit v-if="deposit_show == true" v-on:deposit-cancel="deposit_cancel" />
-                <PanelWithdraw v-if="withdraw_show == true" v-on:withdraw-cancel="withdraw_cancel"/>
-                <PanelConversionMoneda v-if="convert_show==true" v-on:conversion-moneda-cancel="convert_cancel"/>
+                <PanelWithdraw v-if="withdraw_show == true" v-on:withdraw-cancel="withdraw_cancel"/>                
             </div>
             <div class="col-4">
                 <TableFunds/>
@@ -20,23 +19,20 @@
 <script>
 import PanelDeposit from './PanelDeposit.vue'
 import PanelWithdraw from './PanelWithdraw.vue'
-import PanelConversionMoneda from './PanelConversionMoneda.vue'
 import TableFunds from './TableFunds.vue'
     
 export default {
     name:"PanelFunds",
     components:{
         PanelDeposit,
-        PanelWithdraw,
-        PanelConversionMoneda,
+        PanelWithdraw,        
         TableFunds
     },
     data:() => {
         return {
             panel_show:false,
             deposit_show:false,
-            withdraw_show:false,
-            convert_show:false
+            withdraw_show:false,            
         }
     },
     methods:{
