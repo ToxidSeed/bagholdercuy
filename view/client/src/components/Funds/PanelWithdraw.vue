@@ -5,21 +5,29 @@
                 <div class="text-h6">Withdraw</div> 
             </q-card-section>
             <q-card-section>
-                <SelectFunds v-on:fund-select="fund_select"/>
-                <q-input 
-                v-model="importe" 
-                label="Importe"
-                mask="#.##"
-                reverse-fill-mask
-                input-class="text-right"
-                />
-                <q-input 
-                v-model="fec_registro" 
-                label="Fec. Registro"
-                mask="##/##/####"
-                fill-mask="00/00/0000"
-                input-class="text-right"
-                />
+                <div class="row">
+                    <SelectFunds v-on:fund-select="fund_select" class="col-6"/>
+                    <q-input 
+                    v-model="importe" 
+                    label="Importe"
+                    mask="#.##"
+                    hint="Format: .00"                
+                    reverse-fill-mask
+                    input-class="text-right"
+                    class="col-6 q-pl-xs"
+                    />
+                </div>
+                <div class="row">
+                    <q-input 
+                    v-model="fec_retiro" 
+                    label="Fec. Retiro"
+                    mask="##/##/####"
+                    fill-mask="_"
+                    hint="Format: dd/mm/yyyy"
+                    input-class="text-right"
+                    class="col-4"
+                    />
+                </div>
             </q-card-section>
             <q-card-section>
                 <q-btn color="primary" label="Guardar" @click="save"/>
@@ -29,21 +37,24 @@
                 label="Cancelar" 
                 @click="cancelar"/>
             </q-card-section>
-        </q-card>
+        </q-card>     
+        <MessageBox ref="msgbox"/>   
     </div>
 </template>
 <script>
 import SelectFunds from './SelectFunds.vue'
+import MessageBox from '../MessageBox.vue'
 export default {
     name:"PanelWithdraw",
     components:{
-        SelectFunds
+        SelectFunds,
+        MessageBox
     },
     data:() => {
         return {
             moneda:"",
             importe:"",
-            fec_registro:""
+            fec_retiro:""
         }
     },
     methods:{
@@ -61,9 +72,10 @@ export default {
             this.$http.post('FundsManager/Withdraw/do',{
                 moneda_symbol: symbol,
                 importe: this.importe,
-                fec_registro: this.fec_registro
+                fec_retiro: this.fec_retiro
             }).then(httpresponse => {
-                console.log(httpresponse)
+                var appdata = httpresponse.data
+                this.$refs.msgbox.new(appdata)
             })
         },
         cancelar:function(){

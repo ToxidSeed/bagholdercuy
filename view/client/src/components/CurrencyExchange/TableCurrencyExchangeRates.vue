@@ -6,15 +6,19 @@
             :columns="columns"
             row-key="par_name"
             dense
+            :pagination="pagination"
         >
         </q-table>
     </div>
 </template>
 <script>
 export default {
-    name:"TableCurrencyExchanges",
+    name:"TableCurrencyExchangeRates",
     data: () => {
         return {
+            pagination:{
+                rowsPerPage:20
+            },
             columns:[
                 {
                     label:"Fecha Cambio",
@@ -47,11 +51,16 @@ export default {
         }
     },
     mounted:function(){
-
+        this.get_historic_rates()
     },
     methods:{
         get_historic_rates:function(){
+            this.$http.post('CurrencyExchangeManager/CurrencyExchangeFinder/get_historic_rates',{
 
+            }).then(httpresponse => {
+                var appdata = httpresponse.data
+                this.data = appdata.data
+            })
         }
     }
 }

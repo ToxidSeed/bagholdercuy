@@ -7,9 +7,11 @@ import PanelTrade from './components/PanelTrade.vue';
 import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
 import PanelHoldings from './components/PanelHoldings.vue';
-import PanelFunds from './components/PanelFunds.vue'
-import MainPanelCurrencyExchange from './components/MainPanelCurrencyExchange.vue'
-import MainPanelCurrency from './components/MainPanelCurrency.vue'
+import PanelFunds from './components/Funds/PanelFunds.vue'
+import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCurrencyExchange.vue';
+import MainPanelCurrency from './components/MainPanelCurrency.vue';
+import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
+import PanelHistorialOperaciones from '@/components/Holdings/PanelHistorialOperaciones.vue';
 
 Vue.use(VueRouter);
 
@@ -33,7 +35,11 @@ const routes =  [
     },{
       path:'/holdings', component:PanelHoldings
     },{
+      path:'/historial_operaciones', component:PanelHistorialOperaciones
+    },{
       path:'/currency', component:MainPanelCurrency
+    },{
+      path:"/symbols", component:MainPanelSymbol
     }
 ]
 

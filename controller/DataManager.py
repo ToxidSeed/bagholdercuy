@@ -1,3 +1,4 @@
+from tokenize import Ignore
 from common.Error import Error
 from common.StatusMessage import StatusMessage
 from model.OptionContract import OptionContract
@@ -11,7 +12,7 @@ from app import app, db
 from model.StockData import StockData
 from model.StockSymbol import StockSymbol
 from model.OptionContract import OptionContract
-from common.api.MarketAPI import MarketAPI, Stats
+from common.api.MarketAPI import MarketAPI
 from common.api.Quote import Quote
 from common.Response import Response
 import common.Converter as Converter
@@ -62,14 +63,15 @@ class DataManager:
         """
 
         #guardar las estadisticas de la cotización
-        error = Stats().save(quote)        
+        #error = Stats().save(quote)        
         if error is not None:                       
             return (None, error)
 
         return (quote, None)
 
+    """
     def get_last_intraday(self, symbol="", current_date=""):
-        stats = Stats().get(symbol)
+        #stats = Stats().get(symbol)
         quote = MarketAPI().get_last_intraday({"symbol":symbol})
 
         last_update = ""
@@ -89,6 +91,7 @@ class DataManager:
             self.__save_stock_stats(symbol, quote)
 
         return quote
+    """
  
     def load_daily_data(self, symbol, since):
         last_loaded_date = self.get_max_loaded_daily_price(symbol)
@@ -113,6 +116,7 @@ class DataManager:
             db.session.commit()
         return last_quote
 
+    """
     def get_last_daily_quote(self, symbol="", current_date=""):
         stats = Stats().get(symbol)
 
@@ -139,6 +143,7 @@ class DataManager:
         ).first()
 
         return Quote().from_sd(sd)
+    """
 
     def get_prev_daily_quote(self, ref_date="", symbol=""):
         max_price_date_obj = db.session.query(
@@ -262,28 +267,30 @@ class Symbol:
         return Response(msg="Se ha cargado correctamente los símbolos").get()
 
     def search(self, args={}):
-        search_text="%{}%".format(args["symbol"])
+        try:
+            search_text="%{}%".format(args["symbol"])
 
-        asset_type_args =args["asset_type"]
-        asset_type = []
+            asset_type_args =args["asset_type"]
+            asset_type = []
 
-        if asset_type_args["stock"]:
-            asset_type.append(DataManager.ASSET_TYPE_STOCK)
+            if asset_type_args["stock"]:
+                asset_type.append(DataManager.ASSET_TYPE_STOCK)
 
-        if asset_type_args["etf"]:
-            asset_type.append(DataManager.ASSET_TYPE_ETF)
-        
-        if asset_type_args["options"]:
-            asset_type.append(DataManager.ASSET_TYPE_OPTIONS)
+            if asset_type_args["etf"]:
+                asset_type.append(DataManager.ASSET_TYPE_ETF)
+            
+            if asset_type_args["options"]:
+                asset_type.append(DataManager.ASSET_TYPE_OPTIONS)
 
-        symbol_list = db.session.query(
-            StockSymbol
-        ).filter(
-            StockSymbol.symbol.ilike(search_text),
-            StockSymbol.asset_type.in_(asset_type)
-        ).all()
-
-        return Response(input_data=symbol_list).get()
+            symbol_list = db.session.query(
+                StockSymbol
+            ).filter(
+                StockSymbol.symbol.ilike(search_text),
+                StockSymbol.asset_type.in_(asset_type)
+            ).all()
+            return Response(raw_data=symbol_list).get()
+        except Exception as e:
+            return Response().from_exception(e)
 
 class Options:
     def __init__(self):

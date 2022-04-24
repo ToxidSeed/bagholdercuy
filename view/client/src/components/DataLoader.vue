@@ -10,7 +10,7 @@
                 </q-card-section>
                 <q-card bordered>
                     <q-card-section>
-                        <div color="indigo">Buscar</div>                    
+                        <div color="indigo" class="text-primary">Buscar symbols</div>                    
                         <q-select                                        
                             label="Symbol"
                             v-model="symbol"  
@@ -28,26 +28,32 @@
                         <div>
                             <q-checkbox v-model="asset_type.stock" label="Stock"/>
                             <q-checkbox v-model="asset_type.etf" label="ETF"/>
-                            <q-checkbox v-model="asset_type.options" label="Options"/>
+                            <!--<q-checkbox v-model="asset_type.options" label="Options"/>-->
                         </div>
                     </q-card-section>
                 </q-card>                
                 <q-card-section class="q-pa-none">                                        
-                    <q-select 
-                    v-model="frequency" 
-                    :options="options" 
-                    label="Frequency" 
-                    dense 
-                    />
-                    <q-select 
-                    v-model="method" 
-                    :options="methods" 
-                    label="Method" 
-                    dense 
-                    />
+                    <div class="row">
+                        <q-select 
+                        class="col-6"
+                        v-model="frequency" 
+                        :options="options" 
+                        label="Frequency" 
+                        dense 
+                        />
+                        <q-select 
+                        class="col-6 q-pl-xs"                        
+                        v-model="method" 
+                        :options="methods" 
+                        label="Method" 
+                        dense 
+                        />
+                    </div>                    
+                </q-card-section>
+                <q-card-action>
                     <q-btn color="primary" label="Load" class="q-mt-xs" @click="load"/>
                     <q-btn color="primary" label="Reset" class="q-mt-xs q-ml-xs" @click="load"/>
-                </q-card-section>
+                </q-card-action>
             </q-card >
             <DataloaderOptions class="col-3"/>
         </div>
@@ -87,7 +93,7 @@ export default {
         load:function(){
             var symbol_value = this.symbol.value
             this.$http.post(
-            this.$backend_url+'DataManager/DataManager/load',{
+            'DataManager/DataManager/load',{
                 symbol:symbol_value,
                 frequency:this.frequency
             }).then(httpresponse => {
@@ -109,7 +115,7 @@ export default {
                 return
             }else{
                 this.$http.post(
-                this.$backend_url+'DataManager/Symbol/search',{
+                'DataManager/Symbol/search',{
                     symbol:val,
                     asset_type:this.asset_type
                 }).then(httpresponse => {

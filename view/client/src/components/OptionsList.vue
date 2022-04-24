@@ -16,11 +16,23 @@
             to="/">
                 <q-item-section>Simulation</q-item-section>
             </q-item>
-            <q-item 
-            active-class="my-menu-link"
-            to="/holdings">
-                <q-item-section>Portafolio</q-item-section>
-            </q-item>
+            <q-expansion-item
+                expand-separator            
+                label="Holdings"                
+            >
+                <q-list>
+                    <q-item 
+                    active-class="my-menu-link"
+                    to="/holdings">
+                        <q-item-section>Balance</q-item-section>
+                    </q-item>
+                    <q-item 
+                    active-class="my-menu-link"
+                    to="/historial_operaciones">
+                        <q-item-section>Historial Operaciones</q-item-section>
+                    </q-item>
+                </q-list>
+            </q-expansion-item>
             <q-item 
             active-class="my-menu-link"
             to="/stats">
@@ -35,6 +47,11 @@
             active-class="my-menu-link"
             to="/currency">
                 <q-item-section>Currency</q-item-section>
+            </q-item>
+            <q-item 
+            active-class="my-menu-link"
+            to="/symbols">
+                <q-item-section>Symbols</q-item-section>
             </q-item>
         </q-list>
     </div>

@@ -1,53 +1,59 @@
 from re import S
 from app import app, db
+from common.AppException import AppException
 from model.StockTrade import StockTrade
 from model.StockSymbol import StockSymbol
 from model.OrderModel import OrderModel
+from model.StockTrade import StockTrade
+from model.TipoModel import TipoModel
+
 from datetime import datetime, date, time
 from common.Response import Response
-from model.StockTrade import StockTrade
 from common.Error import Error
 from sqlalchemy import desc
+from sqlalchemy.orm import join
+import sqlalchemy.sql.functions as func
+from sqlalchemy.sql import extract
+import config as CONFIG
 
 
-class TradeManager:
-    ASSET_TYPE_STOCKS = "stocks"
-    ASSET_TYPE_OPTIONS = "options"
-    
+class TradeManager:        
     def __init__(self):
-        pass
+        self.handlers = {
+            "equity":GenericManager,
+            "etf":GenericManager
+        }
     
     def order(self, args={}):
-        error = self.__validate(args)
-        if error is not None:
-            return Response().from_error(error)
+        try:
+            error = self.__validate(args)
+            if error is not None:
+                return Response().from_error(error)
 
-        order = Order().save(args)
+            symbol_obj = self.__get_symbol(args["symbol"])        
+            args["asset_type"] = symbol_obj.asset_type
+            order = Order().save(args)                            
 
-        #asset type
-        symbol = args["symbol"]
-        asset_type = args["asset_type"]
-        trade_type = args["order_type"]
+            #stock
+            handler = self.handlers[symbol_obj.asset_type]
+            handler(order).procesar()
+        
+            db.session.commit()
+            return Response(msg="Orden de compra ejecutada").get()
+        except Exception as e:
+            return Response().from_exception(e)
+
+    def __get_symbol(self, symbol=""):
+        #asset type                   
         symbol_obj = db.session.query(StockSymbol).filter(
             StockSymbol.symbol == symbol
         ).first()
 
         #check existence of symbol
         if symbol_obj is None:
-            return Response(msg="El symbol {} no existe".format(symbol)).get()
+            raise AppException(msg="El symbol {0} no se encuentra registrado".format(symbol))
 
-        #stock
-        if trade_type == "B":            
-            BuyManager(order).buy()
-            
-        if trade_type == "S":            
-            SellManager(order).sell()
-
-        try:            
-            db.session.commit()
-            return Response(msg="Orden de compra ejecutada").get()
-        except:
-            return Response(success=False,msg="Error al guardar la orden de compra").get()
+        return symbol_obj
 
     def __validate(self, args={}):
         #validate symbol
@@ -123,104 +129,35 @@ class Order:
 
         return order
 
-class BuyManager:    
-    def __init__(self, order:Order=None):
+class GenericManager:
+    def __init__(self, order:OrderModel=None):
         self.order = order
-        self.shares_order_balance = order.quantity
+        self.saldo_orden = self.order.quantity
 
-    def buy(self):
-        shares = float(self.order.quantity)
-        self.__buy_holdings()
-        self.__buy_with_no_holdings()    
-    
-    def __get_holdings(self):
-        db.session.query(
-            StockTrade
-        ).filter(
-            #StockTrade.asset_type == "stocks",
-            StockTrade.shares_balance > 0,
-            StockTrade.symbol == self.order.symbol,
-            StockTrade.trade_type == 'S'
-        ).order_by(StockTrade.trade_date, StockTrade.id).all()
+    def procesar(self, args={}):
+        if self.order.order_type == CONFIG.ORDEN_TIPO_COMPRA:
+            self.comprar()
+        if self.order.order_type == CONFIG.ORDEN_TIPO_VENTA:
+            self.vender()
 
-    def __buy_holdings(self):
-        shares = 0
-        trade_date = self.order.order_date
-        price_per_share = self.order.price
-        trade_month = trade_date.month
-
-        holdings = self.__get_holdings()
-
-        order_shares = self.shares_order_balance
-
-        for trade in holdings:
-            if order_shares == 0:
-                break
-
-            if trade.shares_balance < order_shares:
-                order_shares = order_shares - trade.shares_balance
-                shares = trade.shares_balance
-
-                #update the balance
-                trade.shares_balance = 0
-
-            if trade.shares_balance > order_shares:
-                shares = order_shares
-                #update the balance
-                trade.shares_balance = trade.shares_balance - order_shares
-
-            if trade.shares_balance == order_shares:
-                shares = order_shares
-                #update the balance
-                trade.shares_balance = 0           
-
-            new_trade = StockTrade(
-                symbol=self.order.symbol,
-                trade_type = self.order.order_type,
-                asset_type = self.order.asset_type,
-                shares_quantity = shares,
-                shares_balance = 0,
-                premium = 0,
-                trade_date = trade_date ,
-                trade_month = trade_month,
-                buy_price = price_per_share,
-                buy_price_per_trade = shares * price_per_share,
-                sell_price = 0,
-                sell_price_per_trade = 0,
-                realized_gl=0,
-                register_date = datetime.now().date(),
-                register_time = datetime.now().time()
-            )
-
-            db.session.add(new_trade)
-        return order_shares
-
-    def __buy_with_no_holdings(self):        
-        asset_type = self.order.asset_type
-        trade_date = date.fromisoformat(self.order.order_date)
-        price_per_share = float(self.order.price)
-        price_per_trade = float(self.shares_order_balance * price_per_share)
-
-        trade_month = self.order.order_date.month
-        premium = 0
-
-        if asset_type == self.ASSET_TYPE_OPTIONS:              
-            premium = self.shares_order_balance * price_per_share
+    def comprar(self, args={}):
+        num_operacion = self.__get_ult_num_operacion(self.order.order_date.year)
         
-
+        trade_date = self.order.order_date        
+        trade_month = trade_date.month
         trade = StockTrade(
             symbol=self.order.symbol,
+            num_operacion=num_operacion+1,
             trade_type = self.order.order_type,
             asset_type = self.order.asset_type,
-            shares_quantity = self.shares_order_balance,
-            shares_balance = self.shares_order_balance,
-            premium = premium,
+            cantidad = self.order.quantity,
+            saldo = self.order.quantity,
+            premium = 0,
             trade_date = trade_date ,
             trade_month = trade_month,
-            buy_price = price_per_share,
-            buy_price_per_trade = price_per_trade,
-            sell_price = 0,
-            sell_price_per_trade = 0,
+            imp_accion = self.order.price,
+            imp_operacion = self.order.price * self.order.quantity,
+            imp_accion_origen=0,
             realized_gl=0,
             register_date = datetime.now().date(),
             register_time = datetime.now().time()
@@ -228,109 +165,107 @@ class BuyManager:
 
         db.session.add(trade) 
 
-class SellManager:
-    def __init__(self, order):
-        self.order = order
-        self.order_shares_balance = order.quantity
-
-    def sell(self):                               
-        self.__sell_holdings()
-        self.__sell_with_no_holdings()
-
-    def __sell_with_no_holdings(self):
-        if self.order_shares_balance == 0:
-            print("sell with no holdings, sell order shares is zero")
-            return
-
-        asset_type = self.order.asset_type
-        trade_date = date.fromisoformat(self.order.order_type)
-        price_per_share = float(self.order.price)
-        trade_month = trade_date.month
-        premium = 0
-
-        if asset_type == self.ASSET_TYPE_OPTIONS:              
-            premium = self.order_shares_balance * price_per_share
+    def vender(self, args={}):
+        num_operacion = self.__get_ult_num_operacion(self.order.order_date.year)
         
+        opers_con_saldo = self.__obt_operaciones_saldo()
+        for oper in opers_con_saldo:
+            num_operacion+=1
+            self.__vender(oper, num_operacion)
+
+    def __vender(self, oper:StockTrade=None, num_operacion=1):
+        trade_date = self.order.order_date        
+        trade_month = trade_date.month
+        saldo_orden = float(self.saldo_orden)
+        saldo_oper = float(oper.saldo)
+
+        if saldo_orden == 0:
+            return None               
+
+        cantidad = 0
+        if saldo_oper == saldo_orden:
+            cantidad = saldo_orden
+
+        if saldo_oper < saldo_orden:
+            cantidad = saldo_oper
+
+        if saldo_oper > saldo_orden:
+            cantidad = saldo_orden
+
+        self.saldo_orden-=cantidad
+
+        realized_gl = (self.order.price * cantidad) - (float(oper.imp_accion) * cantidad)
+
         trade = StockTrade(
+            num_operacion=num_operacion,
             symbol=self.order.symbol,
             trade_type = self.order.order_type,
             asset_type = self.order.asset_type,
-            shares_quantity = self.order_shares_balance,
-            shares_balance = self.order_shares_balance,
-            premium = premium,
+            ref_trade_id = oper.id,
+            cantidad = cantidad,
+            saldo = 0,
+            premium = 0,
             trade_date = trade_date ,
             trade_month = trade_month,
-            buy_price = 0,
-            buy_price_per_trade = 0,
-            sell_price = price_per_share,
-            sell_price_per_trade = premium,
-            realized_gl=0,
+            imp_accion = self.order.price,
+            imp_operacion = self.order.price * cantidad,
+            imp_accion_origen=oper.imp_accion,
+            realized_gl=realized_gl,
             register_date = datetime.now().date(),
             register_time = datetime.now().time()
         )
 
-        db.session.add(trade)        
+        db.session.add(trade) 
 
-    def __sell_holdings(self):
-        shares = 0
-        trade_date = self.order.order_date
-        price_per_share = self.order.price
-        trade_month = trade_date.month
+        #actualizar la operacion origen
+        oper.saldo = float(oper.saldo) - cantidad        
 
-        #get current holdings and balance
-        holdings = db.session.query(
+    def __obt_operaciones_saldo(self):
+        data = db.session.query(
             StockTrade
         ).filter(
             #StockTrade.asset_type == "stocks",
-            StockTrade.shares_balance > 0,
+            StockTrade.saldo != 0,
             StockTrade.symbol == self.order.symbol,
-            StockTrade.trade_type == 'B'
-        ).order_by(StockTrade.trade_date, StockTrade.id).all()
+            StockTrade.trade_type == CONFIG.ORDEN_TIPO_COMPRA
+        ).order_by(StockTrade.num_operacion).all()
+        return data
 
-        for trade in holdings:
-            if self.order_shares_balance == 0:
-                break
+    def __get_ult_num_operacion(self, anyo=0):
+        result = db.session.query(
+            func.max(StockTrade.num_operacion).label("num_operacion")
+        ).\
+        filter(extract('year',StockTrade.trade_date) == anyo).first()
 
-            holding_shares_balance = float(trade.shares_balance)
-            if holding_shares_balance < self.order_shares_balance:
-                self.order_shares_balance = self.order_shares_balance - holding_shares_balance
-                shares = holding_shares_balance
+        num_operacion = 0
+        if result is not None and result.num_operacion is not None:
+            num_operacion = result.num_operacion
 
-                #update the balance
-                trade.shares_balance = 0
+        return num_operacion
 
-            if holding_shares_balance > self.order_shares_balance:
-                shares = self.order_shares_balance
-                #update the balance
-                trade.shares_balance = holding_shares_balance - self.order_shares_balance
-                self.order_shares_balance = 0
+class BuscadorOperaciones:
+    def __init__(self):
+        pass
 
-
-            if holding_shares_balance == self.order_shares_balance:
-                shares = self.order_shares_balance
-                self.order_shares_balance = 0
-                #update the balance
-                trade.shares_balance = 0           
-
-            new_trade = StockTrade(
-                symbol=self.order.symbol,
-                trade_type = self.order.order_type,
-                asset_type = self.order.asset_type,
-                order_id = self.order.order_id,
-                ref_trade_id = trade.id,
-                shares_quantity = shares,
-                shares_balance = 0,
-                premium = 0,
-                trade_date = trade_date ,
-                trade_month = trade_month,
-                buy_price = 0,
-                buy_price_per_trade = 0,
-                sell_price = price_per_share,
-                sell_price_per_trade = shares * price_per_share,
-                realized_gl=0,
-                register_date = datetime.now().date(),
-                register_time = datetime.now().time()
-            )
-
-            db.session.add(new_trade)
-        
+    def obt_list(self, args={}):
+        try:
+            query = db.session.query(
+                StockTrade.id,
+                StockTrade.num_operacion,
+                StockTrade.asset_type,
+                StockTrade.symbol,
+                StockTrade.trade_type,
+                TipoModel.tipo_nombre.label("tipo_oper_nombre"),
+                StockTrade.cantidad,
+                StockTrade.saldo,
+                StockTrade.trade_date,
+                StockTrade.trade_month,
+                StockTrade.imp_accion,
+                StockTrade.imp_operacion,
+                StockTrade.imp_accion_origen,
+                StockTrade.realized_gl                
+            ).outerjoin(TipoModel, StockTrade.trade_type == TipoModel.tipo_id)
+            data = query.all()
+            return Response(raw_data=data).get()
+        except Exception as e:
+            return Response().from_exception(e)

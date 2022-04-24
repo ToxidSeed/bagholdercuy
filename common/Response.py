@@ -44,10 +44,12 @@ class Response:
             self.answer["success"] = False
             self.answer["message"] = exception.msg
             self.answer["errors"] = exception.errors
+            self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])
 
         else:        
+            errortype = type(exception).__name__
             self.answer["success"] = False
-            self.answer["message"] = "Error no controlado, msg: {0}".format(exception)
+            self.answer["message"] = "Error no controlado, tipo:{0}, msg: {1}".format(errortype,exception)
             self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])        
 
         return self.answer
@@ -82,10 +84,7 @@ class Response:
         element_dict = element.__dict__
         element_dict.pop('_sa_instance_state')
 
-        if len(self.formats) > 0:
-            for colname , fmt in self.formats:
-                element_dict[colname+"_fmt"] = fmt.format(element_dict[colname])
-                
+        element_dict = Converter.to_clean_dict(element=element_dict,formats=self.formats)
         return element_dict
 
     def __process_list(self):
@@ -100,7 +99,8 @@ class Response:
         if any("Model" == base.__name__ for base in element.__class__.__bases__):
             record = self.__process_model(element)            
         if element.__class__.__name__ in ['result','LegacyRow', 'Row']:
-            record = Transformer(element._asdict()).to_parseable_json_dict(formats=self.formats)
+            """record = Transformer(element._asdict()).to_parseable_json_dict(formats=self.formats)"""
+            record = Converter.to_dict(element)
         if element.__class__.__name__ == 'RowProxy':
             record = Transformer(dict(element.items())).to_parseable_json_dict(formats=self.formats)
         if element.__class__.__name__ == 'dict':            

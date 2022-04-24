@@ -5,7 +5,7 @@
         use-input
         hide-selected                                      
         fill-input
-        input-debounce="1000"
+        input-debounce="500"
         @filter="filter_fn"
         @input="sel_moneda"
         :options="list"                            
@@ -38,10 +38,8 @@ export default {
         }
     },
     methods:{
-        sel_moneda:function(selected){        
-            console.log(selected)    
-            this.moneda = selected    
-            console.log(this.moneda)     
+        sel_moneda:function(selected){                    
+            this.moneda = selected                
             this.$emit('moneda-select',this.moneda) 
         },
         filter_fn:function(val, update){

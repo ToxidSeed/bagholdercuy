@@ -42,7 +42,7 @@ class CurrencyManager:
 
     def __collect(self, args={}):
         currency_id = args["currency_id"]
-        if currency_id in ["","0",0]:
+        if currency_id in ["#","","0",0]:
             currency_id = None
         else:
             currency_id = int(currency_id)            
@@ -123,6 +123,14 @@ class CurrencyManager:
 
         return Response().from_raw_data(records)
 
+class CurrencyFinder:
+    def __init__(self):
+        pass
+
+    def get_list(self,args={}):
+        data = CurrencyModel.query.all()
+        return Response().from_raw_data(data)
+
 class CurrencyPair:
     def __init__(self, add_list=[], remove_list=[]):
         self.add_list = add_list
@@ -157,8 +165,8 @@ class CurrencyPair:
             #Si no hay errores creamos el objeto y se va agregando
             if len(errors) == 0:
                 pair_found = self.__find_pair(
-                    pair["currency_base_symbol"],
-                    pair["currency_ref_symbol"]
+                    pair["base"],
+                    pair["ref"]
                 )
                 if pair_found is not None:
                     self.__reactivate(pair_found)
@@ -167,8 +175,8 @@ class CurrencyPair:
         return errors    
 
     def __add_pair(self, pair={}):
-        base_symbol = pair["currency_base_symbol"]
-        ref_symbol = pair["currency_ref_symbol"]
+        base_symbol = pair["base"]
+        ref_symbol = pair["ref"]
 
         pair_name = "{0}/{1}".format(base_symbol, ref_symbol)
         new_pair = CurrencyPairModel(
@@ -202,10 +210,10 @@ class CurrencyPair:
             
     def __val_pairs_entry(self, pair={}):
         errors = []
-        if "currency_ref_symbol" not in pair:
-            errors.append("Add pairs: No se ha enviado 'currency_ref_symbol' en alguno de los pares")
+        if "ref" not in pair:
+            errors.append("Add pairs: No se ha enviado 'ref' en alguno de los pares")
         else:
-            currency_ref_symbol = pair["currency_ref_symbol"]
+            currency_ref_symbol = pair["ref"]
             currency = CurrencyModel.query.filter(
                 CurrencyModel.currency_symbol == currency_ref_symbol
             ).first()

@@ -3,8 +3,11 @@ from datetime import datetime
 
 def to_dict(element, clean=True):
     output = None
-    if type(element).__name__ == "Row":
-        return dict(element)        
+    if type(element).__name__ in ['result','LegacyRow', 'Row']:
+        if clean:
+            return to_clean_dict(dict(element))
+        else:
+            return dict(element)        
     
     if any("Model" == base.__name__ for base in element.__class__.__bases__):
         output = element.__dict__
@@ -30,6 +33,8 @@ def to_clean_dict(element, formats={}):
             element[key] = float(value)
         if value.__class__.__name__ == "date":
             element[key] = value.isoformat()
+        if value.__class__.__name__ == "time":
+            element[key] = value.strftime("%H:%M:%S")               
 
     if len(formats) > 0:
         for colname, fmt in formats.items():

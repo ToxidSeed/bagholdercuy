@@ -13,25 +13,27 @@ class DataLoader:
         self.stats = {}
 
     def load(self, args={}):
-        error = self._val_entry_data(args)
-        if error is not None:
-            return Response().from_error(error).get() 
+        try:
+            error = self._val_entry_data(args)
+            if error is not None:
+                return Response().from_error(error).get() 
 
-        market_api = MarketAPI()
-        symbol = args["symbol"]
-        method = args["method"]
+            market_api = MarketAPI()
+            symbol = args["symbol"]
+            method = args["method"]
 
-        self.elements = market_api.get_historical_prices(symbol)
+            self.elements = market_api.get_historical_prices(symbol)
 
-        if method == "replace":
-            self.__replace(symbol)
+            if method == "replace":
+                self.__replace(symbol)
 
-        if method == "append":
-            self.__append(symbol)
+            if method == "append":
+                self.__append(symbol)
 
-        db.session.commit()
-    
-        return Response(msg="Se ha cargado correctamente", extradata=self.stats).get()
+            db.session.commit()
+            return Response(msg="Se ha cargado correctamente", extradata=self.stats).get()
+        except Exception as e:
+            return Response().from_exception(e)
 
     def _val_entry_data(self, args=None):
         error = Error()

@@ -66,7 +66,7 @@
                     </div>
                 </q-card-section>
                 <q-separator />
-                <q-card-actions >
+                <q-card-actions align="right">
                     <q-btn  color="green" @click="save">Guardar</q-btn>
                     <q-btn flat @click="cerrar">Cerrar</q-btn>
                 </q-card-actions>
@@ -177,9 +177,8 @@ export default {
             }
 
             this.$http.post(
-            this.$backend_url+'DataManager/Symbol/search',{
-                symbol:this.symbol_search,
-                asset_type:this.order.asset_type
+            'SymbolManager/SymbolFinder/buscar_por_texto',{
+                texto:this.symbol_search
             }).then(httpresponse => {
                 var appresponse = httpresponse.data
                 this.symbol_list = appresponse.data
@@ -249,7 +248,7 @@ export default {
         },
         do_order:function(){
             this.$http.post(
-            this.$backend_url+'TradeManager/TradeManager/order',{
+            'TradeManager/TradeManager/order',{
                 symbol:this.order.symbol,
                 order_type:this.order.order_type,
                 shares_quantity:this.order.quantity,
@@ -257,20 +256,8 @@ export default {
                 order_date:this.order_date_iso,
                 asset_type:this.order.asset_type             
             }).then(httpresponse => {
-                var appresponse = httpresponse.data
-                    if (appresponse.success == true){
-                        this.$refs.msgbox.new({
-                            title:"Información",
-                            message:"La orden de compra fue completada con éxito",
-                            action:"save-success"
-                        })
-                    }else{
-                        this.$refs.msgbox.new({
-                            title:"Error",
-                            message:"Error al guardar la orden de compra",
-                            action:"save-error"
-                        })
-                    }
+                var appresp = httpresponse.data                
+                this.$refs.msgbox.new(appresp)                    
             });
         }
     }
