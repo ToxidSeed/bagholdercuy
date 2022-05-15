@@ -44,7 +44,12 @@ class EntryAPI(Resource):
             }
 
         obj_Loader = Loader(module_name, class_name, method_name, data=data)
-        return jsonify(obj_Loader.response)
+        response = None
+        if type(obj_Loader.response).__name__ == "Response":
+            response = obj_Loader.response.get_answer()
+        else:
+            response = obj_Loader.response
+        return jsonify(response)
 
 class Loader:
     def __init__(self, module_name, class_name, method_name, data={}):

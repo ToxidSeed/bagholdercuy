@@ -61,6 +61,9 @@ class Response:
         if self.raw_data is not None:
             self.__process()
         return self.answer
+
+    def get_answer(self):
+        return self.answer
     
     def __process(self):
         #Si se ingresa un formateador 

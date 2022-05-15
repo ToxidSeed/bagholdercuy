@@ -22,3 +22,4 @@ class StockTrade(db.Model):
     register_time = db.Column(db.Time)
     user_id = db.Column(db.Integer)
     order_id = db.Column(db.Integer)
+    num_orden = db.Column(db.Integer)

@@ -4,6 +4,7 @@ from common.AppException import AppException
 from model.StockTrade import StockTrade
 from model.StockSymbol import StockSymbol
 from model.OrderModel import OrderModel
+
 from model.StockTrade import StockTrade
 from model.TipoModel import TipoModel
 
@@ -17,137 +18,100 @@ from sqlalchemy.sql import extract
 import config as CONFIG
 
 
-class TradeManager:        
+class OperacionesManager:        
     def __init__(self):
         self.handlers = {
             "equity":GenericManager,
             "etf":GenericManager
         }
-    
-    def order(self, args={}):
-        try:
-            error = self.__validate(args)
-            if error is not None:
-                return Response().from_error(error)
 
-            symbol_obj = self.__get_symbol(args["symbol"])        
-            args["asset_type"] = symbol_obj.asset_type
-            order = Order().save(args)                            
+    def _get_handler(self, asset_type="equity"):
+        return self.handlers[asset_type]
 
-            #stock
-            handler = self.handlers[symbol_obj.asset_type]
-            handler(order).procesar()
-        
-            db.session.commit()
-            return Response(msg="Orden de compra ejecutada").get()
-        except Exception as e:
-            return Response().from_exception(e)
-
-    def __get_symbol(self, symbol=""):
-        #asset type                   
-        symbol_obj = db.session.query(StockSymbol).filter(
-            StockSymbol.symbol == symbol
-        ).first()
-
-        #check existence of symbol
-        if symbol_obj is None:
-            raise AppException(msg="El symbol {0} no se encuentra registrado".format(symbol))
-
-        return symbol_obj
-
-    def __validate(self, args={}):
-        #validate symbol
-        error = Error()
-        if "symbol" not in args:
-            error.add("No se ha enviado symbol como parámetro en httprequest")                        
-
-        symbol_input = args["symbol"]
-        symbol = StockSymbol.query.filter(
-            StockSymbol.symbol == symbol_input
-        ).first()
-
-        if symbol is None:
-            error.add("No se ha encontrado el symbolo {}".format(symbol_input))            
-
-        if "order_type" not in args:
-            error.add("No se ha enviado order_type como parámetro del request")
-
-        trade_type = args["order_type"]
-        if trade_type not in ["B","S"]:
-            error.add("el valor del parámetro [order_type] es invalido, valor enviado: {}".format(trade_type))
-
-        if "shares_quantity" not in args:
-            error.add("No se ha enviado [shares_quantity] como parámetro del request")
-
-        shares_quantity = args["shares_quantity"]
-        if float(shares_quantity) <= 0.00:
-            error.add("La cantidad de participaciones no puede ser menor o igual a 0")
-
-        args["shares_quantity"] = float(shares_quantity)
-
-        if "order_date" not in args:
-            error.add("No se ha enviado [order_date] como parámetro del request")
-        
-        order_date = date.fromisoformat(args["order_date"])
-        if order_date is None:
-            error.add("No se ha enviado una fecha de transacción correcta, valor enviado: {}".format(args["order_date"]))
-
-        if "price_per_share" not in args:
-            error.add("No se ha enviado [price_per_share] como parámetro del request")
-        
-        trade_price = float(args["price_per_share"])
-        if float(trade_price) <= 0.00:
-            error.add("El precio de la orden no puede ser menor o igual a 0")
-
-        args["price_per_share"] = float(trade_price)        
-
-        if error.has_errors():
-            return error
-        else:
-            return None
-
-class Order:
+class EliminadorEntryPoint:
     def __init__(self):
-        pass        
-
-    def save(self, args={}):        
-        order = OrderModel(
-                symbol = args["symbol"],
-                asset_type = args["asset_type"],
-                order_type = args["order_type"],
-                quantity = args["shares_quantity"],
-                price = args["price_per_share"],
-                order_date = date.fromisoformat(args["order_date"]),
-                register_date = datetime.now().date()
-            )
-
-        db.session.add(
-            order
-        )
-
-        db.session.flush()
-
-        return order
-
-class GenericManager:
-    def __init__(self, order:OrderModel=None):
-        self.order = order
-        self.saldo_orden = self.order.quantity
+        pass
 
     def procesar(self, args={}):
+        try:
+            self._validar(args)
+            opers = self._collect(args)
+            eliminador = Eliminador()
+            eliminador.procesar(opers)
+            db.session.commit()
+            return Response(msg="Las Operaciones se han eliminado correctamente").get()
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    def _validar(self, args={}):
+        errors = []
+        if "del_opers" not in args:
+            errors.append("El parámetro 'del_opers' no ha sido enviado")
+        
+        if len(errors) > 0:
+            raise AppException(msg="Se han encontrado errores de validación",errors=errors)
+
+    def _collect(self, args={}):
+        return args["del_opers"]    
+
+class Eliminador(OperacionesManager):
+    def __init__(self):
+        self.ids_opers = []        
+
+    def procesar(self, ids_opers=[]):
+        self.ids_opers = ids_opers
+        self._eliminar_opers()
+        self._eliminar_ordenes()        
+
+    def _eliminar_opers(self):
+        StockTrade.query.filter(
+            StockTrade.id.in_(self.ids_opers)
+        ).delete()
+
+    def _eliminar_ordenes(self):
+        ids_orden = self._get_ordenes_a_eliminar()
+        from controller.OrdenManager import Eliminador
+        Eliminador().procesar(ids_orden)
+
+    def _get_ordenes_a_eliminar(self):
+        ids_orden = []
+
+        ordenes = db.session.query(
+            StockTrade.order_id
+        ).distinct().\
+        filter(
+            StockTrade.id.in_(self.ids_opers)
+        ).all()
+
+        for orden in ordenes:
+            ids_orden.append(orden)
+
+        ids_orden = set(ids_orden)
+        return ids_orden
+
+class GenericManager:
+    def __init__(self):
+        self.order = None
+        self.saldo_orden = 0
+
+    def procesar(self, order:OrderModel):
+        self.order = order
+        self.saldo_orden = order.quantity
+
         if self.order.order_type == CONFIG.ORDEN_TIPO_COMPRA:
             self.comprar()
         if self.order.order_type == CONFIG.ORDEN_TIPO_VENTA:
             self.vender()
 
-    def comprar(self, args={}):
-        num_operacion = self.__get_ult_num_operacion(self.order.order_date.year)
+    def comprar(self):
+        num_operacion = self.__get_num_operacion()
         
         trade_date = self.order.order_date        
         trade_month = trade_date.month
         trade = StockTrade(
             symbol=self.order.symbol,
-            num_operacion=num_operacion+1,
+            num_operacion=num_operacion,
             trade_type = self.order.order_type,
             asset_type = self.order.asset_type,
             cantidad = self.order.quantity,
@@ -160,18 +124,19 @@ class GenericManager:
             imp_accion_origen=0,
             realized_gl=0,
             register_date = datetime.now().date(),
-            register_time = datetime.now().time()
+            register_time = datetime.now().time(),
+            order_id = self.order.order_id,
+            num_orden = self.order.num_orden            
         )
 
         db.session.add(trade) 
 
     def vender(self, args={}):
-        num_operacion = self.__get_ult_num_operacion(self.order.order_date.year)
-        
+        num_operacion = self.__get_num_operacion()
         opers_con_saldo = self.__obt_operaciones_saldo()
-        for oper in opers_con_saldo:
-            num_operacion+=1
+        for oper in opers_con_saldo:            
             self.__vender(oper, num_operacion)
+            num_operacion+=1
 
     def __vender(self, oper:StockTrade=None, num_operacion=1):
         trade_date = self.order.order_date        
@@ -230,28 +195,36 @@ class GenericManager:
             StockTrade.trade_type == CONFIG.ORDEN_TIPO_COMPRA
         ).order_by(StockTrade.num_operacion).all()
         return data
-
-    def __get_ult_num_operacion(self, anyo=0):
+    
+    def __get_num_operacion(self):    
         result = db.session.query(
             func.max(StockTrade.num_operacion).label("num_operacion")
         ).\
-        filter(extract('year',StockTrade.trade_date) == anyo).first()
+        filter(
+            StockTrade.trade_date == self.order.order_date,
+            StockTrade.symbol == self.order.symbol
+        ).first()            
 
-        num_operacion = 0
-        if result is not None and result.num_operacion is not None:
-            num_operacion = result.num_operacion
+        if result is None:
+            return 1
+        if result.num_operacion is None:
+            return 1
+        if result.num_operacion > 0:
+            return result.num_operacion + 1
 
-        return num_operacion
+        
 
 class BuscadorOperaciones:
     def __init__(self):
         pass
 
-    def obt_list(self, args={}):
+    def obt_historial_oper(self, args={}):
         try:
             query = db.session.query(
                 StockTrade.id,
                 StockTrade.num_operacion,
+                StockTrade.order_id,
+                StockTrade.num_orden,
                 StockTrade.asset_type,
                 StockTrade.symbol,
                 StockTrade.trade_type,
@@ -265,6 +238,7 @@ class BuscadorOperaciones:
                 StockTrade.imp_accion_origen,
                 StockTrade.realized_gl                
             ).outerjoin(TipoModel, StockTrade.trade_type == TipoModel.tipo_id)
+            query = query.order_by(StockTrade.trade_date.desc(),StockTrade.symbol.asc(),StockTrade.num_operacion.desc())
             data = query.all()
             return Response(raw_data=data).get()
         except Exception as e:

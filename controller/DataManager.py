@@ -377,8 +377,8 @@ class Options:
         
         calls = Converter.process_list(calls)
         puts = Converter.process_list(puts)
-        
-        return Response(input_data={"calls":calls,"puts":puts}).get() 
+                
+        return Response().from_raw_data({"calls":calls,"puts":puts})
         
     def get_symbol(self, symbol=""):
         sym = db.session.query(

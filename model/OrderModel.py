@@ -4,6 +4,7 @@ class OrderModel(db.Model):
     __tablename__ = "tb_order"
 
     order_id = db.Column(db.Integer, primary_key=True)
+    num_orden = db.Column(db.Integer)
     order_type = db.Column(db.String(1))
     symbol = db.Column(db.String(20))
     asset_type = db.Column(db.String(20))

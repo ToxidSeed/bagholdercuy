@@ -108,6 +108,19 @@ class SymbolFinder:
         ).limit(100).all()
         return Response().from_raw_data(data)
 
+    def get_datos_symbol(self, args={}):
+        try:
+            if "symbol" not in args:
+                raise AppException(msg="El parámetro 'symbol' no ha sido enviado")
+
+            symbol = args["symbol"]
+
+            datos = SymbolModel.query.filter(
+                SymbolModel.symbol == symbol
+            ).first()            
+            return Response().from_raw_data(datos)
+        except Exception as e:
+            return Response().from_exception(e)
 
 class DataLoader:
     def __init__(self):        

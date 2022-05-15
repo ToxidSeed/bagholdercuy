@@ -1,5 +1,5 @@
 from sqlalchemy import inspect
-from datetime import datetime
+from datetime import datetime, date
 
 def to_dict(element, clean=True):
     output = None
@@ -45,6 +45,33 @@ def to_clean_dict(element, formats={}):
 def process_list(inlist=[]):
     outlist = []
     for elem in inlist:
-        outelem = to_dict(elem)
+        #outelem = to_dict(elem)
+        outelem = format(elem)
         outlist.append(outelem)
     return outlist
+
+def format(indata=None):
+    if type(indata).__name__ == "list":
+        return process_list(inlist=indata)
+    if type(indata).__name__ == "date":    
+        return indata.isoformat()
+    if type(indata).__name__ == "Decimal":
+        return float(indata)
+    if type(indata).__name__ == "time":
+        return indata.strftime("%H:%M:%S")
+    if type(indata).__name__ == "dict":
+        return format_dict(indata)
+    if type(indata).__name__ in ['result','LegacyRow', 'Row']:
+        return format_dict(dict(indata))
+    if any("Model" == base.__name__ for base in indata.__class__.__bases__):
+        output = indata.__dict__
+        output.pop('_sa_instance_state')
+        return format_dict(output)
+    
+    return indata
+
+def format_dict(element=None):
+    for key, value in element.items():
+        element[key] = format(value)
+    return element
+
