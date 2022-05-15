@@ -4,7 +4,7 @@
         v-model="symbol"  
         use-input
         hide-selected                                      
-        fill-input
+        fill-input        
         input-debounce="1000"
         @filter="filterFn"
         @input="sel_symbol"
@@ -37,9 +37,8 @@ export default {
                 return
             }else{
                 this.$http.post(
-                this.$backend_url+'DataManager/Symbol/search',{
-                    symbol:val,
-                    asset_type:"stock"
+                'SymbolManager/SymbolFinder/buscar_por_texto',{
+                    texto:val                    
                 }).then(httpresponse => {
                     var appresponse = httpresponse.data
                     //console.log(appresponse.data)

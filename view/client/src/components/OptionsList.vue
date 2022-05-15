@@ -31,6 +31,11 @@
                     to="/historial_operaciones">
                         <q-item-section>Historial Operaciones</q-item-section>
                     </q-item>
+                    <q-item 
+                    active-class="my-menu-link"
+                    to="/historial_ordenes">
+                        <q-item-section>Historial Ordenes</q-item-section>
+                    </q-item>
                 </q-list>
             </q-expansion-item>
             <q-item 

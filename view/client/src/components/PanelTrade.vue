@@ -4,6 +4,7 @@
             <q-card>
                 <q-card-section>
                     <div class="text-h6">Order Entry</div>
+                    <div v-show="ref_num_orden_visible">Insertar {{insertar}} de la Orden: <span class="text-primary">{{ref_num_orden}}</span></div>
                 </q-card-section>
                 <q-separator />
                 <q-card-section>
@@ -18,28 +19,29 @@
                         :color="order.order_type=='S'?'red':'white'"
                         :text-color="order.order_type=='S'?'white':'black'"
                         @click="order.order_type='S'"
-                        />                 
-                        </q-btn-group>    
-                    </div>                              
+                        />
+                        </q-btn-group>
+                    </div>                  
                     <div class="row">
                         <div class="col-8">
                         <q-input v-model="symbol_search" label="symbol" ref="symbol" @input="search" debounce="1000">    
                             <template v-slot:after>
                             <q-icon name="search" @click="search" class="cursor-pointer"/>
-                            </template>                 
+                            </template>
                             <q-popup-proxy v-model="states.symbol_popup" @show="onShowProxy">
-                                <div :style="style.symbol_width">
-                                <q-list bordered separator>
-                                <q-item v-for="item in symbol_list" :key="item.id" clickable v-ripple @click="sel_symbol(item)">
-                                    <q-item-section>{{item.symbol}}-{{item.name}}</q-item-section>
-                                </q-item>                       
-                                </q-list>
-                                </div>
+                                <!--<div :style="style.symbol_width">-->
+                                    <q-list bordered separator>
+                                    <q-item v-for="item in symbol_list" :key="item.id" clickable v-ripple @click="sel_symbol(item)">
+                                        <q-item-section>{{item.symbol}}-{{item.name}}</q-item-section>
+                                    </q-item>                       
+                                    </q-list>
+                                <!--</div>-->
                             </q-popup-proxy>
                         </q-input>
                         </div>
                         <div class="col-4 q-pl-xs">
-                            <q-select v-model="order.asset_type" :options="asset_type_list" label="asset type" />                 
+                            <!--<q-select v-model="order.asset_type" :options="asset_type_list" label="asset type" />   -->
+                            <q-btn color="primary" @click="btn_opciones_click">Opciones</q-btn>         
                         </div>
                     </div>
                     <div class="q-pt-xs">{{order.symbol_name}}</div>
@@ -62,7 +64,7 @@
                             <q-date v-model="order.order_date" mask="YYYY-MM-DD" v-close-popup >                    
                             </q-date>
                             </q-popup-proxy>-->
-                        </q-input> 
+                        </q-input>
                     </div>
                 </q-card-section>
                 <q-separator />
@@ -77,14 +79,15 @@
         <PanelOptionsChain class="col-9" v-bind:asset_type="order.asset_type"
             v-on:option-select="option_selected"
         />
-        -->
-        
+        -->        
     </div>
 </template>
 <script>
 
 import MessageBox from './MessageBox.vue';
-import date from 'date-and-time';
+//import date from 'date-and-time';
+import date from '@/common/date.js'
+
 //import PanelOptionsChain from './PanelOptionsChain.vue';
 //import { ref } from 'vue'
 
@@ -95,6 +98,12 @@ export default {
         //PanelOptionsChain
     },
     props:{
+        ref_num_orden:{
+            default:""
+        },
+        insertar:{
+            default:""
+        },
         symbol:{
             default:""            
         },
@@ -102,6 +111,9 @@ export default {
             default:""
         },
         order_type:{
+            default:""
+        },
+        order_date:{
             default:""
         },
         update:{
@@ -118,7 +130,7 @@ export default {
                 price:"",
                 order_date:"",
                 order_type:"",
-                asset_type:"stock"                
+                asset_type:""                
             },
             states:{
                 symbol_popup:false
@@ -142,16 +154,26 @@ export default {
         }
     },
     computed:{
-        order_date_iso:function(){
-            var current_date = date.parse(this.order.order_date, 'DD/MM/YYYY')
-            return date.format(current_date, 'YYYY-MM-DD')
+        order_date_iso:function(){            
+            return date.format_to_iso(this.order.order_date,"DD/MM/YYYY")
+        },
+        ref_num_orden_visible:function(){
+            if (this.ref_num_orden.length == 0){
+                return false
+            }else{
+                return true
+            }
         }
     },
     mounted:function(){
+        console.log('mounted')
         //var var_order_date = new Date().toISOString().substring(0,10)
-        var var_order_date = date.format(new Date(), 'DD/MM/YYYY');
-                             
-        this.order.order_date = var_order_date
+        //var var_order_date = date.format(new Date(), 'DD/MM/YYYY');                
+        if (this.order_date != ""){
+            this.order.order_date = date.iso_to_format(this.order_date,"DD/MM/YYYY")
+            console.log(this.order.order_date)
+        }                             
+        
         var symbol_witdh = this.$refs.symbol.$el.control.clientWidth
         this.style.symbol_width = "width:"+symbol_witdh+"px";
 
@@ -160,6 +182,9 @@ export default {
         this.order.asset_type = this.asset_type
         this.order.order_type = this.order_type
         this.symbol_search = this.symbol
+        //
+        this.load_datos_symbol()
+
     },
     methods:{
         sel_symbol:function(item){
@@ -171,18 +196,28 @@ export default {
         onShowProxy:function(){
             this.$refs.symbol.focus()
         },
+        load_datos_symbol:function(){
+            this.$http.post(
+                'SymbolManager/SymbolFinder/get_datos_symbol',{
+                    symbol:this.order.symbol
+                }
+            ).then(httpresp => {
+                let appresp = httpresp.data
+                let data = appresp.data
+                this.order.asset_type = data.asset_type
+                this.order.symbol_name = data.name
+            })
+        },
         search:function(){
             if (this.symbol_search == ""){
                 return
             }
-
-            this.$http.post(
+            this.$http.post(    
             'SymbolManager/SymbolFinder/buscar_por_texto',{
                 texto:this.symbol_search
             }).then(httpresponse => {
                 var appresponse = httpresponse.data
                 this.symbol_list = appresponse.data
-
                 this.states.symbol_popup = true
             });
         },
@@ -191,7 +226,7 @@ export default {
             if (!(this.order.order_type == "B" || this.order.order_type == "S")){
                 this.$refs.msgbox.new({
                     title:"Error al guardar",
-                    message:"Debe seleccionar un tipo de participación",
+                    message:"Debe seleccionar un tipo de operacion",
                     action:"save"
                 })
                 return;
@@ -248,7 +283,9 @@ export default {
         },
         do_order:function(){
             this.$http.post(
-            'TradeManager/TradeManager/order',{
+            'OrdenManager/ProcesadorEntryPoint/procesar',{
+                ref_num_orden:this.ref_num_orden,
+                insertar:this.insertar,
                 symbol:this.order.symbol,
                 order_type:this.order.order_type,
                 shares_quantity:this.order.quantity,
@@ -257,8 +294,13 @@ export default {
                 asset_type:this.order.asset_type             
             }).then(httpresponse => {
                 var appresp = httpresponse.data                
-                this.$refs.msgbox.new(appresp)                    
+                this.$refs.msgbox.new(appresp)                   
             });
+        },
+        btn_opciones_click:function(){
+            this.$emit(
+                'btn_opciones_click',this.symbol
+            )
         }
     }
 }

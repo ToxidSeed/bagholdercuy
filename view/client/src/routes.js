@@ -12,6 +12,7 @@ import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCu
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
 import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
 import PanelHistorialOperaciones from '@/components/Holdings/PanelHistorialOperaciones.vue';
+import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue'
 
 Vue.use(VueRouter);
 
@@ -40,6 +41,8 @@ const routes =  [
       path:'/currency', component:MainPanelCurrency
     },{
       path:"/symbols", component:MainPanelSymbol
+    },{
+      path:"/historial_ordenes", component:MainPanelHistorialOrdenes
     }
 ]
 

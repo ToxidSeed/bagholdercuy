@@ -6,6 +6,8 @@
         <q-dialog v-model="panelTradeVisible">
             <PanelTrade
                 v-on:cerrar="panelTradeVisible=false"
+                v-bind:prev_oper="num_operacion"
+                v-bind:action="action"
             />
         </q-dialog>        
     </div>
@@ -22,13 +24,20 @@ export default {
     },
     data: () => {
         return {
-            panelTradeVisible:false
+            panelTradeVisible:false,
+            num_operacion:"",
+            action:""
         }
     },
     methods:{
-        ins_row_handler:function(prev_row){
-            console.log(prev_row)
+        ins_row_handler:function(prev_row){            
             this.panelTradeVisible = true
+            this.num_operacion = prev_row.num_operacion
+            this.action = "insertar"
+        },
+        sin_accion:function(){
+            this.num_operacion = ""
+            this.action = ""
         }
     }
 }

@@ -4,23 +4,37 @@
             title="Historial Operaciones"
             :data="data"
             :columns="columns"
+            selection="multiple"
+            :selected.sync="selected"
             row-key="id"
-            dense                   
+            dense       
+            :pagination="pagination"  
+            separator="vertical"                      
         >
-            <template v-slot:header="props">
-                <q-tr :props="props">
-                    <q-td>N. Operacion</q-td>
-                    <q-td>Symbol</q-td>
-                    <q-td>Operacion</q-td>
-                    <q-td>F. Operacion</q-td>
-                    <q-td>Cantidad</q-td>
-                    <q-td>Saldo</q-td>
-                    <q-td>Imp. Por Accion</q-td>
-                    <q-td>Imp. Por Operacion</q-td>
-                    <q-td>G/P Realizada</q-td>
-                </q-tr>
+            <template v-slot:top>
+                <div class="column">
+                    <div class="text-h5 col">Historial de Operaciones</div>                
+                    <div class="col">                        
+                        <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_opers" />
+                    </div>
+                </div>
             </template>
-            <template v-slot:body="props">
+            <!--<template v-slot:header="props">
+                <q-tr :props="props">
+                    <q-th><q-checkbox dense/></q-th>
+                    <q-th>N. Orden</q-th>
+                    <q-th>N. Operacion</q-th>
+                    <q-th>Symbol</q-th>
+                    <q-th>Operacion</q-th>
+                    <q-th>F. Operacion</q-th>
+                    <q-th class="text-right">Cantidad</q-th>
+                    <q-th class="text-right">Saldo</q-th>
+                    <q-th class="text-right">Imp. Por Accion</q-th>
+                    <q-th class="text-right">Imp. Por Operacion</q-th>
+                    <q-th class="text-right">G/P Realizada</q-th>
+                </q-tr>
+            </template>-->
+            <!--<template v-slot:body="props">
                 <q-tr :props="props">
                     <q-menu
                         touch-position
@@ -35,8 +49,12 @@
                             </q-item>
                         </q-list>
                     </q-menu>
+                    <q-td class="text-center"><q-checkbox v-model="props.row.selected" dense/></q-td>
+                    <q-td key="num_orden" :props="props">
+                        {{ props.row.num_orden }}
+                    </q-td>
                     <q-td key="num_operacion" :props="props">
-                        {{ props.row.num_operacion }}
+                        {{ props.row.symbol }}-{{date_format(props.row.trade_date)}}-{{ props.row.num_operacion }}
                     </q-td>
                     <q-td key="symbol" :props="props">
                         {{ props.row.symbol }}
@@ -63,13 +81,18 @@
                         {{ props.row.realized_gl }}
                     </q-td>
                 </q-tr>
-            </template>
-        </q-table>        
+            </template>-->
+        </q-table>  
+        <MessageBox ref="msgbox"/>      
     </div>
 </template>
 <script>
+import MessageBox from '@/components/MessageBox.vue';
 export default {
     name:"TableHistorialOperaciones",
+    components:{
+        MessageBox     
+    },
     data: () => {
         return {
             columns:[
@@ -78,6 +101,11 @@ export default {
                     align:"left",
                     field:"id",
                     name:"id"
+                },{
+                    label:"orden",
+                    align:"left",
+                    field:"num_orden",
+                    name:"num_orden"
                 },{
                     label:"N. Operacion",
                     field:"num_operacion",
@@ -100,22 +128,22 @@ export default {
                     name:"trade_date"
                 },{
                     label:"Cantidad",
-                    align:"left",
+                    align:"right",
                     field:"cantidad",
                     name:"cantidad"
                 },{
                     label:"Saldo",
-                    align:"left",
+                    align:"right",
                     field:"saldo",
                     name:"saldo"
                 },{
                     label:"Imp. Accion",
-                    align:"left",
+                    align:"right",
                     field:"imp_accion",
                     name:"imp_accion"
                 },{
                     label:"Imp. Operacion",
-                    align:"left",
+                    align:"right",
                     field:"imp_operacion",
                     name:"imp_operacion"
                 },{
@@ -123,10 +151,18 @@ export default {
                     align:"right",
                     field:"realized_gl",
                     name:"realized_gl"
+                },{
+                    label:"orden_id",
+                    align:"orden_id",
+                    field:"order_id",
+                    name:"order_id"
                 }
             ],
             data:[],
-            lastrow_contextmenu:null
+            selected:[],
+            pagination:{
+                rowsPerPage:30
+            }
         }
     },
     mounted:function(){
@@ -135,21 +171,37 @@ export default {
     methods:{
         obt_list:function(){
             this.$http.post(
-                'TradeManager/BuscadorOperaciones/obt_list',{
+                'OperacionesManager/BuscadorOperaciones/obt_historial_oper',{
                 }).then(httpresp => {
                     var appresp = httpresp.data
                     console.log(appresp)
                     this.data = appresp.data
                 })
-        },
-        row_contextmenu:function(evt, row){
-            this.lastrow_contextmenu = row     
-        },
+        },        
         ins_row:function(rclicked_row){
             this.$emit("ins_row",rclicked_row)
         },
-        del_row:function(rclicked_row){
-            console.log(rclicked_row)
+        del_opers:function(){
+            var del_opers = []
+            this.selected.forEach(elem => {
+                del_opers.push(elem.id)
+            })
+
+            del_opers = [...new Set(del_opers)]
+
+            this.$http.post(
+                'OperacionesManager/EliminadorEntryPoint/procesar',{
+                    del_opers:del_opers
+                }
+            ).then(httpresp => {
+                var appresp = httpresp.data
+                this.$refs.msgbox.new(appresp)
+                this.obt_list()
+            })
+        },
+        date_format(in_str){
+            var out_str = in_str.replaceAll("-","")    
+            return out_str
         }
     }
 }

@@ -1,23 +1,33 @@
 <template>
     <!--<div v-if="asset_type=='options'">-->
-    <div>        
+    <div>           
         <div class="row q-pa-sm">
-            <div class="col-3">
+            <div class="col-6" style="max-width:350px;">
                 <SelectSymbol v-on:select-symbol="select_symbol"/>
             </div>
             <div class="col-3 q-pl-xs">
                 <q-input class="col-6"
                 v-model="filter.expiration_date"                  
                 stack-label label="expiration date" 
-                mask="####-##-##" 
+                mask="##/##/####" 
                 fill-mask="#" 
-                hint="format: yyyy-mm-dd"
+                hint="format: dd/mm/yyyy"
                 debounce="1000"                 
-                @input="input_expiration_date"
+                @input="input_expiration_date"                
                 >
+                    <template v-slot:after>
+                        <q-icon name="arrow_drop_down" class="cursor-pointer" v-on:click="show_sel_exp=true"/>
+                    </template>                    
+                    <q-popup-proxy v-model="show_sel_exp">                        
+                        <q-list bodered separator dense>
+                            <q-item v-for="elem in exp_dates" :key="elem" clickable v-ripple style="width:150px;">
+                                <q-item-section>{{elem}}</q-item-section>
+                            </q-item>
+                        </q-list>                        
+                    </q-popup-proxy>                    
                 </q-input>
             </div>
-            <q-input class="col-2 q-pl-xs"
+            <q-input class="col-3 q-pl-xs"
             label="Strike"
             v-model="filter.strike"                  
             type="number"
@@ -35,8 +45,8 @@
                 :data="calls"
                 :columns="call_columns"
                 row-key="name"
-                :pagination="pagination"
-                :visible-columns="['symbol']"
+                :pagination="pagination"  
+                separator="vertical"              
                 >
                     <template v-slot:body="props">                        
                         <q-tr :props="props">
@@ -53,8 +63,16 @@
                                 </q-item>
                             </q-list>
                             </q-menu>
-                            <q-td key="symbol" :props="props">
+                            <q-td key="symbol" :props="props" style="width:30px">
                             {{props.row.symbol}}
+                            </q-td>
+                            <q-td style="width:30px">
+                                {{props.row.strike}}
+                            </q-td>
+                            <q-td style="width:30px">
+                                {{props.row.expiration_date}}
+                            </q-td>
+                            <q-td>
                             </q-td>
                         </q-tr>
                     </template>
@@ -68,6 +86,7 @@
                 :columns="put_columns"
                 row-key="name"
                 :pagination="pagination"
+                separator="vertical"
                 >
                     <template v-slot:body="props">
                     <q-tr :props="props">
@@ -84,14 +103,22 @@
                             </q-item>
                         </q-list>
                         </q-menu>
-                        <q-td key="symbol" :props="props">
+                        <q-td key="symbol" :props="props" style="width:30px">
                         {{props.row.symbol}}
+                        </q-td>
+                        <q-td style="width:30px">
+                            {{props.row.strike}}
+                        </q-td>
+                        <q-td style="width:30px">
+                            {{props.row.expiration_date}}
+                        </q-td>
+                        <q-td>
                         </q-td>
                     </q-tr>
                     </template>
                 </q-table>
             </div>
-        </div>
+        </div>        
     </div>
 </template>
 <script>
@@ -117,6 +144,7 @@ export default {
             },
             calls:[],
             puts:[],
+            exp_dates:[],
             call_columns:[{
                 align:"left",
                 name:"symbol",
@@ -151,7 +179,8 @@ export default {
             }],
             pagination:{
                 rowsPerPage:20
-            }
+            },
+            show_sel_exp:false
         }        
     },
     mounted:function(){
@@ -165,6 +194,10 @@ export default {
 
             //refresh data
             this.get_options_chain();
+        },
+        sel_exp_date:function(selected){
+            this.show_sel_exp = false
+            this.filter.expiration_date = selected            
         },
         input_expiration_date:function(){
             console.log(this.filter.expiration_date)
@@ -187,9 +220,8 @@ export default {
             if (this.filter.symbol == ""){
                 return;
             }
-
-            var endpoint = this.$backend_url+"DataManager/Options/get_options_chain"
-            this.$http.post(endpoint,{
+            
+            this.$http.post("OpcionesContratoManager/OpcionesContratoManager/get_options_chain",{
                 symbol:this.filter.symbol,
                 expiration_date:this.filter.expiration_date,
                 strike:this.filter.strike
@@ -198,6 +230,7 @@ export default {
                 var appdata = appresponse.data
                 this.calls = appdata["calls"]
                 this.puts = appdata["puts"]
+                this.exp_dates = appdata["exp_dates"]
             })
         },
         buy:function(data){    
