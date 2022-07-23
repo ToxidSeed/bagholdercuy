@@ -1,6 +1,6 @@
 <template>
     <div>
-        <q-list separator>
+        <q-list dense>
             <q-item 
             active-class="my-menu-link"
             to="/funds">
@@ -24,7 +24,7 @@
                     <q-item 
                     active-class="my-menu-link"
                     to="/holdings">
-                        <q-item-section>Balance</q-item-section>
+                        <q-item-section>Posiciones</q-item-section>
                     </q-item>
                     <q-item 
                     active-class="my-menu-link"
@@ -57,6 +57,11 @@
             active-class="my-menu-link"
             to="/symbols">
                 <q-item-section>Symbols</q-item-section>
+            </q-item>
+            <q-item 
+            active-class="my-menu-link"
+            to="/opciones">
+                <q-item-section>Opciones</q-item-section>
             </q-item>
         </q-list>
     </div>

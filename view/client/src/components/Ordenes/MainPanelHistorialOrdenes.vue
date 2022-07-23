@@ -15,12 +15,16 @@
                 v-bind:order_date="order_date"
             />
         </q-dialog>
-        <q-dialog v-model="panelOptionsChain">            
+        <q-dialog v-model="pnlOptionsChain.show">            
             <q-card style="width: 700px; max-width: 80vw;">
-                 <q-card-section class="bg-primary text-white">
+                 <q-card-section class="text-primary">
                     <div class="text-h6">Seleccionar Contrato</div>        
                 </q-card-section>
-                <PanelOptionsChain/>
+                <PanelOptionsChain
+                    v-on:sel-contract="sel_contract"
+                    v-bind:symbol_val="pnlOptionsChain.symbol.value"
+                    v-bind:contract="pnlOptionsChain.contract"
+                />
             </q-card>
         </q-dialog>        
     </div>
@@ -39,14 +43,21 @@ export default {
     },
     data: () => {
         return {
-            panelTradeVisible:false,
-            panelOptionsChain:false,
+            panelTradeVisible:false,            
             ref_num_orden:"",
             insertar:"",
             symbol:"",
             asset_type:"",
             order_type:"",
-            order_date:""
+            order_date:"",
+            pnlOptionsChain:{
+                show:false,
+                symbol:{
+                    value:"",
+                    name:""
+                },
+                contract:""
+            }
         }
     },
     methods:{
@@ -59,9 +70,15 @@ export default {
             this.order_date = row.order_date         
             this.panelTradeVisible = true
         },
-        abrir_opciones:function(symbol){
-            console.log(symbol)
-            this.panelOptionsChain = true
+        abrir_opciones:function(symbol, contract){
+            this.pnlOptionsChain.symbol.value = symbol
+            this.pnlOptionsChain.contract = contract
+            this.pnlOptionsChain.show = true
+            console.log(this.pnlOptionsChain)
+        },
+        sel_contract:function(symbol){            
+            this.symbol = symbol
+            this.pnlOptionsChain.show = false
         }
 
     }

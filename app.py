@@ -8,11 +8,10 @@ import traceback
 import sys, os
 import json
 
-
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 
-app.config.from_object("config")
+app.config.from_object("config.general")
 #app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
 
 

@@ -9,16 +9,13 @@
                 dense
                 class="text-grey"
                 active-color="primary"                
-            >         
-                <q-tab name="overview" icon="fas fa-chart-pie" label="Overview" />   
+            >                         
                 <q-tab name="holdings" icon="fas fa-cubes" label="Holdings" />                    
-                <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />    <div class="text-primary">Cash: 10300.75 USD</div>                
+                <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />    
+                <div class="text-primary text-h4">CASH: 10300.75 USD</div>                
             </q-tabs>            
             <q-separator />
-            <q-tab-panels v-model="tabmodel">
-                <q-tab-panel name="overview">
-                    <PanelOverview />
-                </q-tab-panel>
+            <q-tab-panels v-model="tabmodel">                
                 <q-tab-panel name="holdings">                    
                     <q-table
                     title="Posiciones"
@@ -89,18 +86,18 @@
 <script>
 import PanelTrade from './PanelTrade.vue';
 import PanelOptionsChain from './PanelOptionsChain.vue';
-import PanelOverview from './PanelOverview.vue';
+//import PanelOverview from './PanelOverview.vue';
 
 export default {
     name:"PanelHoldings",
     components:{
         PanelTrade,
-        PanelOptionsChain,
-        PanelOverview
+        PanelOptionsChain
+        //,PanelOverview
     },
     data:() =>{
         return {
-            tabmodel:"overview",
+            tabmodel:"holdings",
             order:{
                 symbol:"",
                 asset_type:"",
@@ -132,7 +129,7 @@ export default {
                     name:"total_pl"                    
                 },{
                     label:"shares",
-                    align:"left",
+                    align:"right",
                     field:"sum_shares_balance",
                     name:"sum_shares_balance"
                 },{

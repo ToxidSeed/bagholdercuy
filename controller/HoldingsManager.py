@@ -103,7 +103,7 @@ class iexcloud_bridge:
 
     def calc_val_adic(self, holding=None):        
         vals = {}
-        if holding.asset_type == "equity":
+        if holding.asset_type in ["equity","etf"]:
             vals = self.__calc_val_equity(holding)
         if holding.asset_type == "opciones":
             vals = self.__calc_val_opciones(holding)

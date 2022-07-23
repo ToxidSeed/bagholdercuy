@@ -3,6 +3,7 @@ from app import db
 import inspect
 from common.AppException import AppException
 from model.StockSymbol import StockSymbol as SymbolModel
+from model.OptionContract import OptionContract
 from common.Response import Response
 from datetime import datetime, date
 from common.api.iexcloud import iexcloud
@@ -110,6 +111,11 @@ class SymbolFinder:
 
     def get_datos_symbol(self, args={}):
         try:
+            data = {
+                "asset_type":"",
+                "name":""
+            }
+
             if "symbol" not in args:
                 raise AppException(msg="El parámetro 'symbol' no ha sido enviado")
 
@@ -117,8 +123,25 @@ class SymbolFinder:
 
             datos = SymbolModel.query.filter(
                 SymbolModel.symbol == symbol
-            ).first()            
-            return Response().from_raw_data(datos)
+            ).first()    
+
+            if datos is not None:
+                data["asset_type"] = datos.asset_type
+                data["name"] = datos.name
+                data["symbol"] = datos.symbol
+            
+            #si no hay respuesta buscamos en los contratos
+            if datos is None:
+                datos = OptionContract.query.filter(
+                    OptionContract.symbol == symbol
+                ).first()
+
+                if datos is not None:
+                    data["asset_type"] = "option contract"
+                    data["name"] = datos.description
+                    data["symbol"] = datos.symbol
+
+            return Response().from_raw_data(data)
         except Exception as e:
             return Response().from_exception(e)
 

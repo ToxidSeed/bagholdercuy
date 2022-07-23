@@ -24,7 +24,8 @@
                     </div>                  
                     <div class="row">
                         <div class="col-8">
-                        <q-input v-model="symbol_search" label="symbol" ref="symbol" @input="search" debounce="1000">    
+                        <q-input v-model="symbol_search" label="symbol" ref="symbol" 
+                        @input="search" debounce="1000">    
                             <template v-slot:after>
                             <q-icon name="search" @click="search" class="cursor-pointer"/>
                             </template>
@@ -33,7 +34,7 @@
                                     <q-list bordered separator>
                                     <q-item v-for="item in symbol_list" :key="item.id" clickable v-ripple @click="sel_symbol(item)">
                                         <q-item-section>{{item.symbol}}-{{item.name}}</q-item-section>
-                                    </q-item>                       
+                                    </q-item>
                                     </q-list>
                                 <!--</div>-->
                             </q-popup-proxy>
@@ -144,13 +145,18 @@ export default {
         }
     },
     watch:{
-        update:function(old, value){        
+        /*update:function(old, value){        
             if (old != value){
                 this.order.symbol = this.symbol
                 this.order.asset_type = this.asset_type
                 this.order.order_type = this.order_type
                 this.symbol_search = this.symbol            
             }
+        }*/
+        symbol:function(newval){                        
+            this.order.symbol = newval
+            this.symbol_search = newval
+            this.get_datos_symbol()
         }
     },
     computed:{
@@ -183,11 +189,12 @@ export default {
         this.order.order_type = this.order_type
         this.symbol_search = this.symbol
         //
-        this.load_datos_symbol()
+        this.get_datos_symbol()
 
     },
     methods:{
         sel_symbol:function(item){
+            console.log(item)
             this.states.symbol_popup=false
             this.order.symbol = item.symbol
             this.order.symbol_name = item.name
@@ -196,7 +203,7 @@ export default {
         onShowProxy:function(){
             this.$refs.symbol.focus()
         },
-        load_datos_symbol:function(){
+        get_datos_symbol:function(){
             this.$http.post(
                 'SymbolManager/SymbolFinder/get_datos_symbol',{
                     symbol:this.order.symbol
@@ -209,6 +216,7 @@ export default {
             })
         },
         search:function(){
+            console.log(this.symbol_search)
             if (this.symbol_search == ""){
                 return
             }
@@ -216,6 +224,7 @@ export default {
             'SymbolManager/SymbolFinder/buscar_por_texto',{
                 texto:this.symbol_search
             }).then(httpresponse => {
+                console.log(httpresponse)
                 var appresponse = httpresponse.data
                 this.symbol_list = appresponse.data
                 this.states.symbol_popup = true
@@ -298,8 +307,19 @@ export default {
             });
         },
         btn_opciones_click:function(){
+            let symbol = this.symbol
+            let text = this.symbol_search
+
+            if(symbol == text){
+                text = ""
+            }
+
+            if (symbol != text && text != ""){
+                symbol = ""
+            }
+
             this.$emit(
-                'btn_opciones_click',this.symbol
+                'btn_opciones_click',symbol, text
             )
         }
     }

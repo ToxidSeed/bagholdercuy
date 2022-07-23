@@ -6,6 +6,7 @@ from common.Response import Response
 from model.StockSymbol import StockSymbol
 from model.StockTrade import StockTrade
 import sqlalchemy.sql.functions as func
+import json
 
 class OrdenManager:
     def __init__(self, num_orden_ref=0, accion=""):
@@ -45,7 +46,18 @@ class OrdenManager:
         
         return prev_orden.num_orden + 1
 
-class ProcesadorEntryPoint:
+    def get_symbol(self, symbol=""):
+        symbol = StockSymbol.query.filter(
+            StockSymbol.symbol == symbol
+        ).first()
+
+        if symbol is None:
+            raise AppException(msg="No se ha encontrado el symbolo {}".format(symbol))
+
+        return symbol
+
+
+class ProcesadorEntryPoint(OrdenManager):
     def __init__(self):
         pass
 
@@ -63,8 +75,7 @@ class ProcesadorEntryPoint:
     def _collect(self, args={}):        
                
         order = OrderModel(
-                symbol = args["symbol"],                
-                asset_type = args["asset_type"],
+                symbol = args["symbol"],                                
                 order_type = args["order_type"],
                 quantity = int(args["shares_quantity"]),
                 price = float(args["price_per_share"]),
@@ -81,18 +92,7 @@ class ProcesadorEntryPoint:
         errors = []
         if "symbol" not in args:
             errors.append("No se ha enviado symbol como parámetro en httprequest")                        
-
-        symbol_input = args["symbol"]
-        symbol = StockSymbol.query.filter(
-            StockSymbol.symbol == symbol_input
-        ).first()
-
-        if symbol is None:
-            errors.append("No se ha encontrado el symbolo {}".format(symbol_input))            
-
-        if "order_type" not in args:
-            errors.append("No se ha enviado order_type como parámetro del request")
-
+        
         trade_type = args["order_type"]
         if trade_type not in ["B","S"]:
             errors.append("el valor del parámetro [order_type] es invalido, valor enviado: {}".format(trade_type))
@@ -139,6 +139,10 @@ class Procesador(OrdenManager):
     def procesar(self, nu_orden:OrderModel):        
         self.orden = nu_orden
         nu_orden.num_orden = self._get_sig_num_orden()
+        symbol_obj = self.get_symbol(nu_orden.symbol)
+
+        nu_orden.asset_type = symbol_obj.asset_type
+
         nu_orden = self._insertar(nu_orden)
         self.gen_operaciones_x_orden(nu_orden)
 
@@ -249,6 +253,10 @@ class EliminadorEntryPoint:
         errors = []
         if "ids_ordenes" not in args:
             errors.append("El parámetro 'ids_ordenes' no ha sido enviado en la petición")
+        else:
+            ids_ordenes = args["ids_ordenes"]
+            if len(ids_ordenes) == 0:
+                errors.append("No se ha indicado ninguna orden a eliminar")
 
         if len(errors) > 0:
             raise AppException(msg="Se han encontrado errores de entrada en la petición", errors=errors)

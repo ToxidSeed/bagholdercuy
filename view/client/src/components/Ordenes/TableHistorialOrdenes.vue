@@ -14,18 +14,18 @@
         >
             <template v-slot:top>
                 <q-btn color="primary"  label="Nuevo" />
-                <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_orden" />
+                <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_ordenes" />
                 <q-btn class="q-ml-sm" color="warning"  label="Reprocesar Todo" @click="rep_todo" />
             </template>
             <template v-slot:header="props">
                 <q-tr :props="props">
-                    <q-th style="width:15px"><q-checkbox dense v-model="all_selected"/></q-th>
-                    <q-th class="text-left" 
-                    style="width:30px"
-                    >N. Orden</q-th>                    
+                    <q-th style="width:15px"><q-checkbox dense v-model="all_selected"/></q-th>                                    
                     <q-th class="text-left"
                     style="width:30px"
                     >Fch. Orden</q-th>                    
+                    <q-th class="text-left" 
+                    style="width:30px"
+                    >N. Orden</q-th>    
                     <q-th class="text-left"
                     style="width:30px"
                     >Tipo</q-th>
@@ -56,12 +56,12 @@
                             </q-item>
                         </q-list>
                     </q-menu>
-                    <q-td class="text-center"><q-checkbox v-model="props.row.selected" dense/></q-td>
-                    <q-td key="num_orden" :props="props">
-                        {{ props.row.num_orden }}
-                    </q-td>
+                    <q-td class="text-center"><q-checkbox v-model="props.row.selected" dense/></q-td>                    
                     <q-td key="order_date" :props="props">
                         {{  props.row.order_date }}
+                    </q-td>
+                    <q-td key="num_orden" :props="props">
+                        {{ props.row.num_orden }}
                     </q-td>
                     <q-td key="order_type" :props="props">
                         {{  props.row.order_type }}
@@ -159,10 +159,13 @@ export default {
                 this.data = appdata.data                
             })
         },
-        del_orden(){
-            var ids_ordenes = []
+        del_ordenes(){
+            let ids_ordenes = []
+            let selected = this.data.filter(elem =>{
+                return elem.selected == true
+            })
             
-            this.selected.forEach(element => {
+            selected.forEach(element => {
                 ids_ordenes.push(element.order_id)
             })
 

@@ -1,7 +1,8 @@
 from app import app, db
 import requests
 from datetime import datetime, date
-from common.api.MarketAPI import Quote
+
+import config as CONFIG
 
 
 class Alphavantage:
@@ -9,6 +10,14 @@ class Alphavantage:
         self.default_endpoint = "https://www.alphavantage.co/query"
         self.key = app.config["ALPHAVANTAGE_KEY"]        
         pass    
+
+    def fx_faily(self, params={}):
+        params["function"] = "FX_DAILY"
+        params["apikey"] = CONFIG.ALPHAVANTAGE_KEY
+
+        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT, params=params)
+        data = response.json()
+        return data
 
     def get_daily_data_since(self, symbol, since):
         outputsize = "compact"
@@ -20,7 +29,7 @@ class Alphavantage:
             "function":function,            
             "symbol":symbol,
             "outputsize":outputsize,
-            "apikey":self.key
+            "apikey":CONFIG.ALPHAVANTAGE_KEY
         }        
 
         response = requests.get(self.default_endpoint, params=params)
@@ -116,3 +125,33 @@ class Alphavantage:
         )
                 
         return quote
+
+    def time_series_weekly_adjusted(self, args={}):
+        function = "TIME_SERIES_WEEKLY_ADJUSTED"
+        symbol = args["symbol"]
+
+        params = {
+            "function":function,            
+            "symbol":symbol,            
+            "apikey":CONFIG.ALPHAVANTAGE_KEY
+        }
+        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT,params)
+        data = response.json()
+        series = data["Weekly Adjusted Time Series"]
+        return series
+
+    def time_series_monthly_adjusted(self, args={}):
+        function = "TIME_SERIES_MONTHLY_ADJUSTED"
+        symbol = args["symbol"]
+
+        params = {
+            "function":function,            
+            "symbol":symbol,            
+            "apikey":CONFIG.ALPHAVANTAGE_KEY
+        }
+
+        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT,params)
+        data = response.json()
+        series = data["Monthly Adjusted Time Series"]
+        return series
+        

@@ -154,7 +154,9 @@ class iexcloud:
             'Content-Type': 'application/json'
         }
 
+        
         params["token"] = config.IEXCLOUD_KEY
+        params["symbols"] = "USDPEN"
 
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()

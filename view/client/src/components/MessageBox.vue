@@ -2,7 +2,7 @@
     <q-dialog v-model="opened" persistent transition-show="flip-down" transition-hide="flip-up">
       <q-card> 
             <q-card-section class="q-pt-xs q-pb-xs" >
-                <q-icon name="fa fa-info-circle" size="md" color="red" text-color="white" /> {{title}}            
+                <q-icon :name="msgdata.icon" size="md" :color="msgdata.color" text-color="white" /> {{title}}            
             </q-card-section>
             <q-separator/>
             <q-card-section class="q-pt-md q-pb-xs">
@@ -15,6 +15,15 @@
                             {{item}}
                         </li>
                     </ul>
+                </div>
+            </q-card-section>
+            <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
+                <div class="text-accent text-weight-bold">URL petición</div><div>{{url}}</div>
+            </q-card-section>
+            <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
+                <div class="text-red text-weight-bold">Stacktrace</div>
+                <div v-for="error in stacktrace" v-bind:key="error">
+                    {{error}}
                 </div>
             </q-card-section>            
         <q-separator />
@@ -34,10 +43,25 @@
                 message:"",
                 action:"",
                 errors:[],
-                opened: false
+                stacktrace:[],
+                url:"",
+                opened: false,
+                mostrar_info_error:false,
+                msgdata:{
+                    icon:"",
+                    color:""
+                },
+                error:{
+                    icon:"fa fa-exclamation",
+                    color:"red"
+                },
+                info:{
+                    icon:"fa fa-info-circle",
+                    color:"primary"
+                }
             }
         },
-        methods:{
+        methods:{            
             new:function(appresp=null, args=null){
                 this.errors = []
                 this.opened = true;
@@ -55,16 +79,42 @@
                     }
                 }                
             },
+            httpresp:function(httpresp=null){
+                this.errors = []
+                this.stacktrace=[]
+                this.url = ""
+                this.opened = true;
+                this.url = httpresp.config.url
+                var appdata = httpresp.data
+                this.process_appresp(appdata)
+            },            
             process_appresp:function(appresp){
-                var has_errors = false    
-                console.log(has_errors)                                
+                let error = false
+                let stacktrace = false
+                //var has_errors = false                                            
                 if (appresp != null){
+                    //
                     if (appresp.errors.length > 0){
-                        has_errors = true
-                        this.errors = appresp.errors
+                        //has_errors = true
+                        this.errors = appresp.errors                        
+                        error = true
                     }
-                    this.message = appresp.message
-                    this.title = "Error"
+                    if (appresp.stacktrace != null && appresp.stacktrace.length > 0){
+                        this.stacktrace = appresp.stacktrace
+                        stacktrace = true
+                    }
+                    
+                    //mostrar el dialogo si hay error
+                    if (error == true || stacktrace==true){
+                        this.mostrar_info_error = true
+                        this.msgdata = this.error
+                        this.title = "Error"
+                    }else{
+                        this.mostrar_info_error = false
+                        this.msgdata = this.info
+                        this.title = "Información"
+                    }                                                        
+                    this.message = appresp.message                                        
                 }
             },
             onOk(){

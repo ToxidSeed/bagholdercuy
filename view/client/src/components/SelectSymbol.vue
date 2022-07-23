@@ -1,6 +1,7 @@
 <template>
-    <q-select                                        
-        label="Symbol"
+    <q-select   
+        ref="selsymbol"                                     
+        label="Buscar symbol"
         v-model="symbol"  
         use-input
         hide-selected                                      
@@ -15,18 +16,35 @@
 <script>
 export default {
     name:"SelectSymbol",
+    props:{
+        in_symbol:{
+            type:String,
+            default:""
+        }
+    },    
     data:() => {
         return {
             symbol:"",
             symbol_list:[]
         }
     },
+    mounted:function(){        
+        if (this.in_symbol != ""){
+            this.symbol = {
+                "value":this.in_symbol,
+                "label":this.in_symbol
+            }            
+        }        
+    },
     methods:{
         sel_symbol:function(selected){            
-            this.selected_symbol = selected
+            //this.symbol = selected
+            this.symbol=""
+            this.$refs.selsymbol.blur()            
             this.$emit('select-symbol',selected)   
         },
         filterFn:function(val, update ) {  
+            console.log(val)
             if (val === '') {
                 update(() => {
                     this.symbol_list = []
@@ -34,7 +52,7 @@ export default {
                     // here you have access to "ref" which
                     // is the Vue reference of the QSelect
                 })
-                return
+                this.symbol = ""                
             }else{
                 this.$http.post(
                 'SymbolManager/SymbolFinder/buscar_por_texto',{
@@ -47,7 +65,7 @@ export default {
                     for (let element of appresponse.data){
                         options.push({
                             "value":element["symbol"],
-                            "label":element["symbol"]+" ("+element["name"]+")"
+                            "label":element["name"]
                         })
                     }
                                                             

@@ -1,9 +1,9 @@
 <template>
     <div>
         <div>
-            <q-btn color="green" label="Deposit" @click="deposit"/>
-            <q-btn color="red" label="Withdraw" @click="withdraw"/>
-            <q-btn color="primary" label="Convert" @click="convert"/>
+            <q-btn class="q-mb-xs" color="green" label="Deposit" @click="deposit"/>
+            <q-btn class="q-ml-xs q-mb-xs" color="red" label="Withdraw" @click="withdraw"/>
+            <q-btn class="q-ml-xs q-mb-xs" color="primary" label="Convert" @click="convert"/>
         </div>
         <div class="row" >
             <div v-if="panel_show==true" class="col-3">                

@@ -51,7 +51,7 @@ def process_list(inlist=[]):
     return outlist
 
 def format(indata=None):
-    if type(indata).__name__ == "list":
+    if type(indata).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
         return process_list(inlist=indata)
     if type(indata).__name__ == "date":    
         return indata.isoformat()
@@ -72,6 +72,5 @@ def format(indata=None):
 
 def format_dict(element=None):
     for key, value in element.items():
-        element[key] = format(value)
+        element[key] = format(value)                
     return element
-

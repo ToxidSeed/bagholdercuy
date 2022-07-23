@@ -7,12 +7,13 @@ import PanelTrade from './components/PanelTrade.vue';
 import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
 import PanelHoldings from './components/PanelHoldings.vue';
-import PanelFunds from './components/Funds/PanelFunds.vue'
+import MainPanelFunds from './components/Funds/MainPanelFunds.vue'
 import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCurrencyExchange.vue';
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
 import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
 import PanelHistorialOperaciones from '@/components/Holdings/PanelHistorialOperaciones.vue';
-import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue'
+import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue';
+import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 
 Vue.use(VueRouter);
 
@@ -20,7 +21,7 @@ const routes =  [
     {
       path:'/', component:PanelSimulationDataEntry,     
     },{
-      path:'/funds', component:PanelFunds
+      path:'/funds', component:MainPanelFunds
     },{
       path:'/currencyexchange', component:MainPanelCurrencyExchange
     },{
@@ -43,6 +44,8 @@ const routes =  [
       path:"/symbols", component:MainPanelSymbol
     },{
       path:"/historial_ordenes", component:MainPanelHistorialOrdenes
+    },{
+      path:"/opciones", component:MainMantOpciones
     }
 ]
 

@@ -1,0 +1,65 @@
+<template>
+    <div>
+        <q-table
+            :data="data"
+            :columns="columns"        
+            row-key="symbol"
+            dense
+            :pagination="pagination"
+        />
+    </div>
+</template>
+<script>
+export default {
+    name:"TableOpciones",
+    data: () => {
+        return {
+            data:[],
+            columns:[
+                {
+                    label:"ID",
+                    align:"left",
+                    field:"id",
+                    name:"id"
+                },{
+                    label:"Symbol",
+                    align:"left",
+                    field:"symbol",
+                    name:"symbol"
+                },{
+                    label:"Subyacente",
+                    align:"left",
+                    field:"subyacente",
+                    name:"subyacente"                
+                },{
+                    label:"Side",
+                    align:"left",
+                    field:"side",
+                    name:"side"
+                },{
+                    label:"Fch. exp",
+                    align:"left",
+                    field:"fch_exp",
+                    name:"fch_exp"
+                },{
+                    label:"Strike",
+                    align:"left",
+                    field:"strike",
+                    name:"strike"
+                }
+            ],
+            pagination:{
+                rowsPerPage:20
+            }
+        }
+    },
+    mounted:function(){
+        this.get_opciones()
+    },
+    methods:{
+        get_opciones:function(){
+
+        }
+    }
+}
+</script>

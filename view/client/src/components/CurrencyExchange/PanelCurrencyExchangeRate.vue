@@ -37,8 +37,8 @@ export default {
         }
     },
     methods:{
-        cancelar:function(){
-            this.$emit('conversion-moneda-cancel')
+        cancelar:function(){            
+            this.$emit('conversion-moneda-cancel')            
         },
         pair_select_handler:function(data){
             console.log(data)

@@ -7,13 +7,19 @@ from common.Response import Response
 from common.AppException import AppException
 import config as CONFIG
 
-from sqlalchemy import func, true
+from sqlalchemy import func, true, and_
 
 from controller.AuthManager import AuthManager
 from model.ConversionModel import ConversionModel
 #from model.FundsHistory import FundsHistory
 from model.TransaccionFondosModel import TransaccionFondosModel
 from model.CurrencyModel import CurrencyModel
+from model.CurrencyExchangeModel import CurrencyExchangeModel as CurrencyExchange
+from model.MovimientoFondosModel import MovimientoFondosModel
+from config.negocio import *
+import config.negocio as CFG_NEG
+import config.general as CFG_GEN
+from model.bussiness.deposito_handler import DepositoHandler
 
 class FundsManager:
 
@@ -25,11 +31,11 @@ class FundsManager:
 
         funds = db.session.query(\
             TransaccionFondosModel.moneda_symbol,\
-            func.sum(TransaccionFondosModel.saldo).label("importe")\
+            func.sum(TransaccionFondosModel.imp_saldo_trans).label("importe")\
         ).filter(
             TransaccionFondosModel.moneda_symbol.ilike("%{0}%".format(symbol)),
             TransaccionFondosModel.tipo_transaccion == CONFIG.CONST_TIPO_TRANSACCION_INGRESO,
-            TransaccionFondosModel.saldo > 0.00
+            TransaccionFondosModel.imp_saldo_trans > 0.00
         ).group_by(TransaccionFondosModel.moneda_symbol).all()
 
         #import logging
@@ -42,66 +48,48 @@ class FundsManager:
 
         return Response().from_raw_data(funds, formats=formats)
 
-class Deposit:
-    def __init__(self, subtipo = CONFIG.CONST_SUBTIPO_TRANS_DEPOSITO):
-        self.subtipo_transaccion = subtipo
+class Historial:
+    def __init__(self):
+        pass
 
-    def do(self, args={}):
+    def get(self, args={}):
+        funds = db.session.query(
+            TransaccionFondosModel
+        ).order_by(TransaccionFondosModel.fec_transaccion.desc(), TransaccionFondosModel.num_transaccion.desc())\
+        .all()
+
+        return Response().from_raw_data(funds)   
+
+class DepositResource():
+    def __init__(self):
+        pass
+
+    def add(self, args={}):
         try:
-            self.process(args)
+            self.val_add(args)
+            new_deposit = self.__collect(args)            
+            DepositoHandler().add(new_deposit)
             db.session.commit()
-            return Response(msg="Se ha depositado correctamente").get()
+            return Response(msg="Se ha depositado correctamente {0} {1}".format(new_deposit.mon_trans_id,new_deposit.imp_transaccion)).get()
         except Exception as e:
             db.session.rollback()
             return Response().from_exception(e)
-    
-    def process(self, args={}):
-        new_deposit = self.__to_object(args)            
-        auth_info = AuthManager().get_user_information()
 
-        new_deposit.user_id =  auth_info["user_id"]
-        new_deposit.fec_registro = date.today()
-        new_deposit.subtipo_transaccion = self.subtipo_transaccion
-        new_deposit.fec_audit = datetime.now()
-        new_deposit.est_transaccion_fondos_id = CONFIG.CONST_ESTADO_TRANS_FONDOS_REGISTRADO
-        new_deposit.tipo_transaccion = CONFIG.CONST_TIPO_TRANSACCION_INGRESO
-        new_deposit.concepto = ""
-
-        self.__check_moneda(new_deposit.moneda_symbol)
-        db.session.add(new_deposit)
-
-    def __check_moneda(self, moneda_symbol=""):
-        moneda_found = CurrencyModel.query.filter(
-            CurrencyModel.currency_symbol == moneda_symbol
-        ).first()
-
-        if moneda_found is None:
-            raise AppException(msg="La moneda {0} no existe en la base de datos".format(moneda_symbol))
-
-        return True
-
-    def __to_object(self, args={}):
-        fund = TransaccionFondosModel()
-        fund.fec_audit = datetime.now()
-
+    def val_add(self, args={}):
         errors = []
         if "moneda_symbol" not in args:
             errors.append("El parámetro 'moneda_symbol' no se encuentra en la petición")
         else:
             moneda_symbol = args["moneda_symbol"]
             if not moneda_symbol:
-                errors.append("No se ha ingresado/seleccionado la moneda del depósito")         
-            fund.moneda_symbol = moneda_symbol    
+                errors.append("No se ha ingresado/seleccionado la moneda del depósito")                 
 
         if "importe" not in args:
             errors.append("El parámetro 'importe' no se encuentra en la petición")
-
-        importe = float(args["importe"])
-        if importe <= 0:
-            errors.append("El importe ingresados es menor o igual a 0")
-
-        fund.importe = importe
-        fund.saldo = importe
+        else:
+            importe = float(args["importe"])
+            if importe <= 0:
+                errors.append("El importe ingresados es menor o igual a 0")
 
         #validando la fecha de registro
         if "fec_deposito" not in args:
@@ -110,17 +98,25 @@ class Deposit:
             #converting date client to date server
             fec_transaccion_parm = args["fec_deposito"]
             try:
-                fund.fec_transaccion = datetime.strptime(fec_transaccion_parm,CONFIG.CLIENT_DATE_FORMAT).date()                
+                datetime.strptime(fec_transaccion_parm,CFG_GEN.CLIENT_DATE_FORMAT).date()                
             except ValueError as e:                
                 errors.append("Error al convertir a date: {0}".format(str(e)))
 
         if len(errors) > 0:
             raise AppException(msg="Errores en la validación del depósito", errors=errors)
 
+    def __collect(self, args={}):
+        fund = TransaccionFondosModel()
+        fund.fec_transaccion = datetime.strptime(args['fec_deposito'],CFG_GEN.CLIENT_DATE_FORMAT).date()        
+        fund.tipo_trans_id = TIPO_TRANS_DEPOSITO
+        fund.imp_transaccion = float(args["importe"])
+        fund.mon_trans_id = args["moneda_symbol"]
+        fund.fec_registro = datetime.now().date()
+        fund.fec_audit = datetime.now()                                
         return fund
 
 class Withdraw:
-    def __init__(self, subtipo=CONFIG.CONST_SUBTIPO_TRANS_RETIRO):
+    def __init__(self):
         self.moneda_symbol = None
         self.importe = None
         self.saldo = None

@@ -4,32 +4,17 @@
             <!--<q-card  class="col-3 q-mt-xs q-ml-md">-->
                 <!--<q-input v-model="symbol" label="Symbol" dense />-->
                 <!--@filter="filterFn"-->
-            <q-card class="col-3 q-pa-sm">
+            <q-card class="col-4 q-pa-sm">
                 <q-card-section class="q-pa-xs">
                     <div class="text-h6">Series</div>                    
                 </q-card-section>
                 <q-card bordered>
-                    <q-card-section>
-                        <div color="indigo" class="text-primary">Buscar symbols</div>                    
-                        <q-select                                        
-                            label="Symbol"
-                            v-model="symbol"  
-                            use-input
-                            hide-selected                                      
-                            fill-input
-                            input-debounce="1000"
-                            @filter="filterFn"
-                            @input="sel_symbol"
-                            :options="symbol_list"
-                            dense                    
-                            clearable                    
-                        >                                   
-                        </q-select>
-                        <div>
-                            <q-checkbox v-model="asset_type.stock" label="Stock"/>
-                            <q-checkbox v-model="asset_type.etf" label="ETF"/>
-                            <!--<q-checkbox v-model="asset_type.options" label="Options"/>-->
-                        </div>
+                    <q-card-section>                        
+                        <SelectSymbol
+                            v-on:select-symbol="sel_symbol"
+                        />
+                        <div class="text-h6 text-weight-bold">{{symbol.value}}</div>
+                        <div>{{symbol.name}}</div>
                     </q-card-section>
                 </q-card>                
                 <q-card-section class="q-pa-none">                                        
@@ -50,34 +35,42 @@
                         />
                     </div>                    
                 </q-card-section>
-                <q-card-action>
+                <q-card-actions>
                     <q-btn color="primary" label="Load" class="q-mt-xs" @click="load"/>
                     <q-btn color="primary" label="Reset" class="q-mt-xs q-ml-xs" @click="load"/>
-                </q-card-action>
+                </q-card-actions>
             </q-card >
             <DataloaderOptions class="col-3"/>
         </div>
+        <MsgBox ref="msgbox"/>
     </div>
 </template>
 <script>
 //import MessageBox from './MessageBox.vue';
 import DataloaderOptions from './DataLoaderOptions.vue'
+import SelectSymbol from "@/components/SelectSymbol.vue"
+import MsgBox from "@/components/MessageBox.vue"
 
 export default {
     name:"DataLoader",
     components:{
-        DataloaderOptions
+        DataloaderOptions,
+        SelectSymbol,
+        MsgBox
     },
     data:() => {
         return {            
             country:"",
-            frequency:"",
-            symbol:"",
+            frequency:"daily",
+            symbol:{
+                value:"",
+                name:""
+            },
             selected_symbol:{},
             symbol_list:[],
             options:['daily', 'weekly', 'monthly', 'yearly'],
             methods:['replace','append'],
-            method:"append",
+            method:"replace",
             loading:false,
             asset_type:{
                 stock:true,
@@ -93,49 +86,20 @@ export default {
         load:function(){
             var symbol_value = this.symbol.value
             this.$http.post(
-            'DataManager/DataManager/load',{
+            'SerieManager/SerieManager/load',{
                 symbol:symbol_value,
+                method:this.method,
                 frequency:this.frequency
             }).then(httpresponse => {
-                console.log(httpresponse);
+                let appresp = httpresponse.data
+                this.$refs.msgbox.new(appresp)
             })
         },
         sel_symbol:function(selected){            
-            this.selected_symbol = selected            
-        },
-
-        filterFn:function(val, update ) {  
-            if (val === '') {
-                update(() => {
-                    this.symbol_list = []
-    
-                    // here you have access to "ref" which
-                    // is the Vue reference of the QSelect
-                })
-                return
-            }else{
-                this.$http.post(
-                'DataManager/Symbol/search',{
-                    symbol:val,
-                    asset_type:this.asset_type
-                }).then(httpresponse => {
-                    var appresponse = httpresponse.data
-                    //console.log(appresponse.data)
-                    /*this.symbol_list = appresponse.data*/
-                    var options = []
-                    for (let element of appresponse.data){
-                        options.push({
-                            "value":element["symbol"],
-                            "label":element["symbol"]+" ("+element["name"]+")"
-                        })
-                    }
-                                                            
-                    update(() => {
-                        this.symbol_list = options                            
-                    })
-                })
-            }
-            
+            //this.selected_symbol = selected       
+            this.symbol.value = selected.value
+            this.symbol.name = selected.label    
+            console.log(selected)
         }
 
     }

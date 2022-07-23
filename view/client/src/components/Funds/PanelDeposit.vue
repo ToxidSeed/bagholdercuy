@@ -15,16 +15,15 @@
                     />
                 </div>
                 <div class="row">
-                    <q-input v-model="fec_deposito"
-                    label="Fec. Depósito" mask="##/##/####"
-                    fill-mask="_" input-class="text-right q-pl-xs"                 
+                    <q-input v-model="fec_deposito" label="Fec. Depósito" mask="##/##/####"
+                    fill-mask="#" class="q-pl-xs col-5"                 
                     />
                 </div>
 
             </q-card-section>
             <q-card-section>
                 <q-btn color="primary" label="Guardar" @click="save"/>
-                <q-btn color="white" text-color="red" label="Cancelar" @click="cancelar"/>
+                <q-btn color="red" class="q-ml-xs" label="Cancelar" @click="cancelar"/>
             </q-card-section>
         </q-card>
         <MessageBox ref="msgbox"/>
@@ -33,6 +32,8 @@
 <script>
 import SelectMoneda from '../SelectMoneda.vue'
 import MessageBox from '../MessageBox.vue'
+import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
+import date from 'date-and-time'
 
 export default {
     name:"PanelDeposit",
@@ -47,8 +48,9 @@ export default {
             fec_deposito:""
         }
     },
-    mounted:function(){
-
+    mounted:function(){        
+        this.fec_deposito = date.format(new Date(),CLIENT_DATE_FORMAT)
+        console.log(this.fec_deposito)
     },
     methods:{
         moneda_select:function(moneda){
@@ -62,13 +64,14 @@ export default {
                 moneda_symbol = this.moneda["value"]
             }
 
-            this.$http.post('FundsManager/Deposit/do',{
+            this.$http.post('FundsManager/DepositResource/add',{
                 moneda_symbol: moneda_symbol,
                 fec_deposito: this.fec_deposito,
                 importe: this.importe
-            }).then(httpresponse => {
-                var appdata = httpresponse.data
-                this.$refs.msgbox.new(appdata)                
+            }).then(httpresp => {                
+                this.$refs.msgbox.httpresp(httpresp)                
+            }).catch(error => {
+                console.log(error)
             })
         },
         cancelar:function(){

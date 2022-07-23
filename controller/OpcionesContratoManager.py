@@ -10,76 +10,123 @@ class OpcionesContratoManager:
         pass
 
     def get_options_chain(self, args={}):
-        symbol=args["symbol"] #symbol is required
-        expiration_date=""
-        strike=""
-        if "expiration_date" in args:
-            expiration_date = args["expiration_date"]
-        if "strike" in args:
-            strike = args["strike"]
-        #strike = args["strike"]
-
-        calls_query = db.session.query(
-            OptionContract
-        ).filter(
-            OptionContract.side == 'call',
-            OptionContract.expiration_date >= date.today().isoformat(),
-            OptionContract.underlying == symbol
-        ).order_by(OptionContract.expiration_date, OptionContract.strike)
-
-        if expiration_date != "":
-            calls_query = calls_query.filter(OptionContract.expiration_date == expiration_date)
-        if strike != "":
-            calls_query = calls_query.filter(OptionContract.strike == strike)
-
-        calls = calls_query.all()
-
-        puts_query = db.session.query(
-            OptionContract
-        ).filter(
-            OptionContract.side == 'put',
-            OptionContract.expiration_date >= date.today().isoformat(),
-            OptionContract.underlying == symbol
-        ).order_by(OptionContract.expiration_date, OptionContract.strike)
-        
-        if expiration_date != "":
-            puts_query = puts_query.filter(OptionContract.expiration_date == expiration_date)
-        if strike != "":
-            puts_query = puts_query.filter(OptionContract.strike == strike)
-
-        puts = puts_query.all()
+        symbol = args["symbol"]
+        expiration_date = args["expiration_date"]
+        calls = self.get_calls(args=args)
+        puts = self.get_puts(args=args)        
                 
         data = {
             "calls":Converter.process_list(calls),
             "puts":Converter.process_list(puts),
             "exp_dates":Converter.format(self.get_expiration_dates(args=args)),
-            "strikes":self.get_strikes(symbol, exp_date=expiration_date,strike=strike)
+            "strikes":Converter.format(self.get_strikes(symbol, expiration_date))
         }
                 
         return Response().from_raw_data(data)
+
+    def get_calls(self, args={}):
+        contract = args["contract"]
+
+        query = db.session.query(
+            OptionContract
+        ).filter(
+            OptionContract.side == 'call',
+        )
+
+        if contract != "":
+            contract = "%{}%".format(contract)
+
+            query = query.filter(
+                OptionContract.symbol.ilike(contract)
+            )       
+
+            return query.all()
+
+        symbol = args["symbol"]
+        exp_date = args["expiration_date"]
+        strike = args["strike"]
+
+        if symbol != "":
+            query = query.filter(
+                OptionContract.underlying == symbol    
+            )
+
+        if exp_date == "":
+            query = query.filter(
+                OptionContract.expiration_date >= date.today().isoformat()
+            )
+        else:
+            query = query.filter(
+                OptionContract.expiration_date == exp_date
+            )
+
+        if strike != "":
+            query = query.filter(
+                OptionContract.strike == strike
+            )
+
+        query = query.order_by(OptionContract.expiration_date, OptionContract.strike)
+
+        return query.all()
+
+    def get_puts(self, args={}):
+        contract = args["contract"]
+
+        query = db.session.query(
+            OptionContract
+        ).filter(
+            OptionContract.side == 'put',
+        )
+
+        if contract != "":
+            contract = "%{}%".format(contract)
+
+            query = query.filter(
+                OptionContract.symbol.ilike(contract)
+            )       
+
+            return query.all()
+
+        symbol = args["symbol"]
+        exp_date = args["expiration_date"]
+        strike = args["strike"]
+
+        if symbol != "":
+            query = query.filter(
+                OptionContract.underlying == symbol    
+            )
+
+        if exp_date == "":
+            query = query.filter(
+                OptionContract.expiration_date >= date.today().isoformat()
+            )
+        else:
+            query = query.filter(
+                OptionContract.expiration_date == exp_date
+            )
+
+        if strike != "":
+            query = query.filter(
+                OptionContract.strike == strike
+            )
+
+        query = query.order_by(OptionContract.expiration_date, OptionContract.strike)
+
+        return query.all()
 
     def get_expiration_dates(self, args={}):
         symbol=args["symbol"] #symbol is required
         expiration_date=date.today().isoformat()
         strike=""
-        if "expiration_date" in args:
-            expiration_date = args["expiration_date"]
-        if "strike" in args:
-            strike = args["strike"]
-
+        
         query = db.session.query(
             OptionContract.expiration_date
         ).distinct(OptionContract.expiration_date)
 
-        query.filter(
-            OptionContract.expiration_date >= expiration_date,
+        query = query.filter(               
             OptionContract.underlying == symbol
         )
-
-        if strike != "":
-            query.filter(
-                OptionContract.strike == strike
-            )
+        query = query.filter(OptionContract.expiration_date >= expiration_date)
 
         results = query.all()
 
@@ -89,25 +136,30 @@ class OpcionesContratoManager:
 
         return exp_list
 
-    def get_strikes(self, symbol="", exp_date=date.today().isoformat(),strike=""):
+    def get_strikes(self, symbol="", exp_date=""):                
         query = db.session.query(
             OptionContract.strike
         ).distinct(OptionContract.strike)
 
-        query.filter(
-            OptionContract.expiration_date >= exp_date,
+        query = query.filter(            
             OptionContract.underlying == symbol
-        )
+        )        
 
-        if strike != "":
-            query.filter(
-                OptionContract.strike == strike
+        if exp_date == "":
+            query = query.filter(            
+                OptionContract.expiration_date  >= date.today().isoformat()
+            )   
+        else:
+            query = query.filter(            
+                OptionContract.expiration_date  == exp_date
             )
+
+        query = query.order_by(OptionContract.strike)
 
         results = query.all()
 
         strikes = []
         for row in results:
-            strikes.append(row.strike)
+            strikes.append(float(row.strike))
         
         return strikes

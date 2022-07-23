@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div>        
         <q-table
             title="Historial de Tipos de Cambio"
             :data="data"
@@ -8,7 +8,32 @@
             dense
             :pagination="pagination"
         >
+            <template v-slot:top>
+                <div>
+                    <div class="text-h6">Historial de Tipos de Cambio</div>
+                    <div>
+                        <q-btn color="light-green" icon="search" @click="win_filtrar_open=true"/>
+                    </div> 
+                </div>               
+            </template>
         </q-table>
+        <q-dialog v-model="win_filtrar_open">
+            <q-card style="min-width: 25vw">
+                <q-card-section class="q-pb-none">                    
+                    <div class="text-h6 text-primary">Filtros</div>
+                </q-card-section>
+                <q-card-section class="q-pt-none">
+                    <div class="row">
+                        <q-input class="col-4" label="Fch. Cambio" v-model="fch_cambio" mask="##/##/####" fill-mask="#"/>
+                    </div>
+                    <q-input label="Par" v-model="par"/>
+                </q-card-section>
+                <q-card-actions>
+                    <q-btn label="Buscar" color="primary"/>                    
+                    <q-btn label="Cerrar" color="red" @click="win_filtrar_open=false"/>                    
+                </q-card-actions>
+            </q-card>
+        </q-dialog>
     </div>
 </template>
 <script>
@@ -16,6 +41,9 @@ export default {
     name:"TableCurrencyExchangeRates",
     data: () => {
         return {
+            fch_cambio:"",
+            par:"",
+            win_filtrar_open:false,
             pagination:{
                 rowsPerPage:20
             },
