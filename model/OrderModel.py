@@ -11,4 +11,4 @@ class OrderModel(db.Model):
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(15,4))
     register_date = db.Column(db.Date)
-    order_date = db.Column(db.Date)
+    order_date = db.Column(db.Date)    

@@ -2,14 +2,15 @@
     <q-select                                        
         :label="cmp_label"
         v-model="moneda"  
+        stack-label
         use-input
         hide-selected                                      
-        fill-input
+        fill-input  
         input-debounce="500"
         @filter="filter_fn"
         @input="sel_moneda"
         :options="list"                            
-        clearable                    
+        clearable          
     />
 </template>
 <script>
@@ -19,6 +20,10 @@ export default {
         label:{
             type:String,
             default:""
+        },
+        throwerror:{
+            type:Boolean,
+            default:false
         }
     },
     computed:{
@@ -50,15 +55,24 @@ export default {
            }else{
                this.$http.post('CurrencyManager/CurrencyManager/get_list',{
                    search_text:val
-               }).then(httpresponse => {
-                   
-                   var appresponse = httpresponse.data
+               },{
+                    headers:{
+                        'Authorization':localStorage.getItem('token')
+                    }
+                }).then(httpresp => {
+                   var appresp = httpresp.data
+                   if (appresp.success == false){
+                       this.$emit('httperror',httpresp)                       
+                   }                                   
+                   if (appresp.expired == true){
+                       this.$router.push({name:"login"})
+                   }
                    var options = []
-                   for (let elem of appresponse.data){
+                   for (let elem of appresp.data){
                        options.push({
-                           "value":elem["currency_symbol"],
-                           "label":elem["currency_symbol"],
-                           "moneda_id":elem["currency_id"]
+                           "value":elem["codigo_iso"],
+                           "label":elem["codigo_iso"],
+                           "moneda_id":elem["moneda_id"]
                        })
                    }
 

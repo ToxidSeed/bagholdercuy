@@ -3,6 +3,8 @@ from flask_restful import Resource, Api
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from common.Response import Response
+from localStoragePy import localStoragePy
 
 import traceback
 import sys, os
@@ -13,6 +15,7 @@ app = Flask(__name__)
 
 app.config.from_object("config.general")
 #app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
+localStorage = localStoragePy('app', 'json')
 
 
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
@@ -28,33 +31,41 @@ class EntryAPI(Resource):
         return response
 
     def post(self, module_name, class_name, method_name):        
-        #solo para probar se poneuser_id        
-        print(app)        
-        session["user_id"] = 1
+        try:
+            #solo para probar se poneuser_id                
+            session["user_id"] = 1
 
-        data = None
+            data = None
 
-        if request.is_json:
-            data = request.json
-        else:
-            data = {
-                "files": request.files,
-                "form": request.form
-            }
+            if request.is_json:
+                data = request.json
+                data["access_token"]=request.headers.get('Authorization')
+            else:
+                data = {
+                    "files": request.files,
+                    "form": request.form,
+                    "access_token":request.headers.get('Authorization')
+                }
 
-        obj_Loader = Loader(module_name, class_name, method_name, data=data)
-        response = None
-        if type(obj_Loader.response).__name__ == "Response":
-            response = obj_Loader.response.get_answer()
-        else:
-            response = obj_Loader.response
-        return jsonify(response)
+            obj_Loader = Loader(module_name, class_name, method_name, data=data)
+            response = None
+            if type(obj_Loader.response).__name__ == "Response":
+                response = obj_Loader.response.get_answer()
+            else:
+                response = obj_Loader.response
+            return jsonify(response)
+        except Exception as e:
+            response = Response().from_exception(e)
+            return jsonify(response)
 
 class Loader:
     def __init__(self, module_name, class_name, method_name, data={}):
         mod =  __import__("controller."+module_name, fromlist=[class_name])
         obj_reference = getattr(mod, class_name)
-        self.obj = obj_reference()
+        if obj_reference.AUTH_REQUIRED == False:
+            self.obj = obj_reference()
+        else:
+            self.obj = obj_reference(data.get("access_token"))
         method_to_call = getattr(self.obj, method_name)
         self.response = method_to_call(data)
 

@@ -1,5 +1,6 @@
 from model.TransaccionFondosModel import TransaccionFondosModel
-from model.CurrencyModel import CurrencyModel
+from model.balance import BalanceCuentaModel
+from model.MonedaModel import MonedaModel
 from common.AppException import AppException
 from app import app, db
 from sqlalchemy import func, true, and_
@@ -30,11 +31,19 @@ class TransaccionHandler:
         return num_trans
     
     def _check_moneda(self, moneda_symbol=""):
-        moneda_found = CurrencyModel.query.filter(
-            CurrencyModel.currency_symbol == moneda_symbol
+        moneda_found = MonedaModel.query.filter(
+            MonedaModel.moneda_id == moneda_symbol
         ).first()
 
         if moneda_found is None:
             raise AppException(msg="La moneda {0} no existe en la base de datos".format(moneda_symbol))
 
         return True
+
+    def get_saldos_cuenta(self, moneda_id, usuario_id):
+        saldo = BalanceCuentaModel.query.filter(
+            BalanceCuentaModel.usuario_id == usuario_id,
+            BalanceCuentaModel.moneda_id == moneda_id
+        ).first()
+
+        return saldo

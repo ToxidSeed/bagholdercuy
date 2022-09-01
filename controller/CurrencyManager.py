@@ -2,16 +2,21 @@ from distutils.log import error
 from re import M
 from common.AppException import AppException
 from common.Response import Response
-from model.CurrencyModel import CurrencyModel
+from controller.base import Base
+#from model.CurrencyModel import CurrencyModel
+from model.MonedaModel import MonedaModel
+from model.MonedaParModel import MonedaParModel
+from model.bussiness.moneda_par_handler import MonedaParHandler 
 from datetime import date, datetime
 from app import db
 from sqlalchemy import func
 
-from model.CurrencyPairModel import CurrencyPairModel
 
+class CurrencyManager(Base):
+    AUTH_REQUIRED = True
 
-class CurrencyManager:
-    def __init__(self):
+    def __init__(self,access_token=None):
+        super().__init__(access_token=access_token)
         self.currency = None
 
     def save(self, args={}):
@@ -24,101 +29,113 @@ class CurrencyManager:
             else:
                 self.__update()
 
+            """
             CurrencyPair(
                 add_list=args["pairs_to_add"],
                 remove_list = args["pairs_to_remove"]
             ).process_pairs()
+            """
+            extradata = {
+                "moneda_id":self.currency.moneda_id
+            }
 
             db.session.commit()
-            return Response(msg="Se ha guardado correctamente la moneda").get()
+            return Response(msg="Se ha guardado correctamente la moneda",extradata=extradata).get()
         except AppException as e:            
             return Response().from_exception(e)
 
     def __is_new(self):
-        if self.currency.currency_id is None:
+        if self.currency.moneda_id is None:
             return True
         else:
             return False
 
     def __collect(self, args={}):
-        currency_id = args["currency_id"]
-        if currency_id in ["#","","0",0]:
-            currency_id = None
-        else:
-            currency_id = int(currency_id)            
+        moneda_id = args["moneda_id"]
+        if moneda_id in ["#","","0",0]:
+            moneda_id = None        
 
-        currency = CurrencyModel(
-            currency_id = currency_id,
-            currency_symbol = args["currency_symbol"],
-            currency_name = args["currency_name"],
-            currency_desc = args["currency_desc"]
+        moneda = MonedaModel(
+            moneda_id = moneda_id.upper(),
+            codigo_iso = args["codigo_iso"].upper(),
+            simbolo = args["simbolo"],
+            nombre = args["nombre"],
+            descripcion = args["descripcion"]
         )
         
-        return currency
+        return moneda
 
     def __val_save(self, args={}):
         errors = []
-        if "currency_id" not in args:
-            errors.append("El parámetro 'currency_id' no ha sido enviado")
+        if "moneda_id" not in args:
+            errors.append("El parámetro 'moneda_id' no ha sido enviado")
 
-        if "currency_symbol" not in args:
-            errors.append("El parámetro 'currency_symbol' no ha sido enviado")        
+        if "simbolo" not in args:
+            errors.append("El parámetro 'simbolo' no ha sido enviado")
 
-        if "currency_name" not in args:
-            errors.append("El parámetro 'currency_name' no ha sido enviado")
+        if "codigo_iso" not in args:
+            errors.append("El parámetro 'codigo_iso' no ha sido enviado")        
 
-        if "currency_desc" not in args:
-            errors.append("El parámetro 'currency_desc' no ha sido enviado")
+        if "nombre" not in args:
+            errors.append("El parámetro 'nombre' no ha sido enviado")
 
+        if "descripcion" not in args:
+            errors.append("El parámetro 'descripcion' no ha sido enviado")
+
+        """
         if "pairs_to_add" not in args:
             errors.append("El parámetro 'pairs_to_add' no ha sido enviado")
 
         if "pairs_to_remove" not in args:
             errors.append("El parámetro 'pairs_to_remove' no ha sido enviado")
+        """
 
         if len(errors) > 0:
             raise AppException(msg="se han encontrado errores de validación", errors=errors)
 
     def __insert(self):
-        currency_found = self.__find_currency(self.currency.currency_symbol)
-        if currency_found is not None:
-            raise AppException(msg="El symbol {0} que se está intentando registrar ya existe".format(self.currency.currency_symbol))        
+        moneda = self.__find_currency(self.currency.codigo_iso)
+        if moneda is not None:
+            raise AppException(msg="El symbol {0} que se está intentando registrar ya existe".format(self.currency.codigo_iso))        
 
-        self.currency.currency_id = None
+        self.currency.moneda_id = self.currency.codigo_iso
         self.currency.fec_registro = date.today()
         self.currency.fec_audit = datetime.now()
         db.session.add(self.currency)
 
     def __find_currency(self, symbol=""):
-        currency_found = CurrencyModel.query.filter(
-            CurrencyModel.currency_symbol == symbol
+        moneda = MonedaModel.query.filter(
+            MonedaModel.moneda_id == symbol
         ).first()
 
-        return currency_found
+        return moneda
 
     def __find_currency_by_id(self, id=None):
-        currency_found = CurrencyModel.query.filter(
-            CurrencyModel.currency_id == id
+        moneda = MonedaModel.query.filter(
+            CurrencyModel.moneda_id == id
         ).first()
-        return currency_found
+        return moneda
 
     def __update(self):
-        currency_found = self.__find_currency_by_id(self.currency.currency_id)
-        if currency_found is None:
-            raise AppException(msg="La moneda con id {0} que se está intentando actualizar no existe".format(self.currency.currency_id))
+        moneda = self.__find_currency_by_id(self.currency.moneda_id)
+        if moneda is None:
+            raise AppException(msg="La moneda con id {0} que se está intentando actualizar no existe".format(self.currency.moneda_id))
         
         #Si es diferente de None
-        if currency_found.currency_id != self.currency.currency_id:
-            raise AppException(msg="El symbol {0} que se está intentando actualizar ya existe registrada para la moneda con id: {1}".format(self.currency.currency_symbol, currency_found.currency_id))
+        if moneda.moneda_id != self.currency.moneda_id:
+            raise AppException(msg="El symbol {0} que se está intentando actualizar ya existe registrada para la moneda con id: {1}".format(self.currency.codigo_iso, moneda.moneda_id))
 
         #actualizar
-        currency_found.currency_symbol = self.currency.currency_symbol
+        #moneda.moneda_id = self.currency.moneda
+        moneda.nombre = self.currency.nombre
+        moneda.descripcion = self.currency.descripcion
+        moneda.simbolo = self.currency.simbolo
 
     def get_list(self, args={}):
         search_text = args["search_text"]
 
-        records = CurrencyModel.query.filter(
-            func.concat(CurrencyModel.currency_symbol,'').ilike("%{0}%".format(search_text))
+        records = MonedaModel.query.filter(
+            func.concat(MonedaModel.codigo_iso,MonedaModel.nombre).ilike("%{0}%".format(search_text))
         ).all()
 
         return Response().from_raw_data(records)
@@ -128,13 +145,79 @@ class CurrencyFinder:
         pass
 
     def get_list(self,args={}):
-        data = CurrencyModel.query.all()
+        data = MonedaModel.query.all()
         return Response().from_raw_data(data)
 
-class CurrencyPair:
-    def __init__(self, add_list=[], remove_list=[]):
-        self.add_list = add_list
-        self.remove_list = remove_list
+    def get_data(self, args={}):
+        if "moneda_id" not in args:
+            raise AppException(msg="No se ha enviado el parámetro 'moneda_id'")
+
+        moneda_id = args["moneda_id"]
+        data = MonedaModel.query.filter_by(moneda_id=moneda_id).first()
+
+        if data is None:
+            raise AppException(msg="No se ha logrado recuperar los datos de la moneda para 'moneda_id='{0}".format(moneda_id))
+
+        return Response().from_raw_data(data)
+
+class ParFinder:
+    def __init__(self):
+        pass
+
+    def get_list_x_mon(self, args={}):
+        try:
+            if "moneda_id" not in args:
+                raise AppException("No se ha enviado 'moneda_id'")
+
+            moneda_id = args["moneda_id"]
+            pares = MonedaParModel.query.filter(
+                MonedaParModel.mon_base_id == moneda_id
+            ).all()
+
+            return Response().from_raw_data(pares)
+        except Exception as e:
+            raise AppException().from_exception(e)
+
+class MonedaParAddController:   
+    def __init__(self):
+        pass
+
+    def add(self,args={}):
+        try:
+            self._val(args)
+            par = self._collect(args)
+            MonedaParHandler().add(par)                            
+            db.session.commit()       
+            return Response(msg="El par se ha agregado correctamente")
+        except Exception as e:
+            return Response().from_exception(e)
+
+    def _val(self, args={}):
+        errors = []
+        if "base" not in args:
+            errors.append("No se ha enviado el parámetro 'base'")
+
+        if "ref" not in args:
+            errors.append("No se ha enviado 'ref'")
+
+        if "operacion" not in args:
+            errors.append("No se ha enviado 'operacion'")
+                
+        return errors
+
+    def _collect(self, args={}):
+        base = args["base"]
+        ref = args["ref"]
+
+        par = MonedaParModel(
+            mon_base_id = base,
+            mon_ref_id = ref,
+            nombre = "{0}/{1}".format(base, ref),
+            operacion = args["operacion"],            
+        )
+        return par
+
+class xxx:
 
     def process_pairs(self):        
         add_errors = self.__add()
@@ -153,9 +236,9 @@ class CurrencyPair:
                 self.__remove_pair(pair_found)
         return errors
 
-    def __remove_pair(self, pair:CurrencyPairModel=None):
+    def __remove_pair(self, pair:MonedaParModel=None):
         pair.ind_activo = "N"
-        pair.fec_audit = datetime.now()
+        pair.fch_audit = datetime.now()
 
     def __add(self):
         errors = []
@@ -190,28 +273,31 @@ class CurrencyPair:
 
         db.session.add(new_pair)
 
-    def __reactivate(self, pair:CurrencyPairModel =None):
+    def __reactivate(self, pair:MonedaParModel =None):
         pair.fec_audit = datetime.now()
         pair.ind_activo = "S"
 
     def __find_pair_by_id(self, id=None):
-        pair_found = CurrencyPairModel.query.filter(
-            CurrencyPairModel.currency_pair_id == id 
+        pair_found = MonedaParModel.query.filter(
+            MonedaParModel.par_id == id 
         ).first()
         return pair_found
 
     def __find_pair(self, base="", ref=""):
-        pair_found = CurrencyPairModel.query.filter(
-            CurrencyPairModel.currency_base_symbol == base,
-            CurrencyPairModel.currency_ref_symbol == ref
+        pair_found = MonedaParModel.query.filter(
+            MonedaParModel.mon_base_id == base,
+            MonedaParModel.mon_ref_id == ref
         ).first()
     
         return pair_found
             
     def __val_pairs_entry(self, pair={}):
         errors = []
+        if "base" not in pair:
+            errors.append("No se ha enviado el parámetro 'base'")
+
         if "ref" not in pair:
-            errors.append("Add pairs: No se ha enviado 'ref' en alguno de los pares")
+            errors.append("Add pairs: No se ha enviado 'ref'")
         else:
             currency_ref_symbol = pair["ref"]
             currency = CurrencyModel.query.filter(

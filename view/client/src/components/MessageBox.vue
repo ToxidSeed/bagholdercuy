@@ -1,5 +1,5 @@
 <template>
-    <q-dialog v-model="opened" persistent transition-show="flip-down" transition-hide="flip-up">
+    <q-dialog v-model="opened" transition-show="flip-down" transition-hide="flip-up">
       <q-card> 
             <q-card-section class="q-pt-xs q-pb-xs" >
                 <q-icon :name="msgdata.icon" size="md" :color="msgdata.color" text-color="white" /> {{title}}            
@@ -62,22 +62,18 @@
             }
         },
         methods:{            
-            new:function(appresp=null, args=null){
+            new:function(args=null){
                 this.errors = []
-                this.opened = true;
-                if (appresp != null){
-                    this.process_appresp(appresp)
-                }else{
-                    if (args.title != undefined){
-                        this.title = args.title
-                    }
-                    if (args.action != undefined){
-                        this.action = args.action
-                    }
-                    if (args.message != undefined){
-                        this.message = args.message
-                    }
-                }                
+                if (args.title != undefined){
+                    this.title = args.title
+                }
+                if (args.action != undefined){
+                    this.action = args.action
+                }
+                if (args.message != undefined){
+                    this.message = args.message
+                }       
+                this.opened = true      
             },
             httpresp:function(httpresp=null){
                 this.errors = []
@@ -86,9 +82,9 @@
                 this.opened = true;
                 this.url = httpresp.config.url
                 var appdata = httpresp.data
-                this.process_appresp(appdata)
+                this.appresp(appdata)
             },            
-            process_appresp:function(appresp){
+            appresp:function(appresp=null){
                 let error = false
                 let stacktrace = false
                 //var has_errors = false                                            

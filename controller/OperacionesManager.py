@@ -15,7 +15,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import join
 import sqlalchemy.sql.functions as func
 from sqlalchemy.sql import extract
-import config as CONFIG
+from config.general import ORDEN_TIPO_COMPRA, ORDEN_TIPO_VENTA
 
 
 class OperacionesManager:        
@@ -99,9 +99,9 @@ class GenericManager:
         self.order = order
         self.saldo_orden = order.quantity
 
-        if self.order.order_type == CONFIG.ORDEN_TIPO_COMPRA:
+        if self.order.order_type == ORDEN_TIPO_COMPRA:
             self.comprar()
-        if self.order.order_type == CONFIG.ORDEN_TIPO_VENTA:
+        if self.order.order_type == ORDEN_TIPO_VENTA:
             self.vender()
 
     def comprar(self):

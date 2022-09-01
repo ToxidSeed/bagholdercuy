@@ -1,48 +1,40 @@
 <template>
     <div class="row">
-        <div class="col-3">
+        <div class="col-6" v-show="data_panel_show">
             <q-card>
                 <!--<q-card-section style="border:1px solid black;">-->
                 <q-card-section class="q-pa-none">
-                    <q-tabs
-                        v-model="tab"
-                        class="text-primary"
-                        align="left"
-                        dense                        
-                    >
-                        <q-tab name="currency"  label="Moneda" />
-                        <q-tab name="pairs" label="Pares" />
-                    </q-tabs>
-                    <q-tab-panels v-model="tab" animated>
-                        <q-tab-panel name="currency" class="q-pa-none">
+                    <div class="row">                    
+                        <div class="col-6">
                             <PanelCurrency 
-                            ref="PanelCurrency" 
-                            v-on:panel-close="pnl_currecy_close_handler"
-                            v-on:symbol-changed="pnl_currency_symbol_changed_handler"  
-                            v-bind:in_data="pnl_currency_data"                
+                            ref="PanelCurrency"                             
+                            v-on:symbol-changed="pnl_currency_symbol_changed_handler"                              
+                            v-bind:in_moneda_id="moneda_id"              
                             />
-                        </q-tab-panel>
-                        <q-tab-panel name="pairs">
+                        </div>
+                        <div class="col-6 q-pa-md">
+                            <div class="text-bold text-primary">PARES</div>
                             <PanelAddPair 
-                            v-bind:in_currency_base_symbol=currency_symbol
-                            v-on:add-pair-btn-click="add_pair_btn_click_handle"
+                            v-bind:moneda_id=moneda_id
+                            v-on:add-par-end="add_par_end_handler"
                             />
                             <TablePairs ref="TablePairs" class="q-pt-xs"      
                             v-bind:in_data="tbl_pairs_data"
-                            v-bind:in_currency_base_symbol="currency_symbol"
-                            v-on:panel-close="tbl_pairs_close_handler"
+                            v-bind:moneda_id="moneda_id"                            
                             />
-                        </q-tab-panel>
-                    </q-tab-panels>
+                        </div>
+                    </div>                    
                 </q-card-section>
                 <q-card-actions align="right">
                     <q-btn color="primary" @click="btn_save_click_handler">Guardar</q-btn>
-                    <q-btn color="orange">Cancelar</q-btn>                
+                    <q-btn color="orange" label="Cancelar" to="/currency"/>
                 </q-card-actions>
             </q-card>
         </div>
-        <div class="col-9">
-            <TableCurrency/>
+        <div class="col-6 q-pl-xs">
+            <TableCurrency ref="TableCurrency"
+            v-on:row-dblclick="tbl_moneda_row_dblclick"
+            />
         </div>        
         <MessageBox ref="msgbox"/>
     </div>
@@ -64,12 +56,39 @@ export default {
         PanelAddPair,
         MessageBox
     },
+    props:{
+        action:{
+            type:String,
+            default:""
+        },
+        moneda_id:{
+            type:String,
+            default:""
+        }
+    },
     data:() => {
         return {
-            tab:"currency",            
+            tab:"currency", 
+            //moneda_id:"",           
             currency_symbol:"",
-            pnl_currency_data:{},
             tbl_pairs_data:{}
+        }
+    },
+    computed:{
+        edit_disable:function(){
+            if (this.moneda_id == ""){
+                return false
+            }else{
+                return true
+            }
+        },
+        data_panel_show:function(){
+            console.log(this.action)
+            if (this.action == ""){
+                return false
+            }else{
+                return true
+            }
         }
     },
     methods:{        
@@ -78,45 +97,33 @@ export default {
             this.currency_symbol = data.new
             this.tbl_pairs_data = {}
         },
-        btn_save_click_handler:function(){                        
-            var pairs = this.get_pairs_data()
-            var currency_data = this.get_currency_data()      
+        btn_save_click_handler:function(){      
+            console.log(this.$refs.PanelCurrency)                       
+            let moneda_id = this.$refs.PanelCurrency.moneda_id
+            let codigo_iso = this.$refs.PanelCurrency.codigo_iso
+            let nombre = this.$refs.PanelCurrency.nombre
+            let simbolo = this.$refs.PanelCurrency.simbolo
+            let descripcion = this.$refs.PanelCurrency.descripcion
             
             this.$http.post('CurrencyManager/CurrencyManager/save',{
-                currency_id: currency_data.currency_id,
-                currency_symbol: currency_data.symbol,
-                currency_name: currency_data.currency_name,
-                currency_desc: "",
-                //pairs_to_add:pairs.pairs_to_add,
-                pairs_to_remove:pairs.pairs_to_delete
-            }).then(httpresponse => {                
-                //guardar resultado
-                console.log(JSON.parse(httpresponse.config.data))
-                var appresp = httpresponse.data
-                console.log(appresp.message)
-                console.log(appresp.errors)
-                console.log(appresp)
-                this.$refs.msgbox.new(appresp)
-                
+                moneda_id: moneda_id,
+                codigo_iso: codigo_iso,
+                nombre: nombre,
+                simbolo: simbolo,
+                descripcion: descripcion
+            }).then(httpresponse => {                        
+                this.$emit('save-finish')
+                this.$refs.msgbox.httpresp(httpresponse)
+                let appdata = httpresponse.data                
+                let extradata = appdata.extradata
+                if (extradata != null){
+                    this.moneda_id = extradata.moneda_id
+                    this.$router.push("/currency/edit="+extradata.moneda_id)
+                }                
             })
-        },
-        tbl_pairs_close_handler:function(data){
-            this.tbl_pairs_data = data.data
-        },
-        pnl_currecy_close_handler:function(data){
-            this.pnl_currency_data = data           
-            this.currency_symbol = data.symbol  
         },
         add_pair_btn_click_handle:function(data){
             this.$refs.TablePairs.add_pair(data)
-        },
-        get_currency_data(){
-            var currency_data = this.pnl_currency_data
-            //check if exist PanelCurrency
-            if (this.$refs.PanelCurrency != undefined){
-                currency_data = this.$refs.PanelCurrency.get_currency_data()
-            }
-            return currency_data
         },
         get_pairs_data:function(){
             var pairs = {
@@ -137,7 +144,35 @@ export default {
             }
             console.log(pairs)
             return pairs
+        },
+        tbl_moneda_row_dblclick:function(row){
+            this.moneda_id = row.moneda_id            
+        },
+        add_par_end_handler:function(){
+            this.$refs.TablePairs.actualizar_lista()
         }
+    },
+    beforeRouteEnter(to, from, next){        
+        let actions = ["new","edit","view"]
+        if (to.params.action != undefined){
+            const action = actions.find(element => element == to.params.action)
+            console.log(action)
+            if (action == undefined){
+                console.log("action")
+                console.log(from)
+                next(false)
+            }else{
+                next()  
+            }
+        }else{
+            next()
+        }                
+    },
+    beforeRouteUpdate(to, from, next){
+        console.log(to)
+        console.log(from)
+        console.log(next)
+        next()
     }
 }
 </script>

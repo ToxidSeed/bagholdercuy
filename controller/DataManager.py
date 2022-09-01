@@ -1,7 +1,7 @@
 from tokenize import Ignore
 from common.Error import Error
 from common.StatusMessage import StatusMessage
-from model.OptionContract import OptionContract
+from model.OptionContract import OptionContractModel
 from os import error, stat
 from re import S
 import requests, json, csv
@@ -11,14 +11,12 @@ from datetime import date, datetime
 from app import app, db
 from model.StockData import StockData
 from model.StockSymbol import StockSymbol
-from model.OptionContract import OptionContract
-from common.api.MarketAPI import MarketAPI
+#from common.api.MarketAPI import MarketAPI
 from common.api.Quote import Quote
 from common.Response import Response
 import common.Converter as Converter
 import common.Markets as Markets
 from datetime import datetime, date
-
 
 class DataManager:
 
@@ -292,49 +290,6 @@ class Symbol:
         except Exception as e:
             return Response().from_exception(e)
 
-class Options:
-    def __init__(self):
-        pass
-
-    def load_contracts(self, args={}):
-        symbol=args["symbol"]
-        #contracts = MarketApi().get_option_contracts(symbol=symbol)
-
-        with open('tmp/CCLContracts.json') as f:
-            contracts = f.read()
-
-        contracts = json.loads(contracts)
-        for elem in contracts:
-            contract_symbol = elem["symbol"]
-            sym = self.get_symbol(contract_symbol)
-            if sym is None:
-                ss = StockSymbol(
-                    symbol = contract_symbol,
-                    name = elem["description"],
-                    exchange = elem["exchange"],
-                    asset_type = "options"
-                )
-                db.session.add(ss)
-                db.session.flush()
-
-                #adding the details
-                oc = OptionContract(
-                    symbol_id = ss.id,
-                    contract_size = elem["contractSize"],
-                    currency = elem["currency"],
-                    description = elem["description"],
-                    expiration_date = elem["expirationDate"],
-                    side = elem["side"],
-                    strike = elem["strike"],
-                    symbol = elem["symbol"],
-                    underlying = elem["underlying"],
-                    register_date = date.today()
-                )
-                db.session.add(oc)
-        db.session.commit()
-
-        return Response(msg="Se han cargado correctamente los symbol de los contratos para {}".format(symbol)).get()
-
     def get_options_chain(self, args={}):
         symbol=args["symbol"] #symbol is required
         expiration_date=""
@@ -346,32 +301,32 @@ class Options:
         #strike = args["strike"]
 
         calls_query = db.session.query(
-            OptionContract
+            OptionContractModel
         ).filter(
-            OptionContract.side == 'call',
-            OptionContract.expiration_date >= date.today().isoformat(),
-            OptionContract.underlying == symbol
-        ).order_by(OptionContract.expiration_date, OptionContract.strike)
+            OptionContractModel.side == 'call',
+            OptionContractModel.expiration_date >= date.today().isoformat(),
+            OptionContractModel.underlying == symbol
+        ).order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
 
         if expiration_date != "":
-            calls_query = calls_query.filter(OptionContract.expiration_date == expiration_date)
+            calls_query = calls_query.filter(OptionContractModel.expiration_date == expiration_date)
         if strike != "":
-            calls_query = calls_query.filter(OptionContract.strike == strike)
+            calls_query = calls_query.filter(OptionContractModel.strike == strike)
 
         calls = calls_query.all()
 
         puts_query = db.session.query(
-            OptionContract
+            OptionContractModel
         ).filter(
-            OptionContract.side == 'put',
-            OptionContract.expiration_date >= date.today().isoformat(),
-            OptionContract.underlying == symbol
-        ).order_by(OptionContract.expiration_date, OptionContract.strike)
+            OptionContractModel.side == 'put',
+            OptionContractModel.expiration_date >= date.today().isoformat(),
+            OptionContractModel.underlying == symbol
+        ).order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
         
         if expiration_date != "":
-            puts_query = puts_query.filter(OptionContract.expiration_date == expiration_date)
+            puts_query = puts_query.filter(OptionContractModel.expiration_date == expiration_date)
         if strike != "":
-            puts_query = puts_query.filter(OptionContract.strike == strike)
+            puts_query = puts_query.filter(OptionContractModel.strike == strike)
 
         puts = puts_query.all()
         
@@ -379,48 +334,5 @@ class Options:
         puts = Converter.process_list(puts)
                 
         return Response().from_raw_data({"calls":calls,"puts":puts})
-        
-    def get_symbol(self, symbol=""):
-        sym = db.session.query(
-            StockSymbol
-        ).filter(
-            StockSymbol.symbol == symbol
-        ).first()
-
-        return sym
-
-
-
-
-class ChangeFormatter:
-    def __init__(self):
-        pass
-
-    def format(self, records):
-        formatted_records = []
-
-        for element in records:
-            #row = model_to_dict(element)
-            row = None
-
-            open_price  = float(row["open"]) 
-            close = float(row["close"])
-            high = float(row["high"])
-            low = float(row["low"])
-
-            change = round((close - open_price)/open_price ,2)*100
-            change_high = round((high - open_price)/open_price,2)*100
-            change_low  = round((low - open_price)/open_price,2)*100
-
-            extra = {
-                "change":change,
-                "change_high":change_high,
-                "change_low":change_low
-            }
-
-            row.update(extra)
-             
-            formatted_records.append(row)
-        
-        return formatted_records
+            
 

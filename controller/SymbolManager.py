@@ -1,11 +1,13 @@
 from distutils.log import error
 from app import db
 import inspect
-from common.AppException import AppException
-from model.StockSymbol import StockSymbol as SymbolModel
-from model.OptionContract import OptionContract
-from common.Response import Response
 from datetime import datetime, date
+
+from model.StockSymbol import StockSymbol as SymbolModel
+from model.OptionContract import OptionContractModel
+
+from common.AppException import AppException
+from common.Response import Response
 from common.api.iexcloud import iexcloud
 import common.logger as logger
 
@@ -110,120 +112,83 @@ class SymbolFinder:
         return Response().from_raw_data(data)
 
     def get_datos_symbol(self, args={}):
-        try:
-            data = {
-                "asset_type":"",
-                "name":""
-            }
+        try:            
 
             if "symbol" not in args:
                 raise AppException(msg="El parámetro 'symbol' no ha sido enviado")
 
             symbol = args["symbol"]
 
-            datos = SymbolModel.query.filter(
+            stock = SymbolModel.query.filter(
                 SymbolModel.symbol == symbol
             ).first()    
 
-            if datos is not None:
-                data["asset_type"] = datos.asset_type
-                data["name"] = datos.name
-                data["symbol"] = datos.symbol
+            if stock is not None:
+                rsp = {
+                    "stock":stock
+                }
+                return Response().from_raw_data(rsp)
+
+            contrato = OptionContractModel.query.filter(
+                OptionContractModel.symbol == symbol
+            ).first() 
+
+            if contrato is not None:
+                rsp = {
+                    "contrato":contrato
+                }
+                return Response().from_raw_data(rsp)
             
-            #si no hay respuesta buscamos en los contratos
-            if datos is None:
-                datos = OptionContract.query.filter(
-                    OptionContract.symbol == symbol
-                ).first()
-
-                if datos is not None:
-                    data["asset_type"] = "option contract"
-                    data["name"] = datos.description
-                    data["symbol"] = datos.symbol
-
-            return Response().from_raw_data(data)
+            return Response(msg="No se ha recuperado información para el symbol {0}".format(symbol))
         except Exception as e:
             return Response().from_exception(e)
 
 class DataLoader:
     def __init__(self):        
-        bridges = {
-            "IEXCLOUD":IEXCloud_Bridge            
-        }
-        self.bridge = bridges["IEXCLOUD"]()
+        pass
 
     def do(self, args={}):
         try:
-            tipos = []
-            if "tipos" in args:
-                tipos = args["tipos"]
-
-            self.bridge.load(tipos)
+            list_symbols = self.__get_api_symbols()
+            self._procesar(list_symbols)
             db.session.commit()
+            return Response(msg="Se ha realizado la carga de symbols correctamente")
         except Exception as e:
             db.session.rollback()
-            return Response().from_exception(e)
+            raise e    
 
-class IEXCloud_Bridge:
-    asset_a_iex_equiv = {
-        "equity":"cs",
-        "etf":"et"
-    }
-
-    iex_a_asset_equiv = {
-        "cs":"equity",
-        "et":"etf"
-    }
-
-    def __init__(self):
-        self.tipos = []
-        self.fec_audit = None
-
-    def load(self, tipos=[]):                
-        self.tipos = tipos
-        self.tipos_iex = self.__obt_tipos_iex_permitidos()
-        self.fec_audit = datetime.now()        
-        data = self.__symbols()
-        self.__save(data)
-
-    def __obt_tipos_iex_permitidos(self):    
-        resp = []
-        for tipo in self.tipos:
-            if tipo in self.asset_a_iex_equiv:
-                resp.append(self.asset_a_iex_equiv[tipo])
-        return resp
-
-
-    def __save(self, data=[], tipos=[]):
-        for elem in data:
-            if elem["type"] in self.tipos_iex:
-                self.__single_save(elem)
-
-    def __save_etf(self, data=[]):
-        for elem in data:
-            print(elem)
-
-    def __single_save(self, elem={}):
-        tipo_activo = self.iex_a_asset_equiv[elem["type"]]
-
-        #logger.register(elem)
-        symbol = SymbolModel(
-            symbol=elem["symbol"],
-            name=elem["name"],
-            region=elem["region"],
-            exchange=elem["exchange"],
-            asset_type=tipo_activo,
-            fec_registro=date.today(),
-            fec_audit=self.fec_audit
-        )
-        db.session.add(symbol)
-
-    def __symbols(self, params={}):
+    def __get_api_symbols(self):
         api_market = iexcloud()
         data = api_market.symbols()
         return data
 
-    def __etf_symbols(self, params={}):
-        api_market = iexcloud()
-        data = api_market.etf_symbols()
-        return data
+    def _procesar(self, list_symbol=[]):
+        for symbol in list_symbol:
+            self._procesar_elemento(symbol)
+
+    def _existe_symbol(self, symbol=""):
+        symbolbd = SymbolModel.query.filter(
+            SymbolModel.symbol == symbol
+        ).first()
+
+        if symbolbd is not None:
+            return True
+        else:
+            return False
+
+    def _procesar_elemento(self, elem=None):
+        symbol = elem.get("symbol")
+        if self._existe_symbol(symbol)==True:
+            return
+
+        newsymbol = SymbolModel(
+            symbol=symbol,
+            name=elem.get("name"),
+            region=elem.get("region"),
+            exchange=elem.get("exchange"),            
+            fec_registro=date.today(),
+            fec_audit=datetime.now(),
+            moneda_id=elem.get("currency")
+        )
+        db.session.add(newsymbol)
+

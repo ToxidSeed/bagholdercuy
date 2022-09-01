@@ -23,11 +23,11 @@ export default {
             type:Object,
             default: () => {}
         },
-        in_currency_base_symbol:{
+        moneda_id:{
             type:String,
             default:""
         }
-    },    
+    },        
     data:() => {
         return {
             selected:[],
@@ -35,53 +35,48 @@ export default {
                 {
                     label:"ID",
                     align:"left",
-                    field:"pair_id",
-                    name:"pair_id"
+                    field:"par_id",
+                    name:"par_id"
                 },
                 {
                     label:"Par",
                     align:"left",
-                    field:"pair_name",
-                    name:"pair_name"
-                }],
+                    field:"nombre",
+                    name:"nombre"
+                },
+                {
+                    label:"Operacion",
+                    align:"left",
+                    field:"operacion",
+                    name:"operacion"
+                }
+                ],
             data:[],
             deleted_records:[]
         }
     },
-    methods:{
-        add_pair:function(data){            
-            var in_ref_symbol = data["ref"]
-            var in_base_symbol = data["base"]
-            var dupplicate_ref = false
-            var response = ""
-
-            const found = this.data.find(element => element.ref == in_ref_symbol)
-            if (found != undefined){
-                dupplicate_ref = true
+    watch:{
+        moneda_id:function(newval){
+            if (newval == ""){
+                this.data = []
+            }else{
+                this.actualizar_lista()
             }
-                        
-            if (dupplicate_ref == true){
-                response = "La moneda referencia "+in_ref_symbol+" ya esta agregada a la lista"
-                this.$emit('add-pair-error', response)
-                return;
-            }
-            if (in_base_symbol == ""){
-                response = "La moneda base está vacía"
-                this.$emit('add-pair-error', response)
-                return;
-            }
-
-            //if no errors add pair
-            var pair_name = data["base"]+"/"+data["ref"]
-            this.data.push({
-                "pair_id":"#",
-                "pair_name":pair_name,
-                "base":in_base_symbol,
-                "ref":in_ref_symbol
+        }
+    },
+    methods:{       
+        actualizar_lista:function(){
+            this.$http.post(
+                '/CurrencyManager/ParFinder/get_list_x_mon',{
+                    moneda_id:this.moneda_id
+                }
+            ).then(httpresp => {
+                let appresp = httpresp.data
+                this.data = appresp.data
+                if (appresp.success == false){
+                    this.$refs.msgbox.httpresp(httpresp)
+                }
             })
-        },        
-        get_pairs_data:function(){
-            return this.$data
         },
         remove_pairs:function(){
             this.data = []

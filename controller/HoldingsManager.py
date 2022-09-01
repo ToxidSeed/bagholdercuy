@@ -8,10 +8,11 @@ from sqlalchemy import func
 import common.Converter as Converter
 from common.Response import Response
 from common.StatusMessage import StatusMessage
+from common.api.iexcloud import iexcloud
 from pytz import HOUR, timezone
 from datetime import datetime, date
-from config import APP_DEC_PREC, MARKET_API_LIST
-import config as CONFIG
+from config.general import APP_DEC_PREC, MARKET_API_LIST
+
 #from controller.StockDataProvider import StockDataProvider
 import common.Markets as Markets
 from controller.Base import Base
@@ -39,7 +40,7 @@ class HoldingsManager(Base):
 
         return holdings
 
-    def get_list(self, args={}):                   
+    def get_list(self, args={}):                             
         active_holdings = self.__get_active_holdings()
 
         #shares_balance * current_price
@@ -48,7 +49,7 @@ class HoldingsManager(Base):
             elem_dict = Converter.to_dict(elem) 
             vals_adic = self.default_bridge.calc_val_adic(elem)
             elem_dict.update(vals_adic)
-            results.append(elem_dict)
+            results.append(elem_dict)        
         return Response().from_raw_data(results)
 
     def __options_price(self,holding={},quote=None):
@@ -97,9 +98,16 @@ class HoldingsManager(Base):
 
         return holding
 
+class ResumenController(Base):
+    def __init__(self):
+        pass
+
+    
+
 class iexcloud_bridge:
     def __init__(self):
-        self.apiobj = MarketAPI().get_api()
+        #self.apiobj = MarketAPI().get_api()
+        self.api = iexcloud()
 
     def calc_val_adic(self, holding=None):        
         vals = {}
@@ -113,22 +121,15 @@ class iexcloud_bridge:
     def __calc_val_opciones(self, holding=None):
         pass
 
-    def __calc_val_equity(self, holding=None):
-        args  = {
-            "symbol":holding.symbol.upper()
-        }
-        quote = self.apiobj.get_quote(args)
-        close = quote["close"]
-        prev_close = quote["previousClose"]
-        close_date = quote["closeTime"]
-
+    def __calc_val_equity(self, holding=None):        
+        imp_open, imp_close,prev_close, close_date = self.get_quote(holding.symbol.upper())
 
         sum_shares_balance = float(holding["sum_shares_balance"])
         sum_imp_operacion = float(holding["sum_imp_operacion"])            
         avg_buy_price = round(sum_imp_operacion/sum_shares_balance,APP_DEC_PREC)        
-        market_value = round(sum_shares_balance * close, APP_DEC_PREC)        
-        daily_change = round(((close - prev_close)/prev_close)*100,APP_DEC_PREC)
-        total_change = round(((close - avg_buy_price)/avg_buy_price)*100,APP_DEC_PREC)
+        market_value = round(sum_shares_balance * imp_close, APP_DEC_PREC)        
+        daily_change = round(((imp_close - prev_close)/prev_close)*100,APP_DEC_PREC)
+        total_change = round(((imp_close - avg_buy_price)/avg_buy_price)*100,APP_DEC_PREC)
         total_pl = round(market_value - sum_imp_operacion,APP_DEC_PREC)
         
         vals = {
@@ -137,10 +138,39 @@ class iexcloud_bridge:
             "total_change":total_change,
             "total_pl":total_pl,
             "last_price_date": close_date,
-            "last_price":close,
+            "last_price":imp_close,
             "market_value":market_value
         }
 
         return vals
+
+    def get_quote(self, symbol=""):
+        args = {
+            "symbol":symbol
+        }
+
+        print(datetime.now())
+        quote = self.api.get_quote(args)
+        print(datetime.now())
+
+        imp_open = quote.get("open")
+        if imp_open is None:
+            imp_open = quote.get("iexOpen")
+
+        imp_close = quote.get("close")        
+        if imp_close is None:
+            imp_close = quote.get("iexRealtimePrice")
+        
+        imp_prev_close = quote.get("previousClose")
+
+        close_date = quote.get("closeTime")
+        if close_date is None:
+            close_date = quote.get("latestUpdate")
+
+        return (imp_open, imp_close,imp_prev_close, close_date)
+
+
+        
+        
 
 

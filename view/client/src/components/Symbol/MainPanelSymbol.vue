@@ -1,41 +1,37 @@
 <template>
-    <div class="row">
-        <div class="col-3">
-            <q-tabs
-            v-model="tab"                    
+    <div>
+        <div>
+            <q-splitter
+                v-model="visible"
+                :limits="[0,100]"
+                style="height: 100hr" 
             >
-                <q-tab name="symbol" label="Symbol" />
-                <q-tab name="symbol_loader" label="Symbol Loader" />
-            </q-tabs>
-            <q-tab-panels
-            v-model="tab"             
-            >
-                <q-tab-panel name="symbol">
+                <template v-slot:before>
                     <PanelSymbol/>
-                </q-tab-panel>
-                <q-tab-panel name="symbol_loader">
-                    <PanelSymbolLoader/>
-                </q-tab-panel>
-            </q-tab-panels>
+                </template>
+                <template v-slot:after>
+                    <TableSymbol class="col-9"/>
+                </template>            
+            </q-splitter>
         </div>
-        <TableSymbol class="col-9"/>
+        
     </div>
 </template>
 <script>
 import PanelSymbol from './PanelSymbol.vue'
 import TableSymbol from './TableSymbol.vue'
-import PanelSymbolLoader from './PanelSymbolLoader.vue'
+//import PanelSymbolLoader from './PanelSymbolLoader.vue'
 
 export default {
     name:"MainPanelSymbol",
     components:{
         PanelSymbol,
-        TableSymbol,
-        PanelSymbolLoader
+        TableSymbol/*,
+        PanelSymbolLoader*/
     },
     data: () => {
         return {
-            tab:"symbol"
+            visible:25
         }
     }
 }

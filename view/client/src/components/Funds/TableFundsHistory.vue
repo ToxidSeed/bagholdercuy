@@ -8,12 +8,10 @@
             dense
             selection="multiple"
             :selected.sync="selected"
+            separator="vertical"
         >
             <template v-slot:top>
-                <div>
-                    <div class="text-h6">
-                        Historial
-                    </div>
+                <div>                    
                     <q-btn label="Rec. Saldos" color="primary"/>                    
                 </div>
             </template>
@@ -29,36 +27,38 @@ export default {
                 {
                     label:"id",
                     name:"id",
-                    field:"id"
+                    field:"id",
+                    style:"width:100px;"
                 },
                 {
                     label:"Fch. transacción",
                     name:"fec_transaccion",
-                    field:"fec_transaccion"
+                    field:"fec_transaccion",
+                    style:"width:100px;"
                 },{
                     label:"Tipo",
-                    name:"tipo_transaccion",
-                    field:"tipo_transaccion"
+                    name:"tipo_trans_id",
+                    field:"tipo_trans_id",
+                    style:"width:100px;"
                 },{
-                    label:"Subtipo",
-                    name:"subtipo_transaccion",
-                    field:"subtipo_transaccion"
+                    label:"Imp. Transaccion",
+                    name:"imp_transaccion",
+                    field:"imp_transaccion",
+                    style:"width:100px;"
                 },{
-                    label:"Importe",
-                    name:"importe",
-                    field:"importe"
+                    label:"Mon. Transaccion",
+                    name:"mon_trans_id",
+                    field:"mon_trans_id",
+                    style:"width:100px;"
                 },{
                     label:"Concepto",
-                    name:"concepto",
-                    field:"concepto"
+                    align:"left",
+                    name:"info_adicional",
+                    field:"info_adicional"
                 },{
-                    label:"Moneda",
-                    name:"moneda_symbol",
-                    field:"moneda_symbol"
-                },{
-                    label:"Saldo",
-                    name:"saldo",
-                    field:"saldo"
+                    label:"",
+                    name:"",
+                    field:""
                 }
             ],
             data:[],

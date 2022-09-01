@@ -14,9 +14,9 @@
             <template v-slot:top>
                 <div class="column">
                     <div class="text-h5 col">Historial de Operaciones</div>                
-                    <div class="col">                        
+                    <!--<div class="col">                        
                         <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_opers" />
-                    </div>
+                    </div>-->
                 </div>
             </template>
             <!--<template v-slot:header="props">
@@ -97,68 +97,79 @@ export default {
         return {
             columns:[
                 {
-                    label:"ID",
+                    label:"Fch. Operacion",
                     align:"left",
-                    field:"id",
-                    name:"id"
+                    field:"trade_date",
+                    name:"trade_date",
+                    style:"width:100px;"
                 },{
                     label:"orden",
                     align:"left",
                     field:"num_orden",
-                    name:"num_orden"
+                    name:"num_orden",
+                    style:"width:50px;"
                 },{
                     label:"N. Operacion",
                     field:"num_operacion",
                     align:"left",
-                    name:"num_operacion"
+                    name:"num_operacion",
+                    style:"width:50px;"
                 },{
                     label:"Symbol",
                     align:"left",
                     field:"symbol",
-                    name:"symbol"
+                    name:"symbol",
+                    style:"width:100px;"
                 },{
                     label:"Operacion",
                     align:"left",
                     field:"tipo_oper_nombre",
-                    name:"tipo_oper_nombre"
-                },{
-                    label:"Fch. Operacion",
-                    align:"left",
-                    field:"trade_date",
-                    name:"trade_date"
+                    name:"tipo_oper_nombre",
+                    style:"width:100px;"
                 },{
                     label:"Cantidad",
                     align:"right",
                     field:"cantidad",
-                    name:"cantidad"
+                    name:"cantidad",
+                    style:"width:100px;"
                 },{
                     label:"Saldo",
                     align:"right",
                     field:"saldo",
-                    name:"saldo"
+                    name:"saldo",
+                    style:"width:100px;"
                 },{
                     label:"Imp. Accion",
                     align:"right",
                     field:"imp_accion",
-                    name:"imp_accion"
+                    name:"imp_accion",
+                    style:"width:100px;"
                 },{
                     label:"Imp. Operacion",
                     align:"right",
                     field:"imp_operacion",
-                    name:"imp_operacion"
+                    name:"imp_operacion",
+                    style:"width:100px;"
                 },{
                     label:"G/P",
                     align:"right",
                     field:"realized_gl",
-                    name:"realized_gl"
+                    name:"realized_gl",
+                    style:"width:100px;"
                 },{
                     label:"orden_id",
-                    align:"orden_id",
+                    align:"left",
                     field:"order_id",
-                    name:"order_id"
+                    name:"order_id",
+                    style:"width:100px;"
+                },{
+                    label:"",
+                    align:"",
+                    field:"",
+                    name:""
                 }
             ],
-            data:[],
+            data:[],    
             selected:[],
             pagination:{
                 rowsPerPage:30
@@ -173,9 +184,18 @@ export default {
             this.$http.post(
                 'OperacionesManager/BuscadorOperaciones/obt_historial_oper',{
                 }).then(httpresp => {
+                    this.data = []
                     var appresp = httpresp.data
-                    console.log(appresp)
-                    this.data = appresp.data
+                    //console.log(appresp)                    
+                    appresp.data.forEach(element => {
+                        let eltmp = element
+                        eltmp.imp_operacion = element.imp_operacion.toFixed(2)
+                        eltmp.realized_gl = element.realized_gl.toFixed(2)                        
+                        eltmp.imp_accion = element.imp_accion.toFixed(2)                        
+                        eltmp.saldo = element.saldo.toFixed(2)                        
+                        this.data.push(eltmp)
+                    })
+                    //this.data = appresp.data
                 })
         },        
         ins_row:function(rclicked_row){

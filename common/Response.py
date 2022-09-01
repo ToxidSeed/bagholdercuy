@@ -8,6 +8,8 @@ from flask import jsonify
 import json
 
 
+
+
 class Response:
     def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata={},errors=[], stacktrace=None):
         self.answer = {
@@ -15,6 +17,7 @@ class Response:
             "code":code,
             "data":data,            
             "message":msg,
+            "expired":False,
             "extradata":extradata,
             "errors":errors,
             "stacktrace":stacktrace
@@ -23,6 +26,12 @@ class Response:
         self.formatter = formatter
         self.formats = {}
 
+    def elem(self, key="",element=None):
+        if self.answer["data"] is None:
+            self.answer["data"]={}
+
+        self.answer["data"][key]=element
+        
     def from_raw_data(self, rawdata=None, formats={}):
         self.formats = formats
         if rawdata is not None:
@@ -46,13 +55,15 @@ class Response:
             self.answer["message"] = exception.msg
             self.answer["errors"] = exception.errors
             self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])
-
+        elif type(exception).__name__ == "ExpiredSignatureError":
+            self.answer["success"] = False
+            self.answer["message"] = "El acceso del usuario ha expirado, volver a conectarse"
+            self.answer["expired"] = True
         else:        
             errortype = type(exception).__name__
             self.answer["success"] = False
-            self.answer["message"] = "Error no controlado, tipo:{0}, msg: {1}".format(errortype,exception)
+            self.answer["message"] = "Error no controlado, {0}, msg: {1}".format(errortype,exception)
             self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])        
-
         return self.answer
 
     def add_extradata(self, key, value):

@@ -11,7 +11,7 @@
                         <q-input label="Desde" mask="##/##/####" fill-mask="#" v-model="desde"/>                    
                     </div>                                
                 </div>-->
-                <q-input label="Pares" v-model="pares"/>                                    
+                <q-input stack-label label="Pares" v-model="pares" class="text-uppercase"/>                                    
             </q-card-section>            
             <q-separator/>
             <q-card-actions align="right">
@@ -19,11 +19,17 @@
                 <q-btn label="cancelar" color="red" @click="btn_cancelar_click"/>
             </q-card-actions>
         </q-card>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
+import MessageBox from '@/components/MessageBox.vue'
+
 export default {
     name:"PanelCurrencyExchangeRateHistLoader",
+    components:{
+        MessageBox
+    },
     data: () => {
         return {            
             pares:""
@@ -37,10 +43,7 @@ export default {
             this.$http.post('CurrencyExchangeManager/DataLoader/do',{                
                 pares:this.pares
             }).then(httpresp => {
-                console.log(httpresp)
-                var appresp = httpresp.data
-                var data = appresp.data
-                console.log(data)
+                this.$refs.msgbox.httpresp(httpresp)                
             })
         }
     }

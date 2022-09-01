@@ -21,5 +21,6 @@ class StockData(db.Model):
     adj_close = db.Column(db.Numeric(15,4))
     adj_volume = db.Column(db.Numeric(15,4))
     split_factor = db.Column(db.Integer)    
+    fch_registro = db.Column(db.Date)
 
     

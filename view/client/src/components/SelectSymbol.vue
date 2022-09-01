@@ -1,16 +1,18 @@
 <template>
     <q-select   
         ref="selsymbol"                                     
-        label="Buscar symbol"
+        :label="label"
+        stack-label
         v-model="symbol"  
         use-input
-        hide-selected                                      
+        hide-selected                                              
         fill-input        
         input-debounce="1000"
         @filter="filterFn"
         @input="sel_symbol"
         :options="symbol_list"                            
-        clearable                    
+        clearable      
+        :readonly="readonly"              
     />
 </template>
 <script>
@@ -20,6 +22,14 @@ export default {
         in_symbol:{
             type:String,
             default:""
+        },
+        readonly:{
+            type:Boolean,
+            default:false
+        },
+        label:{
+            type:String,
+            default:"Buscar Symbol"
         }
     },    
     data:() => {
@@ -31,8 +41,8 @@ export default {
     mounted:function(){        
         if (this.in_symbol != ""){
             this.symbol = {
-                "value":this.in_symbol,
-                "label":this.in_symbol
+                value:this.in_symbol,
+                label:this.in_symbol
             }            
         }        
     },

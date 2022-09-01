@@ -1,6 +1,5 @@
 var func = {
-    preventInvalidNumbers:function(event){
-        console.log(event)
+    preventInvalidNumbers:function(event){        
         var value = event.target.value
 
         //keycodes
@@ -71,8 +70,7 @@ var func = {
         
         let len = value.length
         len = len - (len-(pos+1)-decimals)                
-
-        console.log(value.substring(0, len))
+        
         return value.substring(0, len)
     }
 }

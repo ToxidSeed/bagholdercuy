@@ -1,18 +1,21 @@
 <template>
     <div>        
         <q-table
-            title="Historial de Tipos de Cambio"
+            :title="title"
             :data="data"
             :columns="columns"
             row-key="par_name"
             dense
+            separator="vertical"
             :pagination="pagination"
+            @row-dblclick="row_dblclick"
+            :visible-columns="visiblecolumns"
         >
             <template v-slot:top>
                 <div>
-                    <div class="text-h6">Historial de Tipos de Cambio</div>
+                    <div class="text-h6">{{title}}</div>
                     <div>
-                        <q-btn color="light-green" icon="search" @click="win_filtrar_open=true"/>
+                        <q-btn label="Criterios de búsqueda" color="light-green" icon="search" @click="win_filtrar_open=true"/>
                     </div> 
                 </div>               
             </template>
@@ -24,7 +27,7 @@
                 </q-card-section>
                 <q-card-section class="q-pt-none">
                     <div class="row">
-                        <q-input class="col-4" label="Fch. Cambio" v-model="fch_cambio" mask="##/##/####" fill-mask="#"/>
+                        <q-input class="col-4" label="Fch. Cambio" v-model="fch_cambio" mask="##/##/####" fill-mask=""/>
                     </div>
                     <q-input label="Par" v-model="par"/>
                 </q-card-section>
@@ -39,40 +42,66 @@
 <script>
 export default {
     name:"TableCurrencyExchangeRates",
+    props:{
+        selection:{
+            type:Boolean,
+            default:false
+        },
+        title:{
+            type:String,
+            default:"Historial de Tipos de Cambio"
+        },
+        visiblecolumns:{
+            type: Array,
+            default: () => [
+                "fch_cambio","par_nombre","ind_activo","imp_compra","imp_venta",""
+            ]
+        }
+    },
     data: () => {
         return {
             fch_cambio:"",
             par:"",
             win_filtrar_open:false,
             pagination:{
-                rowsPerPage:20
+                rowsPerPage:25
             },
             columns:[
                 {
                     label:"Fecha Cambio",
                     align:"left",
-                    field:"fecha_cambio",
-                    name:"fecha_cambio"
+                    field:"fch_cambio",
+                    name:"fch_cambio",
+                    style: 'width: 40px'
                 },{
                     label: "Par",
                     align:"left",
-                    field:"par_name",
-                    name:"par_name"
+                    field:"par_nombre",
+                    name:"par_nombre",
+                    style: 'width: 60px'
                 },{
                     label:"Ind. Activo",
                     align:"left",
                     field:"ind_activo",
-                    name:"ind_activo"
+                    name:"ind_activo",
+                    style: 'width: 60px'
                 },{
                     label:"Imp. Compra",
                     align:"right",
-                    field:"importe_compra",
-                    name:"importe_compra"
+                    field:"imp_compra",
+                    name:"imp_compra",
+                    style: 'width: 60px'
                 },{
                     label:"Imp. Venta",
                     align:"right",
-                    field:"importe_venta",
-                    name:"importe_venta"
+                    field:"imp_venta",
+                    name:"imp_venta",
+                    style: 'width: 60px'
+                },{
+                    label:"",
+                    align:"left",
+                    field:"",
+                    name:""
                 }
             ],
             data:[]
@@ -89,6 +118,11 @@ export default {
                 var appdata = httpresponse.data
                 this.data = appdata.data
             })
+        },
+        row_dblclick:function(event, row){
+            if(this.selection == true){
+                this.$emit('select',row)
+            }
         }
     }
 }

@@ -1,12 +1,21 @@
 <template>
     <div>
         <q-card>
-            <q-card-section>
-                <div class="text-h6">Deposit</div>
+            <q-card-section class="q-pb-none q-pt-none" >
+                <div class="row">
+                    <div class="text-h6">Deposit</div>
+                    <q-space/>
+                    <q-btn  flat dense rounded icon="close" :to="{name:'funds'}"/>
+                </div>
             </q-card-section>
+            <q-toolbar >
+                <q-btn no-caps color="blue-10" label="Guardar" @click="save"/>
+            </q-toolbar>
             <q-card-section>                
                 <div class="row">
-                    <SelectMoneda v-on:moneda-select="moneda_select" class="col-6"/>
+                    <SelectMoneda v-on:moneda-select="moneda_select" class="col-6"
+                    v-on:httperror="open_httpresp_dialog"
+                    />
                     <q-input 
                     v-model="importe" label="Importe"
                     mask="#.##" reverse-fill-mask               
@@ -20,11 +29,7 @@
                     />
                 </div>
 
-            </q-card-section>
-            <q-card-section>
-                <q-btn color="primary" label="Guardar" @click="save"/>
-                <q-btn color="red" class="q-ml-xs" label="Cancelar" @click="cancelar"/>
-            </q-card-section>
+            </q-card-section>            
         </q-card>
         <MessageBox ref="msgbox"/>
     </div>
@@ -68,15 +73,31 @@ export default {
                 moneda_symbol: moneda_symbol,
                 fec_deposito: this.fec_deposito,
                 importe: this.importe
+            },{
+                headers:{
+                    "Authorization":localStorage.getItem("token")
+                }
             }).then(httpresp => {                
-                this.$refs.msgbox.httpresp(httpresp)                
+                this.open_httpresp_dialog(httpresp)
+                
+                //var appresp = httpresp.data                
+                //var appdata = appresp.data 
+                /*if (appdata.success == true){
+                    this.$emit('btn-save-success',appdata.extradata)
+                }*/                
             }).catch(error => {
                 console.log(error)
+            }).then(()=>{
+                this.$emit('deposito-fin')
             })
         },
         cancelar:function(){
             this.$emit('deposit-cancel')
+        },
+        open_httpresp_dialog:function(httpresp){
+            this.$refs.msgbox.httpresp(httpresp)                   
         }
+
     }
 }
 </script>

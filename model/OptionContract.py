@@ -1,6 +1,6 @@
 from app import db
 
-class OptionContract(db.Model):
+class OptionContractModel(db.Model):
     __tablename__ = "tb_option_contract"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -14,3 +14,5 @@ class OptionContract(db.Model):
     symbol = db.Column(db.String(50))
     underlying = db.Column(db.String(5))
     register_date = db.Column(db.Date)
+    moneda_id = db.Column(db.String(3))
+    fch_audit = db.Column(db.DateTime)

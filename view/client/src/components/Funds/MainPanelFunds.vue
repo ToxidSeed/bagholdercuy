@@ -11,10 +11,10 @@
         <q-tab-panels
             v-model="tab"
         >
-            <q-tab-panel name="Gestion"> 
-                <PanelFunds/>
+            <q-tab-panel name="Gestion" class="q-pl-none"> 
+                <PanelFunds v-bind:visible="mantvisible"/>
             </q-tab-panel>
-            <q-tab-panel name="Historial">
+            <q-tab-panel name="Historial" class="q-pl-none q-pr-none">
                 <TableFundsHistory/>
             </q-tab-panel>
         </q-tab-panels>
@@ -32,7 +32,25 @@ export default {
     },
     data: () => {
         return {
+            mantvisible:0,
             tab:"Gestion"
+        }
+    },
+    mounted:function(){
+        this.reset()    
+    },
+    watch:{
+        $route:function(){
+            this.reset()    
+        }
+    },
+    methods:{
+        reset:function(){
+            if(this.$route.name!="funds"){
+                this.mantvisible = 30
+            }else{
+                this.mantvisible = 0
+            }            
         }
     }
 }

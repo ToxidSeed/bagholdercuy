@@ -3,12 +3,20 @@ from model.OrderModel import OrderModel
 from datetime import datetime, date, time
 from common.AppException import AppException
 from common.Response import Response
+
 from model.StockSymbol import StockSymbol
 from model.StockTrade import StockTrade
-import sqlalchemy.sql.functions as func
-import json
+from model.OrderModel import OrderModel
 
-class OrdenManager:
+from controller.Base import Base
+
+import sqlalchemy.sql.functions as func
+from sqlalchemy.sql import extract
+
+import json
+from config.general import CLIENT_DATE_FORMAT
+
+class OrdenManager(Base):
     def __init__(self, num_orden_ref=0, accion=""):
         self.num_orden_ref = num_orden_ref
         self.num_orden_ini = 0
@@ -64,6 +72,7 @@ class ProcesadorEntryPoint(OrdenManager):
     def procesar(self, args={}):
         try:
             procesador = Procesador()
+            self._validar_procesar(args)
             orden = self._collect(args)            
             procesador.procesar(orden)
             db.session.commit()
@@ -79,16 +88,14 @@ class ProcesadorEntryPoint(OrdenManager):
                 order_type = args["order_type"],
                 quantity = int(args["shares_quantity"]),
                 price = float(args["price_per_share"]),
-                order_date = date.fromisoformat(args["order_date"]),
+                order_date = datetime.strptime(args["order_date"],CLIENT_DATE_FORMAT).date(),
                 register_date = datetime.now().date()
             )        
 
-        return order    
-
-        
+        return order            
 
     def _validar_procesar(self, args={}):
-        #validate symbol
+        #validate symbol    
         errors = []
         if "symbol" not in args:
             errors.append("No se ha enviado symbol como parámetro en httprequest")                        
@@ -109,7 +116,7 @@ class ProcesadorEntryPoint(OrdenManager):
         if "order_date" not in args:
             errors.append("No se ha enviado [order_date] como parámetro del request")
         
-        order_date = date.fromisoformat(args["order_date"])
+        order_date = datetime.strptime(args.get("order_date"),CLIENT_DATE_FORMAT).date()        
         if order_date is None:
             errors.append("No se ha enviado una fecha de transacción correcta, valor enviado: {}".format(args["order_date"]))
 
@@ -122,11 +129,13 @@ class ProcesadorEntryPoint(OrdenManager):
 
         args["price_per_share"] = float(trade_price) 
 
+        """
         if "action" not in args:
             errors.append("No se ha enviado [action] como parámetro del request")
         else:
             if args["action"] not in ["ins_antes","ins_despues",""]:
                 errors.append("El parámetro 'action' tiene el valor no permitido: {0}".format(args["action"]))
+        """
 
         if len(errors) > 0:
             raise AppException(msg="Se han encontrado errores de validacion", errors=errors)
@@ -292,8 +301,6 @@ class Eliminador(OrdenManager):
         return symbols
 
 
-
-
 class Buscador(OrdenManager):
     def __init__(self):
         pass
@@ -303,3 +310,91 @@ class Buscador(OrdenManager):
             OrderModel
         ).all()
         return Response(raw_data=results).get()
+
+    def get_max_fch_orden(self, args={}):
+        response = Response()
+
+        result = db.session.query(
+            func.max(OrderModel.order_date).label("fch_orden"),
+            extract("year",func.max(OrderModel.order_date)).label("anyo"),
+            extract("month",func.max(OrderModel.order_date)).label("mes")
+        ).first()
+
+        """
+        response.elem("fch_orden",datetime.now().strftime(CLIENT_DATE_FORMAT))
+
+        if result is not None and result.fch_orden is not None:            
+            response.elem("fch_orden",result.fch_orden.strftime(CLIENT_DATE_FORMAT))
+        """                
+        return response.from_raw_data(result)
+
+    def get_ordenes_x_fecha(self, args={}):
+        fch_orden = args.get("fch_orden")        
+
+        if fch_orden is None:
+            raise AppException(msg="No se ha ingresado una fecha de orden")
+
+        fch_orden = datetime.strptime(fch_orden, CLIENT_DATE_FORMAT)
+
+        result = db.session.query(
+            OrderModel
+        ).filter(
+            OrderModel.order_date == fch_orden
+        ).all()
+
+        return Response().from_raw_data(result)
+
+    def get_fechas(self, args={}):
+        anyo = args.get("anyo")
+        mes  = args.get("mes")
+
+        if anyo is None:
+            raise AppException(msg="No se ha ingresado el Año")
+        if mes is None:
+            raise AppException(msg="No se ha ingresado el mes")
+
+        results = db.session.query(
+            OrderModel.order_date,
+            func.count(1).label("num_ordenes")
+        ).filter(
+            extract("year",OrderModel.order_date) == anyo,
+            extract("month",OrderModel.order_date) == mes
+        ).group_by(
+            OrderModel.order_date
+        ).all()
+
+        return Response().from_raw_data(results)
+
+    def get_max_anyo(self, args={}):
+        result = db.session.query(
+            func.max(extract("year",OrderModel.order_date)).label("max_anyo")
+        ).first()
+
+        return Response().from_raw_data(result)
+
+    def get_anyos(elf, args={}):        
+        results = db.session.query(
+            extract("year",OrderModel.order_date).label("anyo")
+        ).distinct("anyo").all()
+        return Response().from_raw_data(results)             
+    
+    def get_meses(self, args={}):
+        anyo = args.get("anyo")
+        if anyo is None or anyo=="":
+            raise AppException(msg="No se ha ingresado el año")
+        
+        results = db.session.query(
+            extract("month",OrderModel.order_date).label("mes")
+        ).filter(
+            extract("year",OrderModel.order_date)==anyo
+        ).distinct().all()
+
+        return Response().from_raw_data(results)
+
+
+
+
+
+
+
+        

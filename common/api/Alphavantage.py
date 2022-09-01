@@ -1,8 +1,7 @@
 from app import app, db
 import requests
 from datetime import datetime, date
-
-import config as CONFIG
+from config.general import ALPHAVANTAGE_KEY, ALPHAVANTAGE_ENDPOINT
 
 
 class Alphavantage:
@@ -11,11 +10,11 @@ class Alphavantage:
         self.key = app.config["ALPHAVANTAGE_KEY"]        
         pass    
 
-    def fx_faily(self, params={}):
+    def fx_daily(self, params={}):
         params["function"] = "FX_DAILY"
-        params["apikey"] = CONFIG.ALPHAVANTAGE_KEY
+        params["apikey"] = ALPHAVANTAGE_KEY
 
-        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT, params=params)
+        response = requests.get(ALPHAVANTAGE_ENDPOINT, params=params)
         data = response.json()
         return data
 
@@ -29,7 +28,7 @@ class Alphavantage:
             "function":function,            
             "symbol":symbol,
             "outputsize":outputsize,
-            "apikey":CONFIG.ALPHAVANTAGE_KEY
+            "apikey":ALPHAVANTAGE_KEY
         }        
 
         response = requests.get(self.default_endpoint, params=params)
@@ -133,9 +132,9 @@ class Alphavantage:
         params = {
             "function":function,            
             "symbol":symbol,            
-            "apikey":CONFIG.ALPHAVANTAGE_KEY
+            "apikey":ALPHAVANTAGE_KEY
         }
-        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT,params)
+        response = requests.get(ALPHAVANTAGE_ENDPOINT,params)
         data = response.json()
         series = data["Weekly Adjusted Time Series"]
         return series
@@ -147,10 +146,10 @@ class Alphavantage:
         params = {
             "function":function,            
             "symbol":symbol,            
-            "apikey":CONFIG.ALPHAVANTAGE_KEY
+            "apikey":ALPHAVANTAGE_KEY
         }
 
-        response = requests.get(CONFIG.ALPHAVANTAGE_ENDPOINT,params)
+        response = requests.get(ALPHAVANTAGE_ENDPOINT,params)
         data = response.json()
         series = data["Monthly Adjusted Time Series"]
         return series

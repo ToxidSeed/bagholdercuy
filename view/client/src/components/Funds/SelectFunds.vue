@@ -17,6 +17,12 @@
 <script>
 export default {
     name:"SelectFunds",
+    props:{
+        throwerror:{
+            type:Boolean,
+            default:true
+        }
+    },
     data: () => {
         return {
             fund:"",
@@ -29,23 +35,38 @@ export default {
             this.$emit('fund-select',this.fund)
         },
         filter_fn:function(val, update){
+            update(()=>{})
             this.$http.post('FundsManager/FundsManager/get_funds',{
                 symbol:val
-            }).then(httpresponse => {
-                var appresponse = httpresponse.data
-                var options = []
-                for (let elem of appresponse.data){
-                    var label = elem["moneda_symbol"]+" - "+elem["importe"]
-                    options.push({
-                        "symbol":elem["moneda_symbol"],
-                        "label":label
-                    })
+            },{
+                headers:{
+                    'Authorization':localStorage.getItem('token')
                 }
-
-                update(() => {
-                    this.list = options
-                })
-            })
+            }).then(httpresponse => {                
+                let appresponse = httpresponse.data
+                if(appresponse.success == false){
+                    if(this.throwerror == true){
+                        this.$emit('httperror',httpresponse)
+                    }                    
+                    if(appresponse.expired == true){
+                        this.$router.push({name:"login"})                        
+                    }                    
+                }else{
+                    let options = []                
+                    for (let elem of appresponse.data){
+                        var label = elem["moneda"]+" - "+elem["importe_fmt"]
+                        options.push({
+                            "symbol":elem["moneda"],
+                            "label":label
+                        })
+                    }                
+                    update(() => {
+                        this.list = options
+                    })
+                }                                                                               
+            }).then(()=>{
+                console.log('final')
+            })  
         }
     }
 }

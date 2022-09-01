@@ -39,24 +39,27 @@
                     <q-btn color="primary" label="Load" class="q-mt-xs" @click="load"/>
                     <q-btn color="primary" label="Reset" class="q-mt-xs q-ml-xs" @click="load"/>
                 </q-card-actions>
-            </q-card >
-            <DataloaderOptions class="col-3"/>
+            </q-card >            
         </div>
         <MsgBox ref="msgbox"/>
     </div>
 </template>
 <script>
 //import MessageBox from './MessageBox.vue';
-import DataloaderOptions from './DataLoaderOptions.vue'
 import SelectSymbol from "@/components/SelectSymbol.vue"
 import MsgBox from "@/components/MessageBox.vue"
 
 export default {
     name:"DataLoader",
-    components:{
-        DataloaderOptions,
+    components:{        
         SelectSymbol,
         MsgBox
+    },
+    props:{
+        action:{
+            type:String,
+            default:"",
+        }
     },
     data:() => {
         return {            
@@ -79,20 +82,26 @@ export default {
             }
         }
     },    
+    watch:{
+        action:function(oldval){
+            console.log(oldval)
+        }
+    },
     mounted:function(){
-
+        console.log(this.action)
     },
     methods:{
         load:function(){
             var symbol_value = this.symbol.value
             this.$http.post(
-            'SerieManager/SerieManager/load',{
+            '/SerieManager/SerieManager/load',{
                 symbol:symbol_value,
                 method:this.method,
                 frequency:this.frequency
             }).then(httpresponse => {
                 let appresp = httpresponse.data
-                this.$refs.msgbox.new(appresp)
+                console.log(appresp)
+                this.$refs.msgbox.httpresp(httpresponse)
             })
         },
         sel_symbol:function(selected){            

@@ -1,6 +1,6 @@
 import requests
 from app import app, db
-import config as config
+from config.general import IEXCLOUD_ENDPOINT, IEXCLOUD_KEY
 from common.StatusMessage import StatusMessage
 from datetime import datetime, date
 from common.Error import Error
@@ -65,8 +65,8 @@ class iexcloud:
         if asset_type == "OPTIONS":
             return (self.get_option_eod_data(args), None)
         
-    def get_contracts(self, symbol=""):
-        #symbol = args["symbol"]
+    def get_contracts(self, args={}):
+        symbol = args.get("symbol")
         endpoint = "{0}/ref-data/options/symbols/{1}".format(self.base_endpoint,symbol)
         headers = {
             'Content-Type': 'application/json'
@@ -133,8 +133,11 @@ class iexcloud:
 
         return quote
 
-    def get_historical_prices(self, symbol):        
-        endpoint = "{0}/stock/{1}/chart/max".format(self.base_endpoint, symbol)
+    def get_historical_prices(self, args={}):        
+        symbol = args.get("symbol")
+        api_range = args.get("range").lower()
+
+        endpoint = "{0}/stock/{1}/chart/{2}".format(self.base_endpoint, symbol, api_range)
         headers = {
             'Content-Type': 'application/json'
         }
@@ -147,15 +150,16 @@ class iexcloud:
 
         return data
             
-    def fx_historical(self, params={}):        
+    def fx_historical(self, params={}):     
+                   
 
-        endpoint = "{0}/fx/historical/".format(config.IEXCLOUD_ENDPOINT)
+        endpoint = "{0}/fx/historical/".format(IEXCLOUD_ENDPOINT)
         headers = {
             'Content-Type': 'application/json'
         }
 
         
-        params["token"] = config.IEXCLOUD_KEY
+        params["token"] = IEXCLOUD_KEY
         params["symbols"] = "USDPEN"
 
         rsp = requests.get(endpoint,params=params, headers=headers)
@@ -164,23 +168,23 @@ class iexcloud:
         return data
         
     def symbols(self, params={}):
-        endpoint = "{0}/ref-data/symbols".format(config.IEXCLOUD_ENDPOINT)
+        endpoint = "{0}/ref-data/symbols".format(IEXCLOUD_ENDPOINT)
         headers = {
             'Content-Type': 'application/json'
         }
 
-        params["token"] = config.IEXCLOUD_KEY
+        params["token"] = IEXCLOUD_KEY
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()
         return data
 
     def etf_symbols(self, params={}):
-        endpoint = "{0}/ref-data/mutual-funds/symbols".format(config.IEXCLOUD_ENDPOINT)
+        endpoint = "{0}/ref-data/mutual-funds/symbols".format(IEXCLOUD_ENDPOINT)
         headers = {
             'Content-Type': 'application/json'
         }
 
-        params["token"] = config.IEXCLOUD_KEY
+        params["token"] = IEXCLOUD_KEY
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()
         return data

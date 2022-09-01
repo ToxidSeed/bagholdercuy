@@ -13,7 +13,7 @@
                 </div>
             </q-card-section>  
             <q-card-actions>
-                <q-btn label="aceptar" color="primary" @click="save"/>
+                <q-btn label="aceptar" color="primary" @click="load"/>
                 <q-btn label="cancelar"/>
             </q-card-actions>
         </q-card>

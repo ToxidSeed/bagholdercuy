@@ -1,75 +1,67 @@
 <template>
-    <div>
-        <div>
-            <q-btn class="q-mb-xs" color="green" label="Deposit" @click="deposit"/>
-            <q-btn class="q-ml-xs q-mb-xs" color="red" label="Withdraw" @click="withdraw"/>
-            <q-btn class="q-ml-xs q-mb-xs" color="primary" label="Convert" @click="convert"/>
-        </div>
-        <div class="row" >
-            <div v-if="panel_show==true" class="col-3">                
-                <PanelDeposit v-if="deposit_show == true" v-on:deposit-cancel="deposit_cancel" />
-                <PanelWithdraw v-if="withdraw_show == true" v-on:withdraw-cancel="withdraw_cancel"/>
+    <div>        
+        <q-splitter
+        v-model="visible"
+        :limits="[0,100]"
+        style="height:100hr"
+        >            
+            <template v-slot:before>
+                <router-view 
+                v-on:deposito-fin="actualizar_tabla_fondos"
+                v-on:retiro-fin="actualizar_tabla_fondos"
+                v-on:conversion-fin="actualizar_tabla_fondos"
+                ></router-view>
+            </template>
+            <template v-slot:after >
+                <div>
+                    <q-btn no-caps class="q-mb-xs" color="green" label="Deposit" :to="{name:'funds-deposito'}"/>
+                    <q-btn no-caps class="q-ml-xs q-mb-xs" color="red" label="Withdraw" :to="{name:'funds-retiro'}"/>
+                    <q-btn no-caps class="q-ml-xs q-mb-xs" color="primary" label="Convert" :to="{name:'funds-conversion'}"/>
+                </div>
+                <TableFunds ref="table_funds"/>
+            </template>
+        </q-splitter>
+        <!--<div class="row" >
+            <div v-if="panel_show==true" class="col-4">                
+                <PanelDeposit v-if="deposit_show == true" 
+                v-on:deposit-cancel="deposit_cancel" 
+                v-on:save-end="actualizar_tabla_fondos"/>
+                <PanelWithdraw v-if="withdraw_show == true" 
+                v-on:withdraw-cancel="withdraw_cancel"
+                v-on:save.end="actualizar_tabla_fondos"/>
                 <PanelCurrencyConversion v-if="convert_show==true"/>
             </div>
             <div class="col-4">
-                <TableFunds/>
+                <TableFunds ref="table_funds"/>
             </div>    
-        </div>
+        </div>-->
     </div>
 </template>
 <script>
-import PanelDeposit from './PanelDeposit.vue'
-import PanelWithdraw from './PanelWithdraw.vue'
-import TableFunds from './TableFunds.vue'
-import PanelCurrencyConversion from './PanelCurrencyConversion.vue'
+import TableFunds from '@/components/Funds/TableFunds.vue'
+
     
 export default {
     name:"PanelFunds",
-    components:{
-        PanelDeposit,
-        PanelWithdraw,        
-        TableFunds,
-        PanelCurrencyConversion
+    components:{        
+        TableFunds
     },
+    props:{
+        visible:{
+            type:Number,
+            default:0
+        }        
+    }
+    ,    
     data:() => {
         return {
-            panel_show:false,
-            deposit_show:false,
-            withdraw_show:false,     
-            convert_show:false       
+            
         }
     },
     methods:{
-        deposit:function(){                        
-            this.panel_show = true
-            this.deposit_show = true
-            this.withdraw_show = false
-            this.convert_show = false
-        },
-        withdraw:function(){
-            this.panel_show = true
-            this.deposit_show = false
-            this.withdraw_show = true
-            this.convert_show = false
-        },
-        convert:function(){
-            this.panel_show = true
-            this.deposit_show = false
-            this.withdraw_show = false
-            this.convert_show = true
-        },
-        deposit_cancel:function(){
-            this.panel_show = false
-            this.deposit_show = false            
-        },
-        withdraw_cancel:function(){        
-            this.panel_show = false
-            this.withdraw_show = false
-        },
-        convert_cancel:function(){
-            this.panel_show = false
-            this.convert_show = false
-        }
+         actualizar_tabla_fondos:function(){
+             this.$refs.table_funds.get_funds()
+         }
     }
 }
 </script>
