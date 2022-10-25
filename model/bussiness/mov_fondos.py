@@ -1,7 +1,7 @@
 from model.TransaccionFondosModel import TransaccionFondosModel
+from model.conversionmoneda import ConversionMonedaModel
 from model.MovimientoFondosModel import MovimientoFondosModel
 from model.MonedaModel import MonedaModel
-from model.balance import BalanceCuentaModel
 from config.negocio import TIPO_MOV_INGRESO,  TIPO_MOV_SALIDA
 from common.AppException import AppException
 from datetime import datetime
@@ -30,54 +30,59 @@ class Ingreso(MovFondosHandler):
     def __init__(self):
         pass
 
-    def procesar(self, ingreso:TransaccionFondosModel=None, saldocuenta:BalanceCuentaModel=None):
+    def procesar(self, ingreso:TransaccionFondosModel, conversion:ConversionMonedaModel=None):
+        imp_mov = ingreso.imp_transaccion
+        mon_mov_id = ingreso.mon_trans_id
+        imp_saldo_mov = ingreso.imp_transaccion
+
+        if conversion is not None:
+            imp_mov = conversion.imp_convertido
+            mon_mov_id = conversion.mon_dest_id
+            imp_saldo_mov = imp_mov
+
         new_mov = MovimientoFondosModel(
             trans_id = ingreso.id,
-            fch_transaccion= ingreso.fec_transaccion,
+            fch_transaccion= ingreso.fch_transaccion,
             num_transaccion=ingreso.num_transaccion,
             tipo_trans_id = ingreso.tipo_trans_id,
             tipo_mov_id = TIPO_MOV_INGRESO,
-            imp_mov = ingreso.imp_transaccion,
-            mon_mov_id = ingreso.mon_trans_id,
-            imp_saldo_mov = ingreso.imp_transaccion,            
-            imp_saldo_cuenta = saldocuenta.imp_saldo,
+            imp_mov = imp_mov,
+            mon_mov_id = mon_mov_id,
+            imp_saldo_mov = imp_saldo_mov,
+            usuario_id = ingreso.usuario_id,            
             fch_audit = datetime.now()
         )
         db.session.add(new_mov)
 
 class Salida(MovFondosHandler):
-    def __init__(self):
-        pass
+    def __init__(self, transaccion:TransaccionFondosModel):
+        self.imp_pend_retirar = float(transaccion.imp_transaccion)
+        self.usuario_id = transaccion.usuario_id
+        self.transaccion = transaccion
 
-    def procesar(self, salida:TransaccionFondosModel=None):
-        #
-        self.imp_pend_retirar = salida.imp_transaccion
-        #
-        self._val_salida(salida)        
-        #
-        self._check_moneda(salida.mon_trans_id)
-        #
-        funds = self.__get_positive_banlance(salida) 
-        #        
-        self.actualizar_saldos(salida, funds)
-        
+    def procesar(self):
+        self._val_salida()
+        self._check_moneda(self.transaccion.mon_trans_id)
+        funds = self.__get_positive_banlance() 
+        self.actualizar_saldos(movs=funds)      
 
-    def _val_salida(self, salida:TransaccionFondosModel=None):
-        saldo_total = self.__get_saldo_total(salida)
+    def _val_salida(self):
+        saldo_total = self.__get_saldo_total()
         if saldo_total == 0:
-            raise AppException(msg="El saldo en la moneda ({0}) es 0".format(salida.mon_trans_id))
+            raise AppException(msg="El saldo en la moneda ({0}) es 0".format(self.transaccion.mon_trans_id))
 
         if self.imp_pend_retirar > saldo_total:
             raise AppException(msg="El importe a retirar {0} es mayor al saldo total {1}".format(self.imp_pend_retirar, saldo_total))
 
-    def __get_saldo_total(self, salida:TransaccionFondosModel=None):
+    def __get_saldo_total(self):
         saldo_total = 0
         query = db.session.query(
             func.coalesce(func.sum(MovimientoFondosModel.imp_saldo_mov),0).label("saldo_total")
         ).filter(
             MovimientoFondosModel.tipo_mov_id == TIPO_MOV_INGRESO,
             MovimientoFondosModel.imp_saldo_mov > 0.00,
-            MovimientoFondosModel.mon_mov_id == salida.mon_trans_id
+            MovimientoFondosModel.usuario_id == self.transaccion.usuario_id,
+            MovimientoFondosModel.mon_mov_id == self.transaccion.mon_trans_id
         )
         
         resp = query.first()
@@ -87,23 +92,25 @@ class Salida(MovFondosHandler):
 
         return saldo_total
 
-    def __get_positive_banlance(self, salida:TransaccionFondosModel=None):
+    def __get_positive_banlance(self):
         funds = MovimientoFondosModel.query.filter(
             MovimientoFondosModel.tipo_mov_id == TIPO_MOV_INGRESO,
             MovimientoFondosModel.imp_saldo_mov > 0.00,
-            MovimientoFondosModel.mon_mov_id == salida.mon_trans_id
+            MovimientoFondosModel.usuario_id == self.transaccion.usuario_id,
+            MovimientoFondosModel.mon_mov_id == self.transaccion.mon_trans_id
         ).order_by(MovimientoFondosModel.fch_transaccion.asc(), MovimientoFondosModel.num_transaccion.asc())\
         .all()
 
         return funds
 
-    def actualizar_saldos(self,salida=TransaccionFondosModel, movs=[]):
+    def actualizar_saldos(self, movs=[]):
         for fund in movs:            
-            self.act_saldo_mov(salida=salida,mov_fondo=fund)
+            (mov_fondo,imp_a_retirar) = self.act_saldo_mov(mov_fondo=fund)
+            self.crear_movimiento_salida(mov_fondo, imp_a_retirar)
             if self.imp_pend_retirar == 0:
                 break
 
-    def act_saldo_mov(self,salida:TransaccionFondosModel=None, mov_fondo:MovimientoFondosModel=None):
+    def act_saldo_mov(self,mov_fondo:MovimientoFondosModel=None):
         #iniciar proceso de descuento
         #caso 1, si el importe del retiro es mayor al elemento a actualizar
         mov_saldo = float(mov_fondo.imp_saldo_mov)
@@ -124,21 +131,20 @@ class Salida(MovFondosHandler):
             imp_a_retirar = self.imp_pend_retirar
             mov_fondo.imp_saldo_mov = mov_saldo - self.imp_pend_retirar
             self.imp_pend_retirar = 0
+        return (mov_fondo, imp_a_retirar)        
 
-        #agregar una entrada para el retiro
-        self.crear_movimiento(salida,mov_fondo,imp_a_retirar)
-
-    def crear_movimiento(self, salida:TransaccionFondosModel=None,mov_origen:MovimientoFondosModel=None,imp_mov=0):
+    def crear_movimiento_salida(self,mov_origen:MovimientoFondosModel=None,imp_a_retirar=0):
         mov_salida = MovimientoFondosModel(
-            trans_id = salida.id,
-            num_transaccion = salida.num_transaccion,
-            fch_transaccion = salida.fec_transaccion,
-            ref_mov_id=mov_origen.id,
-            tipo_trans_id=salida.tipo_trans_id,
+            trans_id = self.transaccion.id,
+            num_transaccion = self.transaccion.num_transaccion,
+            fch_transaccion = self.transaccion.fch_transaccion,
+            ref_mov_id = mov_origen.id,
+            tipo_trans_id = self.transaccion.tipo_trans_id,
             tipo_mov_id=TIPO_MOV_SALIDA,
-            imp_mov=imp_mov,
-            mon_mov_id=salida.mon_trans_id,
-            imp_saldo_mov=0,
-            fch_audit=datetime.now()
+            imp_mov = imp_a_retirar,
+            mon_mov_id = self.transaccion.mon_trans_id,
+            imp_saldo_mov = 0,
+            usuario_id = self.transaccion.usuario_id,
+            fch_audit=datetime.now()            
         )
         db.session.add(mov_salida)

@@ -79,6 +79,7 @@
 <script>
 import date from 'date-and-time'
 import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
+import {headers} from '@/common/common.js'
 export default {
     name:"TableVariacionSemanal",
     data: () => {
@@ -182,6 +183,8 @@ export default {
             this.data = []
             this.$http.post('/informe/InformeStockController/get_variacion_semanal',{
                 symbol:this.filter.symbol
+            },{
+                headers:headers()
             }).then(httpresp => {
                     let appresp = httpresp.data
                     console.log(appresp)

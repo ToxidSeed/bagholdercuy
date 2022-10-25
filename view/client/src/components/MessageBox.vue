@@ -37,6 +37,12 @@
 <script>
     export default {
         name:"MessageBox",
+        props:{
+            config:{
+                type:Object,
+                default: () => {}
+            }
+        },
         data () {
             return {
                 title:"",
@@ -61,7 +67,23 @@
                 }
             }
         },
-        methods:{            
+        watch:{
+            config:function(newconf){                
+                if ('httpresp' in newconf){     
+                    this.httpresp(newconf.httpresp,newconf.open)
+                    return;
+                }                                             
+            }
+        },
+        mounted:function(){
+            //this.interface()
+        },
+        methods:{                    
+            open:function(config={}){
+                if ('httpresp' in config){
+                    this.httpresp(config.httpresp,config.open)
+                }
+            },
             new:function(args=null){
                 this.errors = []
                 if (args.title != undefined){
@@ -74,17 +96,30 @@
                     this.message = args.message
                 }       
                 this.opened = true      
-            },
-            httpresp:function(httpresp=null){
+            },                        
+            httpresp:function(httpresp=null,open=true){                
+                this.set_httpresp(httpresp)
+                let appdata = httpresp.data
+                this.set_appresp(appdata)
+
+                if (open == 'always' || open == undefined || open == true){
+                    console.log(open)
+                    this.opened = true
+                    return;
+                }
+                if (open == "onerror" && appdata.success == false){
+                    this.opened = true
+                    return;
+                }                
+            },            
+            set_httpresp:function(httpresp){
+                console.log(httpresp)
                 this.errors = []
                 this.stacktrace=[]
-                this.url = ""
-                this.opened = true;
+                this.url = ""                                
                 this.url = httpresp.config.url
-                var appdata = httpresp.data
-                this.appresp(appdata)
-            },            
-            appresp:function(appresp=null){
+            },
+            set_appresp:function(appresp=null){
                 let error = false
                 let stacktrace = false
                 //var has_errors = false                                            

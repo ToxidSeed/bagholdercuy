@@ -73,6 +73,8 @@
     </q-table>
 </template>
 <script>
+import {headers} from '@/common/common.js'
+
 export default {
     name:"TableVariacionMensual",
     data: () => {
@@ -176,6 +178,8 @@ export default {
             this.data = []
             this.$http.post('/informe/InformeStockController/get_variacion_mensual',{
                 symbol:this.filter.symbol
+            },{
+                headers:headers()
             }).then(httpresp => {
                     let appresp = httpresp.data
                     console.log(appresp)

@@ -1,12 +1,17 @@
+from controller.base import Base
+
 from common.Response import Response
 from common.AppException import AppException
-from model.StockData import StockData
-from model.CalendarioSemanal import CalendarioSemanal
 from common.api.Alphavantage import Alphavantage
 from common.api.iexcloud import iexcloud
-from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL
 
 from model.StockData import StockData
+from model.CalendarioSemanal import CalendarioSemanal
+from model.StockData import StockData
+
+from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL
+
+
 from datetime import date, datetime
 from app import db
 from sqlalchemy import func
@@ -14,9 +19,7 @@ from sqlalchemy.orm import join
 from sqlalchemy import and_
 
 
-class SerieManager:
-    def __init__(self):
-        pass
+class SerieManager(Base):
 
     def procesar(self, args={}):
         try:                        
@@ -108,7 +111,7 @@ class SerieManager:
 
     
 
-    def get_open_data(self, symbol, open_date):
+    def get_open_data(symbol, open_date):
         result = StockData.query.filter(
             StockData.frequency == "daily",
             StockData.symbol == symbol,
@@ -117,7 +120,7 @@ class SerieManager:
 
         return result
 
-    def get_close_data(self, symbol, close_date):
+    def get_close_data(symbol, close_date):
         result = StockData.query.filter(
             StockData.frequency == "daily",
             StockData.symbol == symbol,
@@ -127,9 +130,7 @@ class SerieManager:
         return result
 
 
-class SerieSemanalLoader(SerieManager):    
-    def __init__(self):
-        pass    
+class SerieSemanalLoader():        
 
     def procesar(self,symbol, profundidad):                
         (anyo, semana_ini) = self.eliminar_serie_semanal(symbol=symbol, profundidad=profundidad)
@@ -169,8 +170,8 @@ class SerieSemanalLoader(SerieManager):
         return (anyo, semana_ini)
     
     def _procesar_serie(self,symbol="", semana=None, fch_registro=None):
-        open_data = self.get_open_data(symbol, semana.open_date)            
-        close_data = self.get_close_data(symbol, semana.close_date)                        
+        open_data = SerieManager.get_open_data(symbol, semana.open_date)            
+        close_data = SerieManager.get_close_data(symbol, semana.close_date)                        
 
         new_serie = StockData(
             symbol = symbol,
@@ -230,9 +231,7 @@ class SerieSemanalLoader(SerieManager):
         return query.all()        
         
 
-class SerieMensualLoader(SerieManager):
-    def __init__(self):
-        pass
+class SerieMensualLoader():    
 
     def procesar(self, symbol=None, profundidad=None):
         (anyo, mes) = self.eliminar_series_mensual(symbol=symbol, profundidad=profundidad)
@@ -245,8 +244,8 @@ class SerieMensualLoader(SerieManager):
     def procesar_mes(self, datosmes=None, fch_registro=None):
         symbol = datosmes.symbol
         price_date = datetime(datosmes.anyo,datosmes.mes, 1)
-        open_data = self.get_open_data(symbol, datosmes.open_date)            
-        close_data = self.get_close_data(symbol, datosmes.close_date)
+        open_data = SerieManager.get_open_data(symbol, datosmes.open_date)            
+        close_data = SerieManager.get_close_data(symbol, datosmes.close_date)
 
         new_serie = StockData(
             symbol = symbol,

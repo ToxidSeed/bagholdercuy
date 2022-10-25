@@ -31,6 +31,9 @@ class Response:
             self.answer["data"]={}
 
         self.answer["data"][key]=element
+    
+    def message(self, msg=""):
+        self.answer["message"] = msg
         
     def from_raw_data(self, rawdata=None, formats={}):
         self.formats = formats

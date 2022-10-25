@@ -40,6 +40,8 @@
 <script>
 import SelectSymbol from "@/components/SelectSymbol.vue"
 import MessageBox from "@/components/MessageBox.vue"
+import {headers} from '@/common/common.js'
+
 export default {
     name:"PanelSerieLoader",
     components:{
@@ -77,6 +79,8 @@ export default {
             '/SerieManager/SerieManager/procesar',{
                 profundidad: this.profundidad.value,
                 symbol: this.symbol.value
+            },{
+                headers:headers()
             }).then(httpresponse => {                
                 this.$refs.msgbox.httpresp(httpresponse)
             }).catch(error => {

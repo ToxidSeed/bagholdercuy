@@ -12,6 +12,6 @@ class MovimientoFondosModel(db.Model):
     tipo_mov_id = db.Column(db.String(1))
     imp_mov = db.Column(db.Numeric(15,2))
     mon_mov_id = db.Column(db.String(3))
-    imp_saldo_mov = db.Column(db.Numeric(15,2))    
-    imp_saldo_cuenta = db.Column(db.Numeric(15,2))        
+    imp_saldo_mov = db.Column(db.Numeric(15,2))        
+    usuario_id = db.Column(db.Integer)
     fch_audit = db.Column(db.DateTime)

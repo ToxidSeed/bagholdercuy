@@ -10,3 +10,8 @@ class UsuarioModel(db.Model):
     apellidos = db.Column(db.String)
     moneda_id = db.Column(db.String(3))
     
+    def get(usuario_id):        
+        user = UsuarioModel.query.filter(
+            UsuarioModel.usuario == usuario_id
+        ).one()
+        return user

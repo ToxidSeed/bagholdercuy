@@ -12,7 +12,7 @@ class Base:
                 raise AppException(msg="No se ha enviado el token de acceso")
             
             self.usuario = TokenHandler().verificar(access_token)
-            
+
 
         
 

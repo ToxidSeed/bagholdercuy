@@ -11,7 +11,12 @@
             <q-toolbar >
                 <q-btn no-caps color="blue-10" label="Guardar" @click="save"/>
             </q-toolbar>
-            <q-card-section>                
+            <q-card-section>
+                <div>
+                    <q-badge :color="badgeinfo.color" outline multi-line class="q-pt-xs" v-show="badgeinfo_visible">
+                    {{badgeinfo.msg}}
+                    </q-badge>                
+                </div>        
                 <div class="row">
                     <SelectMoneda v-on:moneda-select="moneda_select" class="col-6"
                     v-on:httperror="open_httpresp_dialog"
@@ -25,20 +30,21 @@
                 </div>
                 <div class="row">
                     <q-input v-model="fec_deposito" label="Fec. Depósito" mask="##/##/####"
-                    fill-mask="#" class="q-pl-xs col-5"                 
+                    fill-mask="#" class="q-pl-xs col-5"
+                    @change="ult_transaccion"             
                     />
                 </div>
-
             </q-card-section>            
         </q-card>
-        <MessageBox ref="msgbox"/>
+        <MessageBox v-bind:config="msgboxconfig"/>
     </div>
 </template>
-<script>
+<script>    
 import SelectMoneda from '../SelectMoneda.vue'
 import MessageBox from '../MessageBox.vue'
 import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
 import date from 'date-and-time'
+import {headers} from '@/common/common.js'
 
 export default {
     name:"PanelDeposit",
@@ -50,13 +56,24 @@ export default {
         return {
             moneda:"",
             importe:"",
-            fec_deposito:""
+            fec_deposito:"",
+            msgboxconfig:{},
+            badgeinfo:{
+                color:"red",
+                msg:"",
+                visible:false
+            }
+        }
+    },
+    computed:{        
+        badgeinfo_visible:function(){
+            return this.badgeinfo.msg == ""?false:true;            
         }
     },
     mounted:function(){        
         this.fec_deposito = date.format(new Date(),CLIENT_DATE_FORMAT)
         console.log(this.fec_deposito)
-    },
+    },    
     methods:{
         moneda_select:function(moneda){
             console.log(moneda)
@@ -74,11 +91,11 @@ export default {
                 fec_deposito: this.fec_deposito,
                 importe: this.importe
             },{
-                headers:{
-                    "Authorization":localStorage.getItem("token")
-                }
+                headers:headers()
             }).then(httpresp => {                
-                this.open_httpresp_dialog(httpresp)
+                this.msgboxconfig = {
+                    httpresp:httpresp
+                }                
                 
                 //var appresp = httpresp.data                
                 //var appdata = appresp.data 
@@ -96,6 +113,28 @@ export default {
         },
         open_httpresp_dialog:function(httpresp){
             this.$refs.msgbox.httpresp(httpresp)                   
+        },
+        ult_transaccion:function(){
+            this.$http.post(
+                '/FundsManager/FundsManager/ult_transaccion',{
+                    fch_transaccion:this.fec_deposito
+                },
+                {
+                    headers:headers()
+                }
+            ).then(httpresp =>{
+                //solo si sale error mostrará el mensaje
+                this.msgboxconfig = {
+                    httpresp:httpresp,
+                    open:'error'
+                }
+                let appresp = httpresp.data
+                let data = appresp.data
+
+                if (data.ult_transaccion == false){
+                    this.badgeinfo.msg = appresp.message
+                }                
+            })
         }
 
     }

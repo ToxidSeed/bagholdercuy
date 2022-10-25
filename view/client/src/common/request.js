@@ -7,4 +7,3 @@ function config(){
 }
 
 export {config}
-

@@ -22,8 +22,10 @@ import DataLoaderOptions from '@/components/DataLoaderOptions.vue'
 import MainMantSerie from '@/components/serie/MainMantSerie.vue'
 import PanelDeposit from '@/components/Funds/PanelDeposit.vue'
 import PanelWithdraw from '@/components/Funds/PanelWithdraw.vue'
+import PanelRecalcularFondos from '@/components/Funds/PanelRecalcularFondos.vue'
 import PanelCurrencyConversion from '@/components/Funds/PanelCurrencyConversion.vue'
 import PanelLogin from '@/components/PanelLogin.vue'
+import PanelReorganizarFondos from '@/components/Funds/PanelReorganizarFondos.vue'
 import Main from '@/Main.vue'
 
 Vue.use(VueRouter);
@@ -51,6 +53,15 @@ const routes =  [
                 path:"conversion",
                 name:"funds-conversion",
                 component:PanelCurrencyConversion
+              },
+              {
+                path:"recalcularfondos",
+                name:"funds-recalcular",
+                component:PanelRecalcularFondos
+              },{
+                path:"reorganizarfondos",
+                name:"funds-reorganizar",
+                component:PanelReorganizarFondos
               }
             ]
           },{
@@ -121,10 +132,8 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  let logeado = localStorage.getItem('logeado')
-  console.log(from)
-  console.log(logeado)
-  console.log(to)
+  let logeado = localStorage.getItem('logeado')  
+  
   if (
     // make sure the user is authenticated
     !logeado &&

@@ -16,6 +16,8 @@
     />
 </template>
 <script>
+import {headers} from '@/common/common.js'
+
 export default {
     name:"SelectSymbol",
     props:{
@@ -67,6 +69,8 @@ export default {
                 this.$http.post(
                 'SymbolManager/SymbolFinder/buscar_por_texto',{
                     texto:val                    
+                },{
+                    headers:headers()
                 }).then(httpresponse => {
                     var appresponse = httpresponse.data
                     //console.log(appresponse.data)

@@ -4,11 +4,9 @@ from common.Formatter import Formatter
 from common.Response import Response
 from model.StockData import StockData as StockDataModel
 from sqlalchemy.sql import extract
+from controller.base import Base
 
-
-class InformeStockController:
-    def __init__(self):
-        pass
+class InformeStockController(Base):    
 
     def get_variacion_mensual(self, args={}):
         formatter = Formatter()

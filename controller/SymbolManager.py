@@ -3,6 +3,8 @@ from app import db
 import inspect
 from datetime import datetime, date
 
+from controller.base import Base
+
 from model.StockSymbol import StockSymbol as SymbolModel
 from model.OptionContract import OptionContractModel
 
@@ -90,9 +92,7 @@ class SymbolManager:
         )
         return symbol_obj
 
-class SymbolFinder:
-    def __init__(self):
-        pass
+class SymbolFinder(Base):    
 
     def get_list(self, args={}):
         data = SymbolModel.query.order_by(
