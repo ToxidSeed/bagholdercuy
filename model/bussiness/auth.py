@@ -15,5 +15,3 @@ class TokenHandler:
         ).one()
         return user
         
-
-
