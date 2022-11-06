@@ -11,11 +11,11 @@
             dense
         >            
             <template v-slot:top >
-                <q-btn color="green" icon="refresh" flat dense/>
-                <q-btn color="blue-10" icon="arrow_upward" flat dense/>
-                <q-btn color="blue-10" icon="arrow_downward" flat dense/>
-                <q-btn color="red" icon="delete" flat dense/>
-                <q-btn color="blue-10" icon="format_list_numbered_rtl" flat dense/>
+                <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha(filter.fch_transaccion)"/>
+                <q-btn color="blue-10" icon="arrow_upward" flat dense @click="subir"/>
+                <q-btn color="blue-10" icon="arrow_downward" flat dense @click="bajar"/>
+                <q-btn color="red" icon="delete" flat dense @click="eliminar"/>
+                <q-btn color="blue-10" icon="format_list_numbered_rtl" flat dense @click="reenumerar"/>
             </template>
         </q-table>   
         <MessageBox ref="msgbox"/>     
@@ -63,7 +63,8 @@ export default {
             pagination:{
                 rowsPerPage:15
             },
-            selected:[]
+            selected:[],
+            list_eliminar:[]
         }
     },
     mounted:function(){
@@ -75,9 +76,71 @@ export default {
             this.get_transacciones_x_fecha(fch_transaccion)
         }
     },
-    methods:{        
+    methods:{             
+        eliminar:function(){
+            let selected = this.selected.shift()
+
+            const index = this.data.findIndex(element => {
+                return element.num_transaccion == selected.num_transaccion
+            })
+
+            this.data.splice(index,1)
+            this.list_eliminar.push(selected)
+            this.reenumerar()
+            console.log(this.list_eliminar)
+
+        },  
+        reenumerar: function(){
+            let num_transaccion = 0
+            this.data.forEach(element => {
+                num_transaccion++ 
+                element.num_transaccion = num_transaccion
+            })
+        },
+        subir:function(){            
+            if(this.selected.length == 0){
+                return;
+            }
+            let selected = this.selected.shift()
+            let prev_num_trans = selected.num_transaccion - 1
+            const prevrow = this.data.find(element => {
+                return element.num_transaccion == prev_num_trans
+            })
+
+            prevrow.num_transaccion = selected.num_transaccion
+            selected.num_transaccion = prev_num_trans
+            this.selected.push(selected)
+            this.ordenar()
+        },
+        bajar:function(){
+            let selected = this.selected.shift()
+            let num_transaccion = selected.num_transaccion
+            let sig_num_transaccion = num_transaccion + 1
+            const sigrow = this.data.find(element => {
+                return element.num_transaccion == sig_num_transaccion
+            })
+            sigrow.num_transaccion = num_transaccion
+            selected.num_transaccion = sig_num_transaccion
+            this.selected.push(selected)
+            this.ordenar()
+        },
+        ordenar:function(){
+            this.data.sort((a,b)=> {
+                if(a.num_transaccion > b.num_transaccion){
+                    return 1;
+                }
+                if(a.num_transaccion < b.num_transaccion){
+                    return -1;
+                }
+                if(a.num_transaccion == b.num_transaccion){
+                    return 0
+                }
+            })
+        },
         get_transacciones_x_fecha:function(fch_transaccion){            
             this.data = []
+            this.selected=[]
+            this.list_eliminar=[]
 
             this.$http.post('/FundsManager/FundsManager/get_transacciones_x_fecha',{
                 fch_transaccion: fch_transaccion
@@ -94,6 +157,7 @@ export default {
                 appresp.data.forEach(elem => {
                     rownum += 1
                     elem.rownum = rownum
+                    elem.imp_transaccion = elem.imp_transaccion.toFixed(2)
                     this.data.push(elem)
                 })
             })

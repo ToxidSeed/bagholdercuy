@@ -65,6 +65,60 @@ class TransaccionHandler:
         else:
             return False
 
+class ReorganizarHandler:
+    def __init__(self, usuario):
+        self.usuario = usuario
+
+    def procesar(self, fch_reorganizar, list_trans=[], list_eli_trans=[]):        
+        self.reenum_list_trans(list_trans)
+        self.eli_list_trans(list_eli_trans)  
+        #db.session.flush()
+        self.veri_integridad_fecha(fch_reorganizar)
+        #reprocesar
+        ReprocesadorFondosHandler(usuario=self.usuario).procesar()
+
+    def veri_integridad_fecha(self, fch_transaccion):
+        grupos = db.session.query(
+            TransaccionFondosModel.fch_transaccion,
+            TransaccionFondosModel.num_transaccion,
+            func.count(1).label("cantidd")
+        ).filter(
+            TransaccionFondosModel.fch_transaccion == fch_transaccion
+        ).group_by(
+            TransaccionFondosModel.fch_transaccion,
+            TransaccionFondosModel.num_transaccion
+        ).having(
+            func.count(1) > 1
+        ).all()
+
+        if len(grupos) > 0:
+            raise AppException(msg="Error al reenumerar las transacciones")
+
+
+    def reenum_list_trans(self,list_trans=[]):
+        for trans in list_trans:
+            self.reenum_trans(trans)
+
+    def reenum_trans(self, trans_reenum):
+        trans = TransaccionFondosModel.query.filter(
+            TransaccionFondosModel.id == trans_reenum.get('id')
+        ).one()
+
+        if trans is None:
+            raise AppException(msg="No se ha encontrado una transacción para el id {0}".format(trans_reenum.get('id')))        
+
+        trans.num_transaccion = trans_reenum.get('num_transaccion')
+
+    def eli_list_trans(self,list_eli_trans=[]):
+        for trans in list_eli_trans:
+            self.eli_trans(trans)
+    
+    def eli_trans(self, trans):
+        TransaccionFondosModel.query.filter(
+            TransaccionFondosModel.id == trans.get('id')
+        ).delete()
+                    
+
 class ReprocesadorFondosHandler:
     def __init__(self, usuario, fch_desde=None, tipo_reproceso=REPROCESO_PROF_FONDOS_TODO):        
         self.fch_desde = fch_desde

@@ -1,6 +1,7 @@
 from inspect import trace
 import traceback, sys
 from datetime import date, datetime
+import json
 from app import app, db
 
 from common.Response import Response
@@ -15,10 +16,12 @@ from model.CurrencyModel import CurrencyModel
 from model.MovimientoFondosModel import MovimientoFondosModel
 from model.conversionmoneda import ConversionMonedaModel
 
+from model.bussiness.transaccion import TransaccionHandler, DepositoHandler, ReprocesadorFondosHandler,RetiroHandler, ConversionMonedaHandler, ReorganizarHandler
+
 from config.negocio import TIPO_MOV_INGRESO,TIPO_TRANS_DEPOSITO, TIPO_TRANS_RETIRO, TIPO_TRANS_CONVERSION, REPROCESO_PROF_FONDOS_TODO,REPROCESO_PROF_FONDOS_FCH_CIERRE
 from config.general import CLIENT_DATE_FORMAT
 
-from model.bussiness.transaccion import TransaccionHandler, DepositoHandler, ReprocesadorFondosHandler,RetiroHandler, ConversionMonedaHandler
+
 
 class FundsManager(Base):    
     def get_funds(self, args={}):
@@ -120,6 +123,40 @@ class Historial(Base):
 
         return Response().from_raw_data(funds)   
 
+class ReorganizarController(Base):
+    def procesar(self, args={}):
+        try:
+            self._validar(args)
+            fch_reorganizar = args.get("fch_reorganizar")
+            fch_reorganizar = datetime.strptime(fch_reorganizar, CLIENT_DATE_FORMAT).date()
+            list_trans = args.get("list_trans")
+            list_eli_trans = args.get("list_eli_trans")
+            ReorganizarHandler(self.usuario).procesar(fch_reorganizar,list_trans,list_eli_trans)            
+            db.session.commit()
+            return Response(msg="Se ha reorganizado correctamente las transacciones para la fecha {0}".format(fch_reorganizar))
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+    
+    def _validar(self, args={}):
+        transacciones = args.get("list_trans")
+        if transacciones is None:
+            raise AppException(msg="No se ha enviado el parámetro 'list_trans'")                
+        
+        if len(transacciones) == 0:
+            raise AppException(msg="No hay transacciones que reorganizar")
+
+        list_eli_trans = args.get("list_eli_trans")
+        if list_eli_trans is None:
+            raise AppException(msg="No se ha enviado el parámetro 'list_eli_trans'")        
+
+        fch_reorganizar = args.get("fch_reorganizar")
+        if fch_reorganizar is None:
+            raise AppException(msg="No se ha enviado el parámetro 'fch_reorganizar'")
+        
+        
+    
+
 class ReprocesarController(Base):    
     def procesar(self, args={}):
         try:            
@@ -129,8 +166,9 @@ class ReprocesarController(Base):
             db.session.commit()
             return Response(msg="Se ha reprocesado correctamente")
         except Exception as e:
-            return Response().from_exception(e)
             db.session.rollback()
+            return Response().from_exception(e)
+            
 
     def _validar(self, args={}):
         fch_desde = args.get("fch_desde")

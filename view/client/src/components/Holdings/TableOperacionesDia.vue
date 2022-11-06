@@ -158,7 +158,7 @@ export default {
             selected.num_orden = prev_num_orden
             this.selected.push(selected)
             //ordenar
-            this.ordernar()
+            this.ordenar()
         },
         mover_abajo:function(){
             let selected = this.selected.shift()
@@ -170,9 +170,9 @@ export default {
             sigrow.num_orden = num_orden
             selected.num_orden = sig_num_orden
             this.selected.push(selected)
-            this.ordernar()
+            this.ordenar()
         },
-        ordernar:function(){
+        ordenar:function(){
             this.data.sort((a,b)=> {
                 if(a.num_orden > b.num_orden){
                     return 1;
