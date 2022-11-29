@@ -1,4 +1,6 @@
 import Vue from 'vue'
+import { BASE_PATH } from './common/constants'
+import axios from 'axios'
 
 import VueRouter from 'vue-router'
 //import PanelSimulationDataEntry from './components/PanelSimulationDataEntry.vue';
@@ -26,6 +28,8 @@ import PanelRecalcularFondos from '@/components/Funds/PanelRecalcularFondos.vue'
 import PanelCurrencyConversion from '@/components/Funds/PanelCurrencyConversion.vue'
 import PanelLogin from '@/components/PanelLogin.vue'
 import PanelReorganizarFondos from '@/components/Funds/PanelReorganizarFondos.vue'
+import PanelCurrencyExchangeRate from '@/components/CurrencyExchange/PanelCurrencyExchangeRate.vue';
+import PanelCurrencyExchangeRateLoader from '@/components/CurrencyExchange/PanelCurrencyExchangeRateLoader.vue'
 import Main from '@/Main.vue'
 
 Vue.use(VueRouter);
@@ -65,7 +69,21 @@ const routes =  [
               }
             ]
           },{
-            path:'/currencyexchange', component:MainPanelCurrencyExchange
+            path:'/currencyexchange', 
+            component:MainPanelCurrencyExchange,
+            name:"currencyexchange",
+            props:true,
+            children:[
+              {
+                path:"nuevo",
+                name:"currencyexchange-nuevo",
+                component:PanelCurrencyExchangeRate
+              },{
+                path:"loader",
+                name:"currencyexchange-loader",
+                component:PanelCurrencyExchangeRateLoader
+              }
+            ]
           },{
             path:'/tradelist', component:PanelTradeList
           },{
@@ -131,20 +149,45 @@ const router = new VueRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  let logeado = localStorage.getItem('logeado')  
-  
-  if (
-    // make sure the user is authenticated
-    !logeado &&
-    // ❗️ Avoid an infinite redirect
-    to.name !== 'login'
-  ) {    
-    // redirect the user to the login page
-    next({ name: 'login' })
-  }else{
-    next()
+router.beforeEach(async(to, from, next) => {
+  let token = localStorage.getItem('token')
+  //console.log(token)
+  let token_valido = await validar_token(token)  
+
+  if (token_valido != true){      
+    if (to.name != 'login'){
+      next({ name: 'login' })      
+    }    
+    next()        
   }
+  
+  if (to.name == 'login'){    
+    next({name:'main'})      
+  }
+  next()
 })
+
+async function validar_token(token){
+  if (token == null || token == undefined){
+    return false
+  }
+
+  const http = axios.create({
+    baseUrl:BASE_PATH    
+  })
+
+  const response = await http.post('/auth/LoginController/validar_token',{
+    token:token
+  })
+
+  let data = response.data 
+
+  if (data.expired == true){    
+    localStorage.removeItem('token')
+    return false
+  }
+
+  return true
+}
 
 export default router;

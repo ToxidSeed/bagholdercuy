@@ -1,6 +1,6 @@
 import logging
 
-enable=True
+"""enable=True
 
 def register(data=None):   
     try:    
@@ -14,4 +14,11 @@ def stop():
     enable=False
 
 def start():
-    enable=True
+    enable=True"""
+
+def create_basic_logger():
+    handle = "console"
+    logging.basicConfig(level=logging.NOTSET)
+    return logging.getLogger(handle)
+
+logger = create_basic_logger()

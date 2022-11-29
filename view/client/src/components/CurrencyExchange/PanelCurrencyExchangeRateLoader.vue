@@ -1,9 +1,14 @@
 <template>
-    <div style="min-width: 25vw" >
+    <div>
         <q-card>
-            <q-card-section class="q-pb-none">
-                <div class="text-h6 text-indigo">Datos de Carga</div>
+            <q-card-section class="q-pt-xs q-pb-none row">
+                <div class="text-h6 text-indigo">Tipos de Cambio - Cargar</div>
+                <q-space/>
+                <q-btn  flat dense color="red" rounded icon="close" @click="btn_close_click_handler"/>
             </q-card-section>
+            <q-card-actions align="left">
+                <q-btn label="Procesar" color="green" @click="btn_aceptar_click"/>                
+            </q-card-actions>
             <q-card-section>
                 <!--
                 <div  class="row">
@@ -12,12 +17,7 @@
                     </div>                                
                 </div>-->
                 <q-input stack-label label="Pares" v-model="pares" class="text-uppercase"/>                                    
-            </q-card-section>            
-            <q-separator/>
-            <q-card-actions align="right">
-                <q-btn label="aceptar" color="primary" @click="btn_aceptar_click"/>
-                <q-btn label="cancelar" color="red" @click="btn_cancelar_click"/>
-            </q-card-actions>
+            </q-card-section>                               
         </q-card>
         <MessageBox ref="msgbox"/>
     </div>
@@ -26,7 +26,7 @@
 import MessageBox from '@/components/MessageBox.vue'
 
 export default {
-    name:"PanelCurrencyExchangeRateHistLoader",
+    name:"PanelCurrencyExchangeRateLoader",
     components:{
         MessageBox
     },
@@ -35,7 +35,14 @@ export default {
             pares:""
         }
     },
+    mounted:function(){
+        this.$emit('open', 30)
+    },
     methods:{        
+        btn_close_click_handler:function(){
+            this.$router.push({name:'currencyexchange',params:{inFirstPanelSize:0}})      
+            this.$emit('close',0)            
+        },
         btn_cancelar_click:function(){
             this.$emit('btn_cancelar_click')
         },

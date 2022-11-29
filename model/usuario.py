@@ -12,6 +12,6 @@ class UsuarioModel(db.Model):
     
     def get(usuario_id):        
         user = UsuarioModel.query.filter(
-            UsuarioModel.usuario == usuario_id
+            UsuarioModel.id == usuario_id
         ).one()
         return user

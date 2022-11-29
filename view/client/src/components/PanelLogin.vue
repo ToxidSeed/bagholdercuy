@@ -37,19 +37,18 @@ export default {
             ).then(httpresp => {
                 let appresp = httpresp.data
                 if(appresp.success==true){
+                    //console.log('xxx')
                     this.set_auth_data(appresp.data)
                     this.$router.push({name:"main"})
+                    
                 }
             }).catch(error => {
                 console.log(error)
             })
         },
         set_auth_data:function(appdata){
-            console.log(localStorage)
             localStorage.setItem("logeado",true)
-            localStorage.setItem("token", appdata.token)
-            console.log(localStorage)
-            
+            localStorage.setItem("token", appdata.token)            
         }
     }
 }

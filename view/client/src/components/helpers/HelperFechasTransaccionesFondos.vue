@@ -123,10 +123,7 @@ export default {
             },{
                 headers:headers()
             }).then(httpresp => {
-                this.$refs.msgbox.open({
-                    httpresp:httpresp,
-                    open:"onerror"
-                })
+                this.$refs.msgbox.http_resp_on_error(httpresp)
                 let appresp = httpresp.data
                 //let data = appresp.data
                 //this.data = data

@@ -16,9 +16,17 @@
                         </li>
                     </ul>
                 </div>
-            </q-card-section>
+            </q-card-section>            
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
                 <div class="text-accent text-weight-bold">URL petición</div><div>{{url}}</div>
+            </q-card-section>
+            <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">                
+                <div class="text-red text-weight-bold">Parámetros de Petición</div>
+                <ul class="q-mt-none">
+                    <li v-for="(value, key) in request_config" v-bind:key="key">
+                        {{key}}:{{value}}
+                    </li>
+                </ul>
             </q-card-section>
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
                 <div class="text-red text-weight-bold">Stacktrace</div>
@@ -49,6 +57,7 @@
                 message:"",
                 action:"",
                 errors:[],
+                request_config:{},
                 stacktrace:[],
                 url:"",
                 opened: false,
@@ -68,21 +77,40 @@
             }
         },
         watch:{
-            config:function(newconf){                
+            /*config:function(newconf){                
                 if ('httpresp' in newconf){     
                     this.httpresp(newconf.httpresp,newconf.open)
                     return;
                 }                                             
-            }
+            }*/
         },
         mounted:function(){
             //this.interface()
         },
-        methods:{                    
-            open:function(config={}){
-                if ('httpresp' in config){
-                    this.httpresp(config.httpresp,config.open)
+        methods:{    
+            http_resp:function(httpresp){
+                let appdata = httpresp.data
+                this.set_httpresp(httpresp)
+                this.set_appresp(appdata)
+                this.opened = true
+            },                                    
+            httpresp:function(httpresp){                
+                let appdata = httpresp.data
+                this.set_httpresp(httpresp)
+                this.set_appresp(appdata)
+                this.opened = true
+            },
+            http_resp_on_error:function(httpresp){
+                let appdata = httpresp.data
+                this.set_httpresp(httpresp)
+                this.set_appresp(appdata)
+
+                if (appdata.success == false){
+                    this.opened = true
                 }
+            },
+            http_error:function(error){
+                console.log(error)
             },
             new:function(args=null){
                 this.errors = []
@@ -96,24 +124,9 @@
                     this.message = args.message
                 }       
                 this.opened = true      
-            },                        
-            httpresp:function(httpresp=null,open=true){                
-                this.set_httpresp(httpresp)
-                let appdata = httpresp.data
-                this.set_appresp(appdata)
-
-                if (open == 'always' || open == undefined || open == true){
-                    console.log(open)
-                    this.opened = true
-                    return;
-                }
-                if (open == "onerror" && appdata.success == false){
-                    this.opened = true
-                    return;
-                }                
-            },            
+            },                                              
             set_httpresp:function(httpresp){
-                console.log(httpresp)
+                this.request_config = JSON.parse(httpresp.config.data)      
                 this.errors = []
                 this.stacktrace=[]
                 this.url = ""                                

@@ -25,16 +25,22 @@ from config.general import CLIENT_DATE_FORMAT
 
 class FundsManager(Base):    
     def get_funds(self, args={}):
-        symbol = args["symbol"]
-
-        funds = db.session.query(\
+        symbol = args.get("symbol")
+        
+        query = db.session.query(\
             MovimientoFondosModel.mon_mov_id.label("moneda"),\
             func.sum(MovimientoFondosModel.imp_saldo_mov).label("importe")\
-        ).filter(
-            MovimientoFondosModel.mon_mov_id.ilike("%{0}%".format(symbol)),
+        ).filter(            
             MovimientoFondosModel.tipo_mov_id == TIPO_MOV_INGRESO,
             MovimientoFondosModel.imp_saldo_mov > 0.00
-        ).group_by(MovimientoFondosModel.mon_mov_id).all()
+        ).group_by(MovimientoFondosModel.mon_mov_id)
+
+        if symbol not in ['',None]:
+            query = query.filter(
+                MovimientoFondosModel.mon_mov_id == symbol
+            )
+                
+        funds = query.all()
 
         #import logging
         #logging.basicConfig()
@@ -61,6 +67,32 @@ class FundsManager(Base):
         ).all()
 
         return Response().from_raw_data(results)
+
+    def get_ult_fecha_con_datos(self, args={}):
+        max_fecha = db.session.query(
+            func.max(TransaccionFondosModel.fch_transaccion).label("max_fch_transaccion")
+        ).filter(
+            TransaccionFondosModel.usuario_id == self.usuario.id
+        ).first()
+
+        if max_fecha is None:
+            return []
+
+        if max_fecha.max_fch_transaccion is None:
+            return []                
+
+        results = db.session.query(
+            TransaccionFondosModel
+        ).filter(
+            TransaccionFondosModel.fch_transaccion == max_fecha.max_fch_transaccion,
+            TransaccionFondosModel.usuario_id == self.usuario.id
+        ).all()
+
+        response = Response()
+        response.from_raw_data(results)
+        response.add_extradata("max_fch_transaccion", max_fecha.max_fch_transaccion.isoformat())
+
+        return response
 
     def get_count_transacciones(self, args={}):
         fch_desde = args.get("fch_desde")
@@ -142,13 +174,14 @@ class ReorganizarController(Base):
         transacciones = args.get("list_trans")
         if transacciones is None:
             raise AppException(msg="No se ha enviado el parámetro 'list_trans'")                
-        
-        if len(transacciones) == 0:
-            raise AppException(msg="No hay transacciones que reorganizar")
 
         list_eli_trans = args.get("list_eli_trans")
         if list_eli_trans is None:
             raise AppException(msg="No se ha enviado el parámetro 'list_eli_trans'")        
+        
+        if len(transacciones) == 0 and len(list_eli_trans) == 0:
+            raise AppException(msg="No hay transacciones que reorganizar")
+
 
         fch_reorganizar = args.get("fch_reorganizar")
         if fch_reorganizar is None:
@@ -267,6 +300,8 @@ class WithdrawResource(Base):
 
     def _val_retirar(self, args={}):
         errors = []
+        importe = args.get('importe')
+
         if "moneda_symbol" not in args:
             errors.append("El parámetro 'moneda_symbol' no se encuentra en la petición")
         else:
@@ -274,10 +309,10 @@ class WithdrawResource(Base):
             if not moneda_symbol:
                 errors.append("No se ha ingresado/seleccionado la moneda del retiro")            
 
-        if "importe" not in args:
-            errors.append("El parámetro 'importe' no se encuentra en la petición")
-        else:
-            importe = float(args["importe"])
+        if importe in [None,""]:
+            errors.append("Debe ingresarse un importe a retirar")
+        else:            
+            importe = float(args["importe"])            
             if importe <= 0:
                 errors.append("El importe ingresados es menor o igual a 0")                      
 
@@ -333,9 +368,7 @@ class WithdrawResource(Base):
         db.session.add(retiro)
 
 class Conversion(Base):        
-    def convert(self, args={}):
-        
-
+    def convert(self, args={}):    
         try:
             self.__val_convert(args)
             nu_conversion = self.__collect(args)            

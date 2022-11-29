@@ -129,7 +129,6 @@ dmypy.json
 .pyre/
 
 #specialfiles
-config.py
 config/general.py
 test.py
 

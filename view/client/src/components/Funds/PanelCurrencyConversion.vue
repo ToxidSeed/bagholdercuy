@@ -2,13 +2,14 @@
     <div>
         <q-card>
             <q-card-section class="q-pb-none  q-pt-none row">
-                <div class="text-h6 text-primary">Conversion</div> 
+                <div class="text-h6 text-blue-10">Conversion</div>
                 <!--<div class="bg-teal-3 text-white q-pa-xs">{{tc_msg}}</div>-->                
                 <q-space/>
                 <q-btn  flat dense rounded icon="close" :to="{name:'funds'}"/>
             </q-card-section>
             <q-card-actions class="q-pl-md q-pt-none">
-                <q-btn no-caps label="Guardar" color="blue-10" @click="save"/>                
+                <q-btn no-caps label="Nuevo" color="blue-10" outline/>                
+                <q-btn no-caps label="Procesar" color="green" @click="confirm_procesar=true"/>                
                 <q-btn no-caps label="T/C Manual" :color="tc_manual==true?'red':'blue-10'" @click="tc_manual_handler"/>        
             </q-card-actions>
             <q-card-section>
@@ -59,6 +60,19 @@
         v-bind:input_pares_readonly=true        
         v-on:select="select_tc"
         />
+        <q-dialog v-model="confirm_procesar" persistent>
+            <q-card>
+                <q-card-section class="row items-center">
+                <q-avatar icon="question_mark" color="warning" text-color="white" />
+                <span class="q-ml-sm">Se va a procesar la Conversion, ¿Desea continuar?</span>
+                </q-card-section>
+
+                <q-card-actions align="right">
+                <q-btn flat label="Cancel" color="primary" v-close-popup />
+                <q-btn flat label="Si" color="primary" v-close-popup @click="procesar"/>
+                </q-card-actions>
+            </q-card>
+        </q-dialog>
     </div>
 </template>
 <script>
@@ -98,7 +112,8 @@ export default {
             par_usado:"",
             wintipocambio:{
                 open:false
-            }
+            },
+            confirm_procesar:false
         }
     },
     mounted:function(){
@@ -163,7 +178,11 @@ export default {
                 this.importe_tc = 0
             }
         },
-        save:function(){
+        procesar:function(){
+            let data = {
+                fch_transaccion: this.fch_cambio
+            }
+
             this.$http.post(
                 'FundsManager/Conversion/convert',{
                     conversion_id:this.conversion_id,
@@ -182,8 +201,9 @@ export default {
                     this.$refs.msgbox.httpresp(httpresponse)
                 }).catch(error=> {
                     console.log(error)
-                }).then(()=>{
-                    this.$emit('conversion-fin')
+                }).finally(()=>{                
+                    console.log(data)    
+                    this.$emit('procesar-fin',data)
                 })
         },
         get_tipo_cambio:function(fch_cambio, mon_base_id, mon_ref_id){            

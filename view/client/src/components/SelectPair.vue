@@ -4,6 +4,7 @@
         v-model="selected"
         use-input
         hide-selected
+        stack-label
         fill-input
         input-debounce="500"
         @filter="filter_fn"
@@ -14,6 +15,7 @@
     </q-select>
 </template>
 <script>
+import {postconfig} from '@/common/request.js';
 export default {
     name:"SelectPair",
     props:{
@@ -47,15 +49,15 @@ export default {
                     this.list = []
                 })
             }else{
-                this.$http.post('CurrencyPairManager/PairFinder/get_list_by_text',{
+                this.$http.post('CurrencyPairManager/ParFinder/get_list_by_text',{
                     search_text:val
-                }).then(httpresponse => {
+                },postconfig()).then(httpresponse => {
                     var appdata = httpresponse.data
                     var options = []
                     for (let elem of appdata.data){
                         options.push({
-                            "value":elem["pair_id"],
-                            "label":elem["pair_name"]
+                            "value":elem["par_id"],
+                            "label":elem["nombre"]
                         })
                     }
                     update(() =>{

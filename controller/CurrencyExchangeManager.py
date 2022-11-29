@@ -2,7 +2,7 @@ from distutils.log import error
 from app import db
 #from config import *
 from common.AppException import AppException
-from model.TipoCambio import TipoCambioModel
+from model.tipocambio import TipoCambioModel
 from common.api.iexcloud import iexcloud
 from common.api.Alphavantage import Alphavantage
 from common.Response import Response
@@ -15,9 +15,7 @@ class CurrencyExchangeManager:
     def __init__(self):
         pass
 
-class CurrencyExchangeFinder(Base):
-    AUTH_REQUIRED=True
-
+class CurrencyExchangeFinder(Base):    
     def get_historic_rates(self, args={}):
         data = db.session.query(
             TipoCambioModel    
@@ -26,6 +24,9 @@ class CurrencyExchangeFinder(Base):
         .all()
 
         return Response().from_raw_data(data)
+
+
+
 
 class DataLoader:
     def __init__(self):

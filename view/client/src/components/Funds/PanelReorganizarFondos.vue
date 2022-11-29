@@ -1,9 +1,15 @@
 <template>
     <div>
         <q-card no-shadow>
+            <q-card-section class="q-pb-none q-pt-sm">
+                <div class="row">
+                    <div class="text-h6 text-blue-10">Reorganizar Fondos</div>
+                    <q-space/>
+                    <q-btn  flat dense rounded color="red" icon="close" :to="{name:'funds'}"/>
+                </div>
+            </q-card-section>
             <q-card-section class="q-pt-none">
-                <div class="text-h6 text-blue-10">Reorganizar Fondos</div>
-                <q-btn label="Procesar" color="blue-10" @click="procesar"/>
+                <q-btn label="Procesar" color="green" @click="procesar"/>
                 <div class="row justify-between">
                     <div class="q-pt-md text-subtitle2 text-blue-10">Reorganizar fecha: 
                         <span class="text-h6 text-black">{{filter.fch_transaccion}}</span>                                                
@@ -15,7 +21,7 @@
             </q-card-section>            
         </q-card>        
         <TableTransaccionesFondosFecha 
-            ref="table_trans_fecha"
+            ref="TableTransaccionesFondosFecha"
             v-bind:filter="filter"
         />
         <HelperFechasTransaccionesFondos 
@@ -29,7 +35,7 @@
 import MessageBox from '@/components/MessageBox.vue';
 import {headers} from '@/common/common.js';
 import HelperFechasTransaccionesFondos from '@/components/helpers/HelperFechasTransaccionesFondos.vue';
-import TableTransaccionesFondosFecha from '@/components/Funds/TableTransaccionesFondosFecha.vue';
+import TableTransaccionesFondosFecha from '@/components/Funds/TableReorganizarFondos.vue';
 
 export default {
     name:"PanelReorganizarFondos",
@@ -55,12 +61,17 @@ export default {
         select:function(row){                        
             this.filter = {
                 fch_transaccion:row.fch_transaccion
-            }            
+            }
+            console.log('cambiar-fecha')
+            this.$emit('cambiar-fecha',row.fch_transaccion)   
         },
         procesar:function(){
             //console.log(this.$refs)
-            let list_trans = this.$refs.table_trans_fecha.data
-            let list_eliminar = this.$refs.table_trans_fecha.list_eliminar
+            let list_trans = this.$refs.TableTransaccionesFondosFecha.data
+            let list_eliminar = this.$refs.TableTransaccionesFondosFecha.list_eliminar
+            let data = {
+                fch_transaccion: this.filter.fch_transaccion
+            }
 
             this.$http.post(
                 '/FundsManager/ReorganizarController/procesar',{
@@ -72,10 +83,11 @@ export default {
                     headers:headers()
                 }
             ).then(httpresp => {
-                this.$refs.msgbox.open({
-                    httpresp:httpresp
-                })
-            })
+                this.$refs.msgbox.http_resp(httpresp)
+            }).finally(() => {                
+                this.$refs.TableTransaccionesFondosFecha.get_transacciones_x_fecha(this.filter.fch_transaccion)
+                this.$emit("procesar-fin",data)
+            })            
         }
     }
 }

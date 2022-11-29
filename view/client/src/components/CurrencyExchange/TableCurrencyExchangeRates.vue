@@ -12,11 +12,26 @@
             :visible-columns="visiblecolumns"
         >
             <template v-slot:top>
-                <div>
-                    <div class="text-h6">{{title}}</div>
-                    <div>
-                        <q-btn label="Criterios de búsqueda" color="light-green" icon="search" @click="win_filtrar_open=true"/>
-                    </div> 
+                <div>                    
+                    <q-toolbar class="text-blue-10">
+                        <q-btn color="blue-10" round flat icon="menu">
+                            <q-menu>
+                                <q-list style="min-width: 100px" dense>
+                                    <q-item clickable v-close-popup :to="{name:'currencyexchange-nuevo',params:{inFirstPanelSize:30}}">
+                                        <q-item-section>Nuevo Registro</q-item-section>
+                                    </q-item>                         
+                                    <q-item clickable v-close-popup :to="{name:'currencyexchange-loader'}">
+                                        <q-item-section>Carga Masiva</q-item-section>
+                                    </q-item>                         
+                                </q-list>
+                            </q-menu>
+                        </q-btn>
+                        <q-btn color="primary" round flat icon="filter_alt" @click="win_filtrar_open=true"/>
+                        <q-btn color="light-green" round flat icon="refresh" @click="win_filtrar_open=true"/>
+                        <q-toolbar-title>
+                            {{title}}
+                        </q-toolbar-title>                        
+                    </q-toolbar>
                 </div>               
             </template>
         </q-table>
@@ -37,11 +52,18 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
+import {postconfig} from '@/common/request.js';
+import MessageBox from '@/components/MessageBox.vue';
+
 export default {
     name:"TableCurrencyExchangeRates",
+    components:{
+        MessageBox
+    },
     props:{
         selection:{
             type:Boolean,
@@ -49,13 +71,21 @@ export default {
         },
         title:{
             type:String,
-            default:"Historial de Tipos de Cambio"
+            default:"Tipos de Cambio"
         },
         visiblecolumns:{
             type: Array,
             default: () => [
                 "fch_cambio","par_nombre","ind_activo","imp_compra","imp_venta",""
             ]
+        },
+        in_filter:{
+            type:Object,
+            default: () => {
+                return {
+                    updtime:""
+                }
+            }
         }
     },
     data: () => {
@@ -110,13 +140,23 @@ export default {
     mounted:function(){
         this.get_historic_rates()
     },
+    watch:{
+        "in_filter.updtime":function(newval){
+            console.log(newval)
+            this.get_historic_rates()
+        }
+    },
     methods:{
         get_historic_rates:function(){
+            this.data = []
             this.$http.post('CurrencyExchangeManager/CurrencyExchangeFinder/get_historic_rates',{
 
-            }).then(httpresponse => {
-                var appdata = httpresponse.data
-                this.data = appdata.data
+            },postconfig()).then(httpresp => {
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+                let appresp = httpresp.data
+                appresp.data.forEach(elem => {
+                    this.data.push(elem)
+                })
             })
         },
         row_dblclick:function(event, row){

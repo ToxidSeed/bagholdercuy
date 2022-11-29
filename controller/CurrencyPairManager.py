@@ -1,21 +1,20 @@
 from app import db
-from model.CurrencyPairModel import CurrencyPairModel
+#from model.CurrencyPairModel import CurrencyPairModel
 from model.MonedaParModel import MonedaParModel
 from common.Response import Response
 from config.negocio import IND_INACTIVO, PAR_OPERACION_DIV
+from controller.base import Base 
 
 class CurrencyPairManager:
     def __init__(self):
         pass
 
-class ParFinder:
-    def __init__(self):
-        pass
+class ParFinder(Base):    
 
     def get_list_by_text(self, args={}):
         text = args["search_text"]
-        pairs = CurrencyPairModel.query.filter(
-            CurrencyPairModel.pair_name.ilike("%{0}%".format(text))
+        pairs = MonedaParModel.query.filter(
+            MonedaParModel.nombre.ilike("%{0}%".format(text))
         ).all()
 
         return Response().from_raw_data(pairs)

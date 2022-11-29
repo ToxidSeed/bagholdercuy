@@ -1,16 +1,17 @@
 <template>
 <q-layout view="hHh lpR fFf">
 
-    <q-header elevated class="bg-primary text-white">
+    <q-header elevated class="bg-white text-primary">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="left = !left" />
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+            <img src="/532625_cash_coins_hand_income_investment_icon.png">
           </q-avatar>
           BagHolder
         </q-toolbar-title>
+        <q-btn label="Cerrar Cesión" flat @click="cerrar_cesion"/>
       </q-toolbar>
     </q-header>
 
@@ -22,10 +23,8 @@
       <router-view />
     </q-page-container>
 
-  </q-layout>
-  
-   <!-- <PanelSimulationDataEntry/>-->
-  
+  </q-layout>  
+   <!-- <PanelSimulationDataEntry/>-->   
 </template>
 
 <script>
@@ -44,6 +43,13 @@ export default {
     return {
       left: false,
       right: false
+    }
+  },
+  methods:{
+    cerrar_cesion:function(){
+      localStorage.removeItem("logeado")
+      localStorage.removeItem("token")
+      this.$router.push("/login")
     }
   }
 }

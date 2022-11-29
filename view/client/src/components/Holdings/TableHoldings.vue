@@ -1,5 +1,6 @@
 <template>
-    <q-table
+    <div>
+        <q-table
         title="Posiciones"
         :data="data"
         :columns="columns"
@@ -46,11 +47,17 @@
                 </q-td>                
             </template>                        
         </q-table>
+        <MessageBox ref="msgbox"/>
+    </div>
 </template>
 <script>
+import MessageBox from '@/components/MessageBox.vue';
 export default {
     name:"TableHoldings",
-    data: () => {
+    components:{
+        MessageBox
+    },
+    data: () => {        
         return {            
             columns:[
                 {

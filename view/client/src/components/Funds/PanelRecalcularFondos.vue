@@ -2,7 +2,7 @@
     <div>
         <q-card>
             <q-card-section class="row q-pb-none q-pt-none">
-                <div class="text-h6">Recalcular</div>
+                <div class="text-h6 text-blue-10">Recalcular</div>
                 <q-space/>
                 <q-btn  flat dense rounded icon="close" :to="{name:'funds'}"/>
             </q-card-section>

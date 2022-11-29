@@ -3,40 +3,68 @@
         <q-table class="no-shadow"
             :columns="columns"
             :data="data"
-            row-key="num_transaccion"
-            selection="single"
-            :selected.sync="selected"
+            row-key="num_transaccion"                        
             :pagination="pagination"
             separator="vertical"
             dense
         >            
             <template v-slot:top >
-                <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha(filter.fch_transaccion)"/>
+                <q-btn color="blue-10" icon="menu" flat dense >
+                    <q-menu>
+                          <q-list style="min-width: 100px">
+                            <q-item clickable v-close-popup>
+                                <q-item-section @click.native="get_ultima_fecha_con_datos()">Última fecha con datos</q-item-section>
+                            </q-item>                         
+                        </q-list>
+                    </q-menu>
+                </q-btn>                
+                <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha()"/>                
+                <q-toolbar-title>
+                    Transacciones de la fecha <span class="text-blue-10">{{filter.fch_transaccion}}</span>
+                </q-toolbar-title>
+                <!--
                 <q-btn color="blue-10" icon="arrow_upward" flat dense @click="subir"/>
                 <q-btn color="blue-10" icon="arrow_downward" flat dense @click="bajar"/>
                 <q-btn color="red" icon="delete" flat dense @click="eliminar"/>
                 <q-btn color="blue-10" icon="format_list_numbered_rtl" flat dense @click="reenumerar"/>
+                -->
             </template>
         </q-table>   
         <MessageBox ref="msgbox"/>     
     </div>
 </template>
 <script>
-import MessageBox from '../MessageBox.vue'
-import {headers} from '@/common/common.js'
+import MessageBox from '../MessageBox.vue';
+import {postconfig} from '@/common/request.js';
+import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
+import date from 'date-and-time';
+import {cdate} from '@/common/custom-date.js';
+
 export default {
     name:"TableTransaccionesFondosFecha",    
     components:{
         MessageBox
     },
     props:{
-        filter:{
+        in_filter:{
             type:Object,
-            default: () => {}
+            default: () => {
+                return {
+                    fch_transaccion:"",
+                    updtime: Date.now()
+                }   
+            }            
+        },
+        init:{
+            type:Boolean,
+            default:false            
         }        
-    },
+    },    
     data: () => {
-        return {            
+        return {      
+            filter:{
+                fch_transaccion:""
+            },      
             columns:[{
                 label:"N. Transaccion",
                 align:"left",
@@ -47,17 +75,29 @@ export default {
                 label:"Operacion",
                 align:"left",
                 field:"tipo_trans_id",
-                name:"tipo_trans_id"
+                name:"tipo_trans_id",
+                style:"width:30px;"
             },{
                 label:"Moneda",
                 align:"left",
                 field:"mon_trans_id",
-                name:"mon_trans_id"
+                name:"mon_trans_id",
+                style:"width:30px;"
             },{
                 label:"Importe",
                 align:"right",
                 field:"imp_transaccion",
-                name:"imp_transaccion"
+                name:"imp_transaccion",
+                style:"width:30px;"
+            },{
+                label:"Info",
+                align:"left",
+                field:"info_adicional",
+                name:"info_adicional",
+                style:"width:100px;"
+            },{
+                label:"",
+                name:""
             }],
             data:[],
             pagination:{
@@ -67,99 +107,83 @@ export default {
             list_eliminar:[]
         }
     },
-    mounted:function(){
-        //this.get_transacciones_x_fecha(this.filter.fch_transaccion)
+    mounted:function(){       
+        if (this.init){
+            this.init_table()
+        }
+        
+        //this.get_transacciones_x_fecha(this.filter.fch_transaccion)        
+        //console.log(this.filter)
     },
-    watch:{
-        filter:function(newval){            
-            let fch_transaccion = newval.fch_transaccion
-            this.get_transacciones_x_fecha(fch_transaccion)
+    watch:{        
+        "in_filter.updtime":function(newval){    
+            console.log('updtime'+newval)
+
+            this.filter.fch_transaccion = this.in_filter.fch_transaccion
+            console.log(this.filter)
+            this.get_transacciones_x_fecha()                       
         }
     },
     methods:{             
-        eliminar:function(){
-            let selected = this.selected.shift()
-
-            const index = this.data.findIndex(element => {
-                return element.num_transaccion == selected.num_transaccion
-            })
-
-            this.data.splice(index,1)
-            this.list_eliminar.push(selected)
-            this.reenumerar()
-            console.log(this.list_eliminar)
-
-        },  
-        reenumerar: function(){
-            let num_transaccion = 0
-            this.data.forEach(element => {
-                num_transaccion++ 
-                element.num_transaccion = num_transaccion
-            })
-        },
-        subir:function(){            
-            if(this.selected.length == 0){
+        init_table:function(){            
+            if (this.in_filter.updtime == undefined){
                 return;
             }
-            let selected = this.selected.shift()
-            let prev_num_trans = selected.num_transaccion - 1
-            const prevrow = this.data.find(element => {
-                return element.num_transaccion == prev_num_trans
-            })
+            if (this.in_filter.updtime == ""){
+                return;
+            }                 
+            if (this.in_filter.fch_transaccion != ""){
+                this.filter.fch_transaccion = this.in_filter.fch_transaccion
+            }
+            if (this.in_filter.fch_transaccion == "" || this.in_filter.fch_transaccion == undefined || this.in_filter.fch_transaccion == null){
+                this.filter.fch_transaccion = date.format(new Date(),CLIENT_DATE_FORMAT)
+            }
 
-            prevrow.num_transaccion = selected.num_transaccion
-            selected.num_transaccion = prev_num_trans
-            this.selected.push(selected)
-            this.ordenar()
+            this.get_transacciones_x_fecha()            
         },
-        bajar:function(){
-            let selected = this.selected.shift()
-            let num_transaccion = selected.num_transaccion
-            let sig_num_transaccion = num_transaccion + 1
-            const sigrow = this.data.find(element => {
-                return element.num_transaccion == sig_num_transaccion
-            })
-            sigrow.num_transaccion = num_transaccion
-            selected.num_transaccion = sig_num_transaccion
-            this.selected.push(selected)
-            this.ordenar()
-        },
-        ordenar:function(){
-            this.data.sort((a,b)=> {
-                if(a.num_transaccion > b.num_transaccion){
-                    return 1;
-                }
-                if(a.num_transaccion < b.num_transaccion){
-                    return -1;
-                }
-                if(a.num_transaccion == b.num_transaccion){
-                    return 0
-                }
-            })
-        },
-        get_transacciones_x_fecha:function(fch_transaccion){            
+        get_transacciones_x_fecha:function(){                            
+            if (this.filter.fch_transaccion == null){
+                return;
+            }    
+
             this.data = []
             this.selected=[]
-            this.list_eliminar=[]
+            this.list_eliminar=[]                                
+            
+            //console.log(postconfig)
 
             this.$http.post('/FundsManager/FundsManager/get_transacciones_x_fecha',{
-                fch_transaccion: fch_transaccion
-            },{
-                headers:headers()
-            }            
-            ).then(httpresp => {                
-                this.$refs.msgbox.open({
-                    httpresp:httpresp,
-                    open:"onerror"
-                })
+                fch_transaccion: this.filter.fch_transaccion
+            },postconfig()).then(httpresp => {                
+                this.$refs.msgbox.http_resp_on_error(httpresp)
                 let appresp = httpresp.data
-                let rownum = 0
-                appresp.data.forEach(elem => {
-                    rownum += 1
-                    elem.rownum = rownum
-                    elem.imp_transaccion = elem.imp_transaccion.toFixed(2)
-                    this.data.push(elem)
-                })
+                if (appresp.success){
+                    let rownum = 0
+                    appresp.data.forEach(elem => {
+                        rownum += 1
+                        elem.rownum = rownum
+                        elem.imp_transaccion = elem.imp_transaccion.toFixed(2)
+                        this.data.push(elem)
+                    })
+                }                
+            })
+        },
+        get_ultima_fecha_con_datos:function(){
+            this.data = []
+            this.$http.post('/FundsManager/FundsManager/get_ult_fecha_con_datos',{
+            },postconfig()).then(httpresp => {
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+                let appresp = httpresp.data
+                if(appresp.success){
+                    let rownum = 0
+                    appresp.data.forEach(elem => {
+                        rownum += 1
+                        elem.rownum = rownum
+                        elem.imp_transaccion = elem.imp_transaccion.toFixed(2)
+                        this.data.push(elem)   
+                    })
+                    this.filter.fch_transaccion = cdate.iso_to_client(appresp.extradata.max_fch_transaccion)
+                }
             })
         }
     }

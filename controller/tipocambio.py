@@ -1,12 +1,17 @@
 from common.Response import Response
-from model.TipoCambio import TipoCambioModel
+from common.AppException import AppException
+from model.tipocambio import TipoCambioModel
 from model.MonedaParModel import MonedaParModel
+from writer.tipocambio import TipoCambioWriter
+
 from config.negocio import PAR_OPERACION_DIV
+from config.general import CLIENT_DATE_FORMAT
 from datetime import date, datetime
 from controller.base import Base
 
-class TipoCambioFinder(Base):
-    AUTH_REQUIRED = True
+from app import db
+
+class TipoCambioFinder(Base):    
 
     def get_tc(self, args={}):
         try:
@@ -75,3 +80,63 @@ class TipoCambioFinder(Base):
             return Response(extradata=extradata).from_raw_data(tc)  
         except Exception as e:
             return Response().from_exception(e)
+
+class TipoCambioNuevoController(Base):
+    def procesar(self, args={}):
+        try:
+            self.validar(args)
+            tc_nuevo = self._collect(args)
+            fch_cambio = args.get('fch_cambio')
+            TipoCambioWriter().registrar(tc_nuevo)
+            db.session.commit()            
+            return Response(msg="Se ha procesado el registro del tipo de cambio para la fecha {0}".format(fch_cambio))
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+              
+
+
+    def validar(self, args={}):
+        fch_cambio = args.get('fch_cambio')
+        if fch_cambio is None:
+            raise AppException(msg="No se ha enviado la fecha del tipo de cambio")
+
+        par_id = args.get('par_id')
+        if par_id is None:
+            raise AppException(msg="No se ha indicado el par del tipo de cambio")
+
+        imp_compra = args.get('imp_compra')
+        if imp_compra is None:
+            raise AppException(msg="No se ha enviado imp_compra")
+
+        if imp_compra in ["",0]:
+            raise AppException(msg="No se ha ingresado el importe de compra")
+
+        imp_venta = args.get('imp_venta')
+        if imp_venta is None:
+            raise AppException(msg="No se ha enviado imp_venta")
+
+        if imp_venta in ["",0]:
+            raise AppException(msg="No se ha ingresado imp_venta")
+        
+
+    def _collect(self, args={}):
+        fch_cambio = args.get('fch_cambio')
+        fch_cambio = datetime.strptime(fch_cambio, CLIENT_DATE_FORMAT).date()
+        par_id = args.get('par_id')                        
+
+        imp_compra = float(args.get('imp_compra'))
+        imp_venta = float(args.get('imp_venta'))
+        fch_registro = date.today()
+        fch_audit = datetime.now()
+
+        tc_nuevo = TipoCambioModel(
+            fch_cambio = fch_cambio,            
+            par_id = par_id,            
+            imp_compra = imp_compra,
+            imp_venta = imp_venta,
+            fch_registro = fch_registro,
+            fch_audit = fch_audit
+        )
+
+        return tc_nuevo

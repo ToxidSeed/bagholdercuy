@@ -1,43 +1,63 @@
 <template>
-    <div>
-        <q-tabs
-            v-model="tab"
-            align="left"
-            dense
-        >
-            <q-tab name="Gestion" label="Gestion"/>
-            <q-tab name="Historial" label="Historial"/>
-        </q-tabs>
-        <q-tab-panels
-            v-model="tab"
-        >
-            <q-tab-panel name="Gestion" class="q-pl-none"> 
-                <PanelFunds v-bind:visible="mantvisible"/>
-            </q-tab-panel>
-            <q-tab-panel name="Historial" class="q-pl-none q-pr-none">
-                <TableFundsHistory/>
-            </q-tab-panel>
-        </q-tab-panels>
+    <div>                
+        <div  class="row"  >
+            <q-toolbar class="text-blue-10">
+                <q-btn flat round dense icon="menu" />
+                <q-toolbar-title>
+                    Fondos
+                </q-toolbar-title>
+                <q-btn flat round dense icon="more_vert" />
+            </q-toolbar>
+            <q-card v-for="item in balance" :key="item.moneda" class="q-ml-sm q-mt-sm q-mb-sm">
+                <q-card-section class="col-1 q-pa-sm" bordered>  
+                    <span>Cash {{item.moneda}}</span>                                  
+                    <div class="text-h5 text-blue-10 text-center q-ma-sm">{{item.importe}}</div>
+                </q-card-section>            
+            </q-card>
+            <!--
+            <q-card class="q-ml-sm q-mt-sm q-mb-sm">
+                <q-card-section class="col-1 q-pa-sm" bordered>  
+                    <span>Cash USD</span>                                  
+                    <div class="text-h5 text-blue-10 text-center q-ma-sm" >$6000.00</div>
+                </q-card-section>            
+            </q-card>
+            <q-card class="q-ml-sm q-mt-sm q-mb-sm">
+                <q-card-section class="col-1 q-pa-sm">                  
+                    <span>Cash EUR</span>                                   
+                        <div class="text-h5 text-blue-10 text-center q-ma-sm" >€3000.00</div>
+                </q-card-section>
+            </q-card>
+            -->
+        </div>        
+        <PanelFunds 
+        v-bind:visible="mantvisible"
+        v-on:procesar-fin="procesar_fin_handler"
+        />
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
 import PanelFunds from '@/components/Funds/PanelFunds.vue';
-import TableFundsHistory from '@/components/Funds/TableFundsHistory.vue';
+import MessageBox from '@/components/MessageBox.vue'
+import {postconfig} from '@/common/request.js';
+//import TableFundsHistory from '@/components/Funds/TableFundsHistory.vue';
 
 export default {
     name:"MainPanelFunds",
     components:{
         PanelFunds,
-        TableFundsHistory
+        MessageBox
     },
     data: () => {
         return {
             mantvisible:0,
-            tab:"Gestion"
+            tab:"Gestion",
+            balance:[]
         }
     },
     mounted:function(){
         this.reset()    
+        this.get_funds()
     },
     watch:{
         $route:function(){
@@ -51,7 +71,31 @@ export default {
             }else{
                 this.mantvisible = 0
             }            
+        },
+        procesar_fin_handler:function(){
+            this.get_funds()
+        },
+        get_funds:function(){
+            this.balance = []
+
+            this.$http.post('FundsManager/FundsManager/get_funds',{
+                symbol:""
+            },postconfig()).then(httpresp => {
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+                let appresp = httpresp.data
+                if(appresp.success){                     
+                    appresp.data.forEach(element => {
+                        element.importe = element.importe.toFixed(2)
+                        this.balance.push(element)
+                    });                    
+                }
+            })
         }
     }
 }
 </script>
+<style>
+.bblue {  
+  border: 1px solid rgb(48, 6, 238);
+}
+</style>

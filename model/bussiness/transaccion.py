@@ -20,7 +20,7 @@ class TransaccionHandler:
     def __init__(self, usuario):
         self.usuario = usuario
 
-    def get_sig_num_transaccion(usuario_id, fch_transaccion=""):
+    def get_sig_num_transaccion(usuario_id, fch_transaccion):
         num_trans = 0
         query = db.session.query(
             func.coalesce(func.max(TransaccionFondosModel.num_transaccion),0).label("num_transaccion"),            
@@ -291,7 +291,7 @@ class ConversionMonedaHandler:
 
         transaccion = TransaccionFondosModel(            
             fch_transaccion = conversion.fch_conversion,  
-            num_transaccion = TransaccionHandler.get_sig_num_transaccion(conversion.fch_conversion),
+            num_transaccion = TransaccionHandler.get_sig_num_transaccion(conversion.usuario_id, conversion.fch_conversion),
             tipo_trans_id=TIPO_TRANS_CONVERSION,         
             imp_transaccion=conversion.imp_origen,
             mon_trans_id=conversion.mon_ori_id, 

@@ -44,8 +44,9 @@ export default {
     },
     methods:{
         sel_moneda:function(selected){                    
-            this.moneda = selected                
-            this.$emit('moneda-select',this.moneda) 
+            console.log(selected)
+            this.moneda = selected.value                
+            this.$emit('moneda-select',selected) 
         },
         filter_fn:function(val, update){
            if (val == ''){
@@ -69,9 +70,10 @@ export default {
                    }
                    var options = []
                    for (let elem of appresp.data){
+                        let label = elem["codigo_iso"] + " - " +elem["nombre"] 
                        options.push({
                            "value":elem["codigo_iso"],
-                           "label":elem["codigo_iso"],
+                           "label":label,
                            "moneda_id":elem["moneda_id"]
                        })
                    }

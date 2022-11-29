@@ -3,9 +3,12 @@ from datetime import timedelta, datetime, timezone
 from model.usuario import UsuarioModel
 from common.AppException import AppException
 from common.Response import Response
+from common.logger import logger
+
 from config.general import AUTH_SECRET_KEY
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from app import db
+import logging
 
 
 class LoginController:
@@ -37,13 +40,35 @@ class LoginController:
             return Response().from_exception(e)
 
     def _crear_token(self, usuario=""):
-        td = timedelta(minutes=30)
-        exp = datetime.now(tz=timezone.utc) + td
+        td = timedelta(minutes=5)
+        start = datetime.now(tz=timezone.utc)
+        exp = start + td
         payload = {
-            "usuario":usuario,
+            "usuario":usuario,            
             "exp":exp
         }        
+        
         return jwt.encode(payload, AUTH_SECRET_KEY, algorithm="HS256")        
+
+    def validar_token(self, args={}):
+        try:
+            token = args.get('token')
+            if token is None:
+                raise AppException(msg="No se ha enviado el token")
+
+            decodificado = jwt.decode(token, AUTH_SECRET_KEY, algorithms=["HS256"])
+
+            #exp_date = datetime.utcfromtimestamp(decodificado.get('exp'))
+
+            #logger.debug(decodificado)
+            #logger.debug(exp_date)
+            #logger.debug(datetime.now(tz=timezone.utc))
+
+            resp = Response(msg="credenciales correctas")
+            #resp.elem()
+            return resp
+        except Exception as e:
+            return Response().from_exception(e)
 
 
     def crear_admon_user(self, args=""):
