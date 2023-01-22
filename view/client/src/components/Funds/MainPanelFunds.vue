@@ -2,7 +2,27 @@
     <div>                
         <div  class="row"  >
             <q-toolbar class="text-blue-10">
-                <q-btn flat round dense icon="menu" />
+                <q-btn flat round dense icon="menu">
+                    <q-menu>
+                        <q-list style="min-width: 100px" dense>
+                            <q-item clickable v-close-popup :to="{name:'funds-deposito'}">
+                                <q-item-section>Deposito</q-item-section>
+                            </q-item>                         
+                            <q-item clickable v-close-popup :to="{name:'funds-retiro'}">
+                                <q-item-section>Retiro</q-item-section>
+                            </q-item>                 
+                            <q-item clickable v-close-popup :to="{name:'funds-conversion'}">
+                                <q-item-section>Conversion</q-item-section>
+                            </q-item>                     
+                            <q-item clickable v-close-popup :to="{name:'funds-recalcular'}">
+                                <q-item-section>Recalcular</q-item-section>
+                            </q-item>                     
+                            <q-item clickable v-close-popup :to="{name:'funds-reorganizar'}">
+                                <q-item-section>Reorganizar</q-item-section>
+                            </q-item>                         
+                        </q-list>
+                    </q-menu>
+                </q-btn>
                 <q-toolbar-title>
                     Fondos
                 </q-toolbar-title>

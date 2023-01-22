@@ -7,7 +7,8 @@ from common.Error import Error
 from common.Response import Response
 from common.api.Quote import Quote
 
-class iexcloud:
+class iexcloud:    
+
     def __init__(self):
         self.status = StatusMessage()
         self.base_endpoint = "https://cloud.iexapis.com/stable"
@@ -133,10 +134,20 @@ class iexcloud:
 
         return quote
 
-    def get_historical_prices(self, args={}):        
-        symbol = args.get("symbol")
-        api_range = args.get("range").lower()
+    def get_historical_prices(self, args={}):      
 
+        PROFUNDIDAD = {
+            "YTD":"ytd",
+            "MAX":"max",
+            "MESACTUAL":"1m",
+            "ULT3MESES":"3m",    
+            "ULT6MESES":"6m",    
+            "ULT1ANYO":"1y"
+        }
+
+        api_range = PROFUNDIDAD.get(args.get("range")).lower()
+        symbol = args.get("symbol")
+        
         endpoint = "{0}/stock/{1}/chart/{2}".format(self.base_endpoint, symbol, api_range)
         headers = {
             'Content-Type': 'application/json'

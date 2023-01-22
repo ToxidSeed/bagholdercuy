@@ -3,6 +3,7 @@
         :data="data"
         :columns="columns"        
         row-key="fch_serie"
+        title="Variación Mínimos"
         dense
         :pagination="pagination"       
         separator="vertical" 
@@ -12,17 +13,10 @@
                 <q-th class="text-left" style="width:50px;">Año</q-th>
                 <q-th class="text-left" style="width:50px;">Fecha</q-th>
                 <q-th class="text-left" style="width:50px;">semana</q-th>
-                <q-th class="text-right" style="width:50px;">open</q-th>
-                <q-th class="text-right" style="width:50px;">high</q-th>
-                <q-th class="text-right" style="width:50px;">low</q-th>
-                <q-th class="text-right" style="width:50px;">close</q-th>
-                <q-th class="text-right" style="width:50px;">% high</q-th>
-                <q-th class="text-right" style="width:50px;">% low</q-th>
-                <q-th class="text-right" style="width:50px;">% close</q-th>
-                <q-th class="text-right" style="width:50px;">Var. high</q-th>
-                <q-th class="text-right" style="width:50px;">Var. low</q-th>
-                <q-th class="text-right" style="width:50px;">Var. high-low</q-th>
-                <q-th class="text-right" style="width:50px;">Var. close</q-th>
+                <q-th class="text-right" style="width:50px;">Cierre Anterior</q-th>                
+                <q-th class="text-right" style="width:50px;">Minimo</q-th>
+                <q-th class="text-right" style="width:50px;">% Minimo</q-th>
+                <q-th class="text-right" style="width:50px;">Var. Minimo</q-th>
                 <q-th class="text-left"></q-th>
             </q-tr>
         </template>
@@ -31,44 +25,23 @@
                 <q-td key="anyo"  class="text-left">
                     {{props.row.anyo}}
                 </q-td>
-                <q-td key="fch_semana"  class="text-left">
-                    {{props.row.fch_semana}}
+                <q-td key="fecha"  class="text-left">
+                    {{props.row.fecha}}
                 </q-td>
                 <q-td key="semana" class="text-left">
                     {{props.row.semana}}
                 </q-td>
-                <q-td key="open" class="text-right">
-                    {{props.row.open}}
+                <q-td key="imp_cierre_ant" class="text-right">
+                    {{props.row.imp_cierre_ant}}
+                </q-td>                
+                <q-td key="imp_minimo" class="text-right">
+                    {{props.row.imp_minimo}}
                 </q-td>
-                <q-td key="high" class="text-right">
-                    {{props.row.high}}
+                <q-td key="pct_variacion_minimo" v-bind:class="{'text-red':props.row.pct_variacion_minimo < 0,'text-green':props.row.pct_variacion_minimo >= 0,'text-right':true}">                    
+                    {{props.row.pct_variacion_minimo}}
                 </q-td>
-                <q-td key="low" class="text-right">
-                    {{props.row.low}}
-                </q-td>
-                <q-td key="close" class="text-right">
-                    {{props.row.close}}
-                </q-td>
-                <q-td key="pct_high" class="text-right">
-                    {{props.row.pct_high}}
-                </q-td>
-                <q-td key="pct_low" class="text-right">
-                    {{props.row.pct_low}}
-                </q-td>
-                <q-td key="pct_close" v-bind:class="{'text-red':props.row.pct_close < 0,'text-green':props.row.pct_close >= 0,'text-right':true}">                    
-                    {{props.row.pct_close}}
-                </q-td>
-                <q-td key="var_high" class="text-right">
-                    {{props.row.var_high}}
-                </q-td>
-                <q-td key="var_low" class="text-right">
-                    {{props.row.var_low}}
-                </q-td>
-                <q-td key="high_low" class="text-right">
-                    {{props.row.var_high_low}}
-                </q-td>
-                <q-td key="var_close"  v-bind:class="{'bg-red':props.row.var_close < 0,'bg-green':props.row.var_close >= 0,'text-right':true,'text-white':true}">
-                    {{props.row.var_close}}
+                <q-td key="imp_variacion_minimo"  v-bind:class="{'bg-orange':props.row.imp_variacion_minimo > -1,'bg-red':props.row.imp_variacion_minimo <= -1,'text-right':true,'text-white':true}">
+                    {{props.row.imp_variacion_minimo}}
                 </q-td>
                 <q-td>                    
                 </q-td>
@@ -81,7 +54,18 @@ import date from 'date-and-time'
 import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
 import {headers} from '@/common/common.js'
 export default {
-    name:"TableVariacionSemanal",
+    name:"TableVariacionSemanalCierre",
+    props:{
+        indata:{
+            type:Array,
+            default: () => []
+        }
+    },
+    watch:{
+        indata:function(newval){
+            this.data = newval
+        }
+    },
     data: () => {
         return {
             filter:{
@@ -92,7 +76,7 @@ export default {
             },
             data:[],            
             columns:[
-                {
+                /*{
                     label:"Año",
                     align:"left",
                     field:"anyo",
@@ -171,14 +155,19 @@ export default {
                     field:"",
                     name:"",
                     style:""
-                }
+                }*/
             ]
         }
     },
     mounted:function(){
-        this.get_variacion_semanal()
+        this.init()
     },
     methods:{
+        init:function(){
+            if (this.indata.length > 0){
+                this.data = this.indata
+            }
+        },
         get_variacion_semanal:function(){
             this.data = []
             this.$http.post('/informe/InformeStockController/get_variacion_semanal',{

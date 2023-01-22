@@ -1,54 +1,35 @@
 <template>
     <div>
-        <!--<div class="q-ma-md text-h6">Posiciones</div>-->        
-        <div class="row">
-            <div class="col-12">
-             <q-tabs
-                v-model="tabmodel"
-                align="left"
-                dense
-                class="text-grey"
-                active-color="primary"                
-            >                         
-                <q-tab name="holdings" icon="fas fa-cubes" label="Holdings" />                    
-                <q-tab name="options_chain" icon="fas fa-link" label="Options Chain" />                    
-            </q-tabs>            
-            <q-separator />
-            <q-tab-panels v-model="tabmodel">                
-                <q-tab-panel name="holdings" class="q-pl-none q-pr-none q-pt-none">                    
-                    <!--<TableHoldings/>       -->
-                 </q-tab-panel>
-                 <q-tab-panel name="options_chain">
-                     <!--<PanelOptionsChain
-                     v-bind:asset_type="order.asset_type"
-                     />-->
-                 </q-tab-panel>
-            </q-tab-panels>
-            </div>
-            <!--<div class="col-3">
-                <PanelResumen/>
-            </div>-->
-            <!--<q-dialog v-model="panel_trade.visible">
-                <PanelTrade style="max-width:450px;"
-                v-on:cerrar="panel_trade.visible=false"
-                />  
-            </q-dialog>-->
-        </div>
+        <q-toolbar class="text-blue-10">
+            <q-btn flat round dense icon="menu"></q-btn>
+            <q-toolbar-title>
+                Holdings
+            </q-toolbar-title>
+        </q-toolbar>
+        <q-splitter
+            v-model="first_panel_size"
+            :limits="[0,100]"
+            style="height:100hr"
+            >
+            <template v-slot:before>
+                <router-view
+                v-on:open="open_handler">                    
+                </router-view>
+            </template>
+            <template v-slot:after >
+                <TableHoldings/>
+            </template>
+        </q-splitter>
         <MessageBox ref="msgbox"/>
-    </div>    
+    </div>
 </template>
 <script>
-//import PanelTrade from './PanelTrade.vue';
-//import PanelResumen from '@/components/Holdings/PanelResumen.vue';
-//import PanelOptionsChain from './PanelOptionsChain.vue';
 import TableHoldings from '@/components/Holdings/TableHoldings.vue';
 import MessageBox from '@/components/MessageBox.vue';
-//import PanelOverview from './PanelOverview.vue';
-
 export default {
     name:"PanelHoldings",
     components:{
-        PanelTrade,
+        //PanelTrade,
         //-->PanelResumen,
         //PanelOptionsChain,
         TableHoldings,
@@ -56,7 +37,7 @@ export default {
     },
     data:() =>{
         return {
-            tabmodel:"holdings",
+            first_panel_size:0,
             order:{
                 symbol:"",
                 asset_type:"",
@@ -121,6 +102,9 @@ export default {
         },
         close:function(){
             this.open_panel_order = false
+        },
+        open_handler:function(size){
+            this.first_panel_size = size
         }
     }
 }

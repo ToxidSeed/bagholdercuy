@@ -40,7 +40,7 @@ class LoginController:
             return Response().from_exception(e)
 
     def _crear_token(self, usuario=""):
-        td = timedelta(minutes=5)
+        td = timedelta(minutes=15)
         start = datetime.now(tz=timezone.utc)
         exp = start + td
         payload = {

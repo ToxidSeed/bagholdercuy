@@ -1,5 +1,5 @@
 from app import db
-class CalendarioSemanal(db.Model):
+class CalendarioSemanalModel(db.Model):
     __tablename__="tb_calendario_semanal"
 
     fch_semana = db.Column(db.Date, primary_key=True)

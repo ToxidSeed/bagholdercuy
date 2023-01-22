@@ -8,7 +8,7 @@ import PanelTradeList from './components/PanelTradeList.vue';
 import PanelTrade from './components/PanelTrade.vue';
 import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
-import PanelHoldings from './components/PanelHoldings.vue';
+import MainPanelHoldings from './components/Holdings/MainPanelHoldings.vue';
 import MainPanelFunds from './components/Funds/MainPanelFunds.vue'
 import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCurrencyExchange.vue';
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
@@ -77,7 +77,9 @@ const routes =  [
               {
                 path:"nuevo",
                 name:"currencyexchange-nuevo",
-                component:PanelCurrencyExchangeRate
+                component:PanelCurrencyExchangeRate,
+                meta: {size:30},
+                props:{inFirstPanelSize:50}
               },{
                 path:"loader",
                 name:"currencyexchange-loader",
@@ -95,7 +97,16 @@ const routes =  [
           },{
             path:'/dataloader', component:DataLoader
           },{
-            path:'/holdings', component:PanelHoldings
+            path:'/holdings', 
+            name:'holdings',
+            component:MainPanelHoldings,
+            children:[{
+              path:'trade',
+              name:'holdings-trade',
+              component:PanelTrade
+            }
+
+            ]
           },{
             path:'/historial_operaciones', component:PanelHistorialOperaciones
           },{

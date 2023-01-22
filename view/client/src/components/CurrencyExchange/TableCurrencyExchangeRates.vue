@@ -20,7 +20,7 @@
                                     <q-item clickable v-close-popup :to="{name:'currencyexchange-nuevo',params:{inFirstPanelSize:30}}">
                                         <q-item-section>Nuevo Registro</q-item-section>
                                     </q-item>                         
-                                    <q-item clickable v-close-popup :to="{name:'currencyexchange-loader'}">
+                                    <q-item clickable v-close-popup :to="{name:'currencyexchange-loader',params:{inFirstPanelSize:25}}">
                                         <q-item-section>Carga Masiva</q-item-section>
                                     </q-item>                         
                                 </q-list>

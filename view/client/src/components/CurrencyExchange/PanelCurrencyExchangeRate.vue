@@ -12,7 +12,7 @@
             <q-card-section>
                 <div class="row">
                     <q-input v-model="fecha_cambio.value" label="Fecha Cambio" mask="##/##/####" fill-mask="#" class="col-5"/>
-                    <SelectPair v-on:pair-select="pair_select_handler" class="col-5 q-pl-xs"/>
+                    <SelectPair v-on:par-select="par_select_handler" class="col-5 q-pl-xs"/>
                 </div>
                 <div class="row">
                     <q-input v-model="importe_compra" label="Compra" mask="#.##"  input-class="text-right" 
@@ -30,7 +30,7 @@
     </div>
 </template>
 <script>
-import SelectPair from '../SelectPair.vue'
+import SelectPair from '@/components/SelectPair.vue'
 import date from 'date-and-time';
 import { CLIENT_DATE_FORMAT } from '@/common/constants';
 import {postconfig} from '@/common/request.js';
@@ -62,10 +62,13 @@ export default {
         this.fecha_cambio.value = date.format(new Date(),CLIENT_DATE_FORMAT)
         this.$emit('open',25)
     },
+    destroyed:function(){
+        this.$emit('close')
+    },
     methods:{
         btn_close_click_handler:function(){      
             this.$router.push({name:'currencyexchange',params:{inFirstPanelSize:0}})      
-            this.$emit('close',0)            
+            //this.$emit('close',0)            
         },
         btn_procesar_click_handler:function(){
             this.confirmar_dialog.open = true
@@ -83,8 +86,8 @@ export default {
                 this.$emit('procesar-fin')
             })
         },
-        pair_select_handler:function(data){
-            this.par_id = data.value
+        par_select_handler:function(data){            
+            this.par_id = data.value            
         }
     }    
 }

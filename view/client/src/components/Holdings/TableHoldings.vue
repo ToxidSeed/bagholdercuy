@@ -10,8 +10,8 @@
 
         >
             <template v-slot:top>
-                <q-btn color="primary" label="Buy" @click="panel_trade.visible=true" />                
-                <q-btn color="red" label="Sell" @click="sell()" class="q-ml-xs" />                
+                <q-btn color="blue-10" label="Buy" :to="{name:'holdings-trade'}"/>                
+                <q-btn color="red-10 " label="Sell" @click="sell()" class="q-ml-xs" />                
                 <q-btn color="green" label="Options Chain" to="/order" class="q-ml-xs" />                
             </template>
             <template v-slot:body-cell-symbol="props">
@@ -52,6 +52,7 @@
 </template>
 <script>
 import MessageBox from '@/components/MessageBox.vue';
+import {postconfig} from '@/common/request.js'
 export default {
     name:"TableHoldings",
     components:{
@@ -125,15 +126,22 @@ export default {
     methods:{
         get_list:function(){
             this.$http.post(
-            'HoldingsManager/HoldingsManager/get_list',{
-            }).then(httpresp =>{
-                console.log(httpresp);
+            'holdings/HoldingsManager/get_list',{
+            },postconfig()).then(httpresp =>{
+                this.data = []
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+
                 var appresp = httpresp.data
-                if(appresp.success == false){
-                    this.$refs.msgbox.httpresp(httpresp)
-                }else{
-                    this.data = appresp.data 
-                }                
+                if(appresp.success){                    
+                    appresp.data.forEach(elem => {
+                        elem.total_change = elem.total_change.toFixed(2)
+                        elem.total_pl = elem.total_pl.toFixed(2)
+                        elem.last_price = elem.last_price.toFixed(2)
+                        elem.avg_buy_price = elem.avg_buy_price.toFixed(2)
+                        elem.market_value = elem.market_value.toFixed(2)
+                        this.data.push(elem)
+                    })
+                }
             })
         }
     }

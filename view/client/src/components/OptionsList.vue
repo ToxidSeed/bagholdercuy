@@ -8,7 +8,7 @@
             </q-item>   
             <q-item 
             active-class="my-menu-link"
-            to="/currencyexchange">
+            :to="{name:'currencyexchange',params:{inFirstPanelSize:0}}">
                 <q-item-section>Currency exchange rates</q-item-section>
             </q-item>            
             <q-item 

@@ -58,7 +58,7 @@ class Response:
             self.answer["message"] = exception.msg
             self.answer["errors"] = exception.errors
             self.answer["stacktrace"] = traceback.format_tb(sys.exc_info()[2])
-        elif type(exception).__name__ == "ExpiredSignatureError":
+        elif type(exception).__name__ in ["InvalidSignatureError","ExpiredSignatureError"]:
             self.answer["success"] = False
             self.answer["message"] = "El acceso del usuario ha expirado, volver a conectarse"
             self.answer["expired"] = True

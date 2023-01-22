@@ -1,14 +1,18 @@
 <template>
     <div>
         <q-card>
-            <q-card-section>
-                <div class="row">
-                    <div class="text-h6 text-primary">Order Entry</div>
-                    <q-space/>
-                    <q-btn color="primary" @click="btn_opciones_click" :disable="btn_opciones_disable">Opciones</q-btn>         
-                </div>            
+            <q-card-section class="q-pt-xs q-pb-none row">
+                
+                <div class="text-h6 text-blue-10">Registro de Orden</div>
+                <q-space/>
+                <!--<q-btn color="primary" @click="btn_opciones_click" :disable="btn_opciones_disable">Opciones</q-btn>         -->
+                <q-btn  flat dense color="red" rounded icon="close" @click="btn_close_click_handler"/>
+
                 <!--<div v-show="ref_num_orden_visible">Insertar {{insertar}} de la Orden: <span class="text-primary">{{ref_num_orden}}</span></div>-->
-            </q-card-section>
+            </q-card-section>            
+            <q-card-actions align="left">
+                <q-btn  color="green" @click="save">Procesar</q-btn>                
+            </q-card-actions>
             <q-separator />
             <q-card-section>
                 <div class="row">
@@ -71,11 +75,7 @@
                     </div>
                 </div>            
             </q-card-section>
-            <q-separator />
-            <q-card-actions align="right">
-                <q-btn  color="green" @click="save">Guardar</q-btn>
-                <q-btn flat @click="cerrar">Cerrar</q-btn>
-            </q-card-actions>
+            <q-separator />            
             <MessageBox ref="msgbox"/>
         </q-card> 
         <q-dialog v-model="win_opciones.visible">
@@ -190,8 +190,7 @@ export default {
             return this.order.contrato_desc==""?this.order.symbol_name:this.order.contrato_desc;
         }
     },
-    mounted:function(){
-        console.log('mounted')
+    mounted:function(){        
         //var var_order_date = new Date().toISOString().substring(0,10)
         //var var_order_date = date.format(new Date(), 'DD/MM/YYYY');                
         if (this.order_date != ""){
@@ -210,7 +209,7 @@ export default {
         this.symbol_search = this.symbol
         //
         //this.get_datos_symbol()
-
+        this.$emit('open',30)
     },
     methods:{        
         onShowProxy:function(){
@@ -249,10 +248,12 @@ export default {
             'SymbolManager/SymbolFinder/buscar_por_texto',{
                 texto:this.symbol_search
             }).then(httpresponse => {
-                console.log(httpresponse)
-                var appresponse = httpresponse.data
-                this.symbol_list = appresponse.data
-                this.states.symbol_popup = true
+                this.$refs.msgbox.http_resp_on_error(httpresponse)    
+                let appresponse = httpresponse.data
+                if (appresponse.success == true){
+                    this.symbol_list = appresponse.data
+                    this.states.symbol_popup = true
+                }                
             });
         },
         save:function(){            
@@ -361,6 +362,9 @@ export default {
             /*this.$emit(
                 'btn_opciones_click',symbol, text
             )*/
+        },
+        btn_close_click_handler:function(){
+            
         }
     }
 }

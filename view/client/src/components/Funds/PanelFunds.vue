@@ -12,15 +12,13 @@
                     ></router-view>
                 </template>
                 <template v-slot:after >
-                    <div>
+                    <!--<div>
                         <q-btn no-caps class="q-mb-xs" color="blue-10" label="Deposito" :to="{name:'funds-deposito'}"/>
                         <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Retiro" :to="{name:'funds-retiro'}"/>
                         <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Conversion" :to="{name:'funds-conversion'}"/>
                         <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Recalcular" :to="{name:'funds-recalcular'}"/>
-                        <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Reorganizar" :to="{name:'funds-reorganizar'}"/>
-
-                        <!--<q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="test" @click="test" />-->
-                    </div>
+                        <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Reorganizar" :to="{name:'funds-reorganizar'}"/>                        
+                    </div>-->
                     <TableTransaccionesFondosFecha ref="TableTransaccionesFondosFecha" v-bind:in_filter="filter" v-bind:init="true"/>
                 </template>
             </q-splitter>        

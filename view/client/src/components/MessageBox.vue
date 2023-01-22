@@ -36,7 +36,7 @@
             </q-card-section>            
         <q-separator />
         <q-card-actions align="right">
-            <q-btn dense color="primary" v-close-popup>OK</q-btn>
+            <q-btn dense color="primary" v-close-popup @click="btn_ok_handler">OK</q-btn>
             <q-btn flat v-close-popup>Cerrar</q-btn>
         </q-card-actions>
       </q-card>
@@ -73,7 +73,8 @@
                 info:{
                     icon:"fa fa-info-circle",
                     color:"primary"
-                }
+                },
+                expired:false
             }
         },
         watch:{
@@ -125,7 +126,7 @@
                 }       
                 this.opened = true      
             },                                              
-            set_httpresp:function(httpresp){
+            set_httpresp:function(httpresp){                                   
                 this.request_config = JSON.parse(httpresp.config.data)      
                 this.errors = []
                 this.stacktrace=[]
@@ -137,6 +138,7 @@
                 let stacktrace = false
                 //var has_errors = false                                            
                 if (appresp != null){
+                    this.expired = appresp.expired
                     //
                     if (appresp.errors.length > 0){
                         //has_errors = true
@@ -161,10 +163,10 @@
                     this.message = appresp.message                                        
                 }
             },
-            onOk(){
-                if (this.action != ""){
-                    this.$emit(this.action)
-                }                
+            btn_ok_handler:function(){
+                if (this.expired){
+                    this.$router.push({name:"/"})
+                }
             }
         }
     }

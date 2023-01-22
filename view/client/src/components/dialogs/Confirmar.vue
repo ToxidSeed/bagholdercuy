@@ -7,8 +7,8 @@
             </q-card-section>
 
             <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="primary" v-close-popup />
-            <q-btn flat label="Si" color="primary" v-close-popup @click="btn_si_click_handler"/>
+            <q-btn flat label="Cancel" color="red" v-close-popup />
+            <q-btn label="Si" color="primary" v-close-popup @click="btn_si_click_handler"/>
             </q-card-actions>
         </q-card>
     </q-dialog>

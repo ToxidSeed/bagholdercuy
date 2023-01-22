@@ -17,7 +17,6 @@ app.config.from_object("config.general")
 #app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
 localStorage = localStoragePy('app', 'json')
 
-
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
 
 db = SQLAlchemy(app)

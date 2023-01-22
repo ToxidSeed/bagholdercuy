@@ -1,21 +1,26 @@
 <template>
-    <q-select
-        :label="label"
-        v-model="selected"
-        use-input
-        hide-selected
-        stack-label
-        fill-input
-        input-debounce="500"
-        @filter="filter_fn"
-        @input="sel_item"
-        :options="list"
-        clearable
-    >
-    </q-select>
+    <div>
+        <q-select
+            :label="label"
+            v-model="selected"
+            use-input
+            hide-selected
+            stack-label
+            fill-input
+            input-debounce="500"
+            @filter="filter_fn"
+            @input="sel_item"
+            :options="list"
+            clearable
+        >
+        </q-select>
+        <MessageBox ref="msgbox"/>
+    </div>
 </template>
 <script>
 import {postconfig} from '@/common/request.js';
+import MessageBox from '@/components/MessageBox.vue';
+
 export default {
     name:"SelectPair",
     props:{
@@ -23,6 +28,9 @@ export default {
             type:String,
             default:""
         }
+    },
+    components:{
+        MessageBox
     },
     computed:{
         label:function(){
@@ -40,8 +48,12 @@ export default {
     },
     methods:{
         sel_item:function(selected){
-            this.selected = selected
-            this.$emit('pair-select',this.selected)
+            if (selected == null){
+                this.$emit('par-deselect')                
+            }else{
+                this.selected = selected
+                this.$emit('par-select',this.selected)            
+            }            
         },
         filter_fn:function(val, update){
             if (val == ''){
@@ -52,6 +64,8 @@ export default {
                 this.$http.post('CurrencyPairManager/ParFinder/get_list_by_text',{
                     search_text:val
                 },postconfig()).then(httpresponse => {
+                    this.$refs.msgbox.http_resp_on_error(httpresponse)
+
                     var appdata = httpresponse.data
                     var options = []
                     for (let elem of appdata.data){

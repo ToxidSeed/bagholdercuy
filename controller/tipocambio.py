@@ -103,6 +103,9 @@ class TipoCambioNuevoController(Base):
 
         par_id = args.get('par_id')
         if par_id is None:
+            raise AppException(msg="No se ha enviado 'par_id'")
+
+        if par_id in ["",0]:
             raise AppException(msg="No se ha indicado el par del tipo de cambio")
 
         imp_compra = args.get('imp_compra')

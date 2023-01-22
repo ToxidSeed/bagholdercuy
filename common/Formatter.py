@@ -28,7 +28,8 @@ class Formatter:
             return self.format_dict(dict(indata))
         if any("Model" == base.__name__ for base in indata.__class__.__bases__):
             output = indata.__dict__
-            output.pop('_sa_instance_state')
+            if "_sa_instance_state" in output:
+                output.pop('_sa_instance_state')
             return self.format_dict(output)
         
         return indata

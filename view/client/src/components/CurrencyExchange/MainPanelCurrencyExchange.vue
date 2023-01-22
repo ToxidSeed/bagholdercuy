@@ -67,6 +67,7 @@ export default {
         }
     },
     mounted:function(){
+        console.log('mounted-main')
         this.init()        
     },
     watch:{
@@ -83,15 +84,22 @@ export default {
                 this.firstPanelSize = this.inFirstPanelSize
             }    */        
         },        
-        open_handler:function(size){            
+        open_handler:function(size){        
+            
             this.firstPanelSize = size
         },
-        close_handler:function(){
+        close_handler:function(){            
+            console.log('close')    
             this.firstPanelSize = 0
         },
         procesar_fin_handler:function(){
             this.filter.updtime = Date.now()
         }
+    },
+    beforeRouteUpdate(to, from, next){
+        console.log(to)
+        console.log(from)     
+        next()   
     }
 }
 </script>

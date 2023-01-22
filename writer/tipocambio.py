@@ -8,7 +8,7 @@ class TipoCambioWriter:
     def registrar(self, tc_nuevo):
         par = TipoCambioModel.get_par(tc_nuevo.par_id)
         if par is None:
-            raise AppException(msg="el par_id {0} no existe".format(par_id))
+            raise AppException(msg="el par_id {0} no existe".format(tc_nuevo.par_id))
         
         tc_nuevo.mon_base_id = par.mon_base_id
         tc_nuevo.mon_ref_id = par.mon_ref_id

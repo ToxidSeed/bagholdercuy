@@ -56,15 +56,27 @@ export default {
                 name:""
             },
             profundidad:{
-                value:"YTD",
-                label:"Desde el inicio del año"
+                value:"",
+                label:""
             },
-            profundidad_list:[{
+            profundidad_list:[
+            {
+                value:"MESACTUAL",
+                label:"MES ACTUAL"
+            },{
                 value:"YTD",
-                label:"Desde el inicio del año"
+                label:"ANYO EN CURSO"
+            },
+            {
+                value:"ULT3MESES",
+                label:"ULTIMOS 3 MESES"
+            },
+            {
+                value:"ULT6MESES",
+                label:"ULTIMOS 6 MESES"
             },{
                 value:"MAX",
-                label:"Máximo posible"
+                label:"MAXIMO POSIBLE"
             }]
         }
     },
@@ -76,7 +88,7 @@ export default {
         procesar:function(){
             this.loading = true
             this.$http.post(
-            '/SerieManager/SerieManager/procesar',{
+            '/SerieManager/SerieManagerLoader/procesar',{
                 profundidad: this.profundidad.value,
                 symbol: this.symbol.value
             },{

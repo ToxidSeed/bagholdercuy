@@ -6,28 +6,52 @@ from common.api.Alphavantage import Alphavantage
 from common.api.iexcloud import iexcloud
 
 from model.StockData import StockData
-from model.CalendarioSemanal import CalendarioSemanal
-from model.StockData import StockData
+from model.CalendarioSemanal import CalendarioSemanalModel
+from model.seriesemanal import SerieSemanalModel
 
-from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL
+from writer.variacionsemanal import VariacionSemanalWriter
+
+from reader.stockdata import StockDataReader
+
+from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL,SERIES_PROF_CARGA_ULT3MESES,SERIES_PROF_CARGA_ULT6MESES
+from config.negocio import SERIES_PROF_CARGA_ULT1ANYO
 
 
 from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
 from app import db
 from sqlalchemy import func
 from sqlalchemy.orm import join
 from sqlalchemy import and_
 
 
-class SerieManager(Base):
+class SerieManagerLoader(Base):    
+    def __init__(self,access_token):
+        super().__init__(access_token=access_token)
+        self.fch_ini_procesar = None
+
 
     def procesar(self, args={}):
         try:                        
+            anyo = semana = dia = None        
+
             profundidad = args.get("profundidad")
             symbol = args.get("symbol")
 
+            self.fch_ini_procesar = self.get_fch_ini_reprocesar(profundidad=profundidad)         
+
             self.load_daily_series(symbol, profundidad)
-            SerieSemanalLoader().procesar(symbol, profundidad)
+
+            #procesamiento de series semanales
+            if self.fch_ini_procesar is not None:
+                (anyo, semana, dia) = self.fch_ini_procesar.isocalendar()
+
+            SerieSemanalLoader().procesar(symbol, anyo=anyo, semana=semana)
+            db.session.flush()
+            
+            VariacionSemanalWriter().procesar(symbol, anyo=anyo, semana=semana)
+            db.session.flush()
+
             SerieMensualLoader().procesar(symbol, profundidad)            
             db.session.commit()
             return Response(msg="Se ha cargado correctamente")
@@ -36,68 +60,90 @@ class SerieManager(Base):
             return Response().from_exception(e)
 
     def get_fch_ini_reprocesar(self, profundidad=""):
+                
+        fecha_actual = date.today()
+
         fecha = None
-        fch_actual = date.today()
+
+        if profundidad == SERIES_PROF_CARGA_MESACTUAL:
+            mes = str(fecha_actual.month).zfill(2)
+            fecha = date.fromisoformat("{0}-{1}-{2}".format(fch_actual.year,mes,'01'))
 
         if profundidad == SERIES_PROF_CARGA_YTD:
-            fecha = "{0}-{1}-{2}".format(fch_actual.year,'01','01')
-        if profundidad == SERIES_PROF_CARGA_MESACTUAL:
-            mes = str(fch_actual.month).zfill(2)
-            fecha = "{0}-{1}-{2}".format(fch_actual.year,mes,'01')
+            fecha = date.fromisoformat("{0}-{1}-{2}".format(fch_actual.year,'01','01')) 
+
+        if profundidad == SERIES_PROF_CARGA_ULT3MESES:
+            fecha = fecha_actual + relativedelta(months=-3)
+
+        if profundidad == SERIES_PROF_CARGA_ULT6MESES:
+            fecha = fecha_actual + relativedelta(months=-6)
+
+        if profundidad == SERIES_PROF_CARGA_ULT1ANYO:
+            fecha = fecha_actual + relativedelta(years=-1)
 
         return fecha
-
-    def get_profundidad_api(self, profundidad=""):
-        profundidad_api = profundidad
-        if profundidad == SERIES_PROF_CARGA_MESACTUAL:
-            profundidad_api = SERIES_PROF_CARGA_YTD
-        return profundidad_api        
+      
 
     def get_historial_prices(self, symbol="", profundidad=""):
-        prof_api = self.get_profundidad_api(profundidad)
         args = {
             "symbol":symbol,
-            "range":prof_api
+            "range":profundidad
         }        
         return iexcloud().get_historical_prices(args)        
 
-    def load_daily_series(self, symbol="", profundidad=""):        
-        self.remove_daily_series(symbol, profundidad)
-        data = self.get_historial_prices(symbol, profundidad=profundidad)
+    def load_daily_series(self, symbol="", profundidad=""):   
+        #obtener la fecha de inicio en base a la profundidad
+        fch_ini_reprocesar = self.get_fch_ini_reprocesar(profundidad=profundidad)         
+        #eliminar las series diarias desde la fecha de inicio        
+        self.remove_daily_series(symbol, fch_ini_reprocesar=fch_ini_reprocesar)
+        #obtener los datos desde la api en base a la profundidad
+        data = self.get_historial_prices(symbol, profundidad=profundidad)              
 
-        fch_registro = date.today()
+        for elem in data:                        
+            price_date = date.fromisoformat(elem.get("date"))            
 
-        for elem in data:
-            uopen = elem.get("uOpen")
-            adj_open = elem.get("open")
-            split_factor = round(uopen / adj_open,0)
-            price_date = date.fromisoformat(elem.get("date"))
-            (year, week, weekday) = price_date.isocalendar()
+            if fch_ini_reprocesar is None:
+                self.insertar_serie_diaria(elem=elem)
+                continue        
 
-            new_serie = StockData(
-                symbol = symbol,
-                price_date = price_date,
-                anyo = year,
-                mes = price_date.month,
-                semana = week,
-                frequency = TIPO_FRECUENCIA_SERIE_DIARIA,
-                open = uopen,
-                high = elem.get("uHigh"),
-                low = elem.get("uLow"),
-                close = elem.get("uClose"),
-                volume = elem.get("uVolume"),
-                adj_open = adj_open,
-                adj_high = elem.get("high"),
-                adj_low = elem.get("low"),
-                adj_close = elem.get("close"),
-                adj_volume = elem.get("volume"),
-                split_factor = split_factor,
-                fch_registro = fch_registro
-            )
-            db.session.add(new_serie)            
+            if price_date >= fch_ini_reprocesar:
+                self.insertar_serie_diaria(elem=elem)
+                continue            
 
-    def remove_daily_series(self, symbol="", profundidad=None):
-        fch_ini_reprocesar = self.get_fch_ini_reprocesar(profundidad=profundidad)        
+    def insertar_serie_diaria(self, elem=None):
+        uopen = elem.get("uOpen")
+        adj_open = elem.get("open")
+        symbol = elem.get("symbol")
+        split_factor = round(uopen / adj_open,0)
+        price_date = date.fromisoformat(elem.get("date"))
+        (year, week, weekday) = price_date.isocalendar()
+        fch_registro = date.today()  
+
+        new_serie = StockData(
+            symbol = symbol,
+            price_date = price_date,
+            anyo = year,
+            mes = price_date.month,
+            semana = week,
+            frequency = TIPO_FRECUENCIA_SERIE_DIARIA,
+            open = uopen,
+            high = elem.get("uHigh"),
+            low = elem.get("uLow"),
+            close = elem.get("uClose"),
+            volume = elem.get("uVolume"),
+            adj_open = adj_open,
+            adj_high = elem.get("high"),
+            adj_low = elem.get("low"),
+            adj_close = elem.get("close"),
+            adj_volume = elem.get("volume"),
+            split_factor = split_factor,
+            fch_registro = fch_registro
+        )
+
+        db.session.add(new_serie)    
+
+
+    def remove_daily_series(self, symbol="", fch_ini_reprocesar=None):        
         if fch_ini_reprocesar is None:
             StockData.query.filter(
                 StockData.symbol == symbol
@@ -130,106 +176,65 @@ class SerieManager(Base):
         return result
 
 
-class SerieSemanalLoader():        
+class SerieSemanalLoader():   
+    def __init__(self):
+        self.symbol = None
+        self.anyo = None
+        self.semana = None
+        self.fch_semana_inicio = None     
 
-    def procesar(self,symbol, profundidad):                
-        (anyo, semana_ini) = self.eliminar_serie_semanal(symbol=symbol, profundidad=profundidad)
-        base = self.get_base_semanal(symbol, anyo, semana_ini)        
+    def procesar(self,symbol, anyo = None, semana = None):                
+        self.symbol = symbol
+        self.anyo = anyo
+        self.semana = semana
+        
+        if anyo is not None and semana is not None:
+            self.fch_semana_inicio = date.fromisocalendar(anyo, semana, 1)
+        
+        self.__eliminar_series_semanales()
+        
+                #(anyo, semana_ini) = self.eliminar_serie_semanal(symbol=symbol, profundidad=profundidad)
+        base = StockDataReader.get_base_semanal(self.symbol, self.fch_semana_inicio)        
                 
         fch_registro = date.today()
-        for semana in base:            
-            self._procesar_serie(symbol=symbol, semana=semana, fch_registro=fch_registro)
+        for preserie_semana in base:            
+            self._procesar_serie(symbol=symbol, preserie_semana=preserie_semana, fch_registro=fch_registro)
 
-    def get_semana_ini_reprocesar(self, symbol="", profundidad=""):
-        semana_ini_repro = None
-        fch_actual = date.today()
+    def __eliminar_series_semanales(self):
         
-        (anyo, semana, diasemana) = fch_actual.isocalendar()
+        stmt = (
+            db.delete(SerieSemanalModel).
+            where(SerieSemanalModel.symbol == self.symbol)
+        )
 
-        if profundidad == SERIES_PROF_CARGA_MESACTUAL:
-            semana_ini_repro = (semana - NUM_SEMANAS_REPROCESAR_MES)+1
-        if profundidad == SERIES_PROF_CARGA_YTD:
-            semana_ini_repro = 1
+        if self.fch_semana_inicio is not None:
+            stmt = stmt.where(
+                SerieSemanalModel.fch_semana >= self.fch_semana_inicio        
+            )
 
-        return (anyo, semana_ini_repro)
-
-    def eliminar_serie_semanal(self, symbol="", profundidad=""):
-        (anyo, semana_ini) = self.get_semana_ini_reprocesar(symbol, profundidad=profundidad)
-
-        query = StockData.query.filter(
-                    StockData.symbol == symbol,
-                    StockData.frequency == TIPO_FRECUENCIA_SERIE_SEMANAL,            
-                )
-                    
-        if semana_ini is not None:
-            query.filter(
-                StockData.anyo == anyo,
-                StockData.semana >= semana_ini    
-            )       
-        query.delete()     
-        return (anyo, semana_ini)
+        db.session.execute(stmt)
     
-    def _procesar_serie(self,symbol="", semana=None, fch_registro=None):
-        open_data = SerieManager.get_open_data(symbol, semana.open_date)            
-        close_data = SerieManager.get_close_data(symbol, semana.close_date)                        
+    def _procesar_serie(self,symbol, preserie_semana, fch_registro):
+        serie_apertura = StockDataReader.get_serie(symbol, preserie_semana.open_date)            
+        serie_cierre = StockDataReader.get_serie(symbol, preserie_semana.close_date)                        
 
-        new_serie = StockData(
-            symbol = symbol,
-            price_date = semana.fch_semana,
-            anyo = semana.anyo,                
-            semana = semana.semana,
-            frequency = TIPO_FRECUENCIA_SERIE_SEMANAL,
-            open = open_data.open,
-            high = semana.high,
-            low = semana.low,
-            close = close_data.close,                
-            adj_open = open_data.adj_open,
-            adj_high = semana.adj_high,
-            adj_low = semana.adj_low,
-            adj_close = close_data.adj_close,
-            fch_registro = fch_registro           
-        )
-        db.session.add(new_serie)
-
-
-    def get_base_semanal(self, symbol="", anyo=None,semana_ini_proceso=None):    
-        query = db.session.query(
-            CalendarioSemanal.fch_semana,
-            CalendarioSemanal.anyo,
-            CalendarioSemanal.semana,
-            func.min(StockData.price_date).label("open_date"),
-            func.max(StockData.price_date).label("close_date"),
-            func.min(StockData.low).label("low"),
-            func.max(StockData.high).label("high"),
-            func.min(StockData.adj_low).label("adj_low"),
-            func.min(StockData.adj_high).label("adj_high"),                        
-        ).select_from(
-            StockData
-        ).outerjoin(
-            CalendarioSemanal,
-            and_(
-                StockData.anyo == CalendarioSemanal.anyo,
-                StockData.semana == CalendarioSemanal.semana
-            )
-        ).filter(
-            and_(
-                StockData.frequency == "daily",
-                StockData.symbol == symbol
-            )
-        ).group_by(
-            CalendarioSemanal.fch_semana
-        ).order_by(
-            CalendarioSemanal.fch_semana.desc()
+        nueva_serie_semanal = SerieSemanalModel(
+            symbol = preserie_semana.symbol,
+            fch_semana = preserie_semana.fch_semana,
+            anyo = preserie_semana.anyo,
+            semana = preserie_semana.semana,
+            imp_apertura = serie_apertura.StockData.open,
+            imp_maximo = preserie_semana.high,
+            imp_minimo = preserie_semana.low,
+            imp_cierre = serie_cierre.StockData.close,
+            imp_apertura_ajus = serie_apertura.StockData.adj_open,
+            imp_maximo_ajus = preserie_semana.adj_high,
+            imp_minimo_ajus = preserie_semana.adj_low,
+            imp_cierre_ajus = serie_cierre.StockData.adj_close
         )
 
-        if semana_ini_proceso is not None:
-            query.filter(
-                StockData.anyo >= anyo,
-                StockData.semana >= semana_ini_proceso
-            )
-        
-        return query.all()        
-        
+        db.session.add(nueva_serie_semanal)
+
 
 class SerieMensualLoader():    
 
@@ -244,8 +249,8 @@ class SerieMensualLoader():
     def procesar_mes(self, datosmes=None, fch_registro=None):
         symbol = datosmes.symbol
         price_date = datetime(datosmes.anyo,datosmes.mes, 1)
-        open_data = SerieManager.get_open_data(symbol, datosmes.open_date)            
-        close_data = SerieManager.get_close_data(symbol, datosmes.close_date)
+        open_data = SerieManagerLoader.get_open_data(symbol, datosmes.open_date)            
+        close_data = SerieManagerLoader.get_close_data(symbol, datosmes.close_date)
 
         new_serie = StockData(
             symbol = symbol,

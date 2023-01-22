@@ -15,14 +15,10 @@ from config.general import APP_DEC_PREC, MARKET_API_LIST
 
 #from controller.StockDataProvider import StockDataProvider
 import common.Markets as Markets
-from controller.Base import Base
+from controller.base import Base
 
 
 class HoldingsManager(Base):
-    def __init__(self):
-        super().__init__(__name__)
-        self.status = StatusMessage()                
-
     def __get_active_holdings(self):
         holdings = db.session.query(
             StockTrade.symbol,
@@ -47,7 +43,9 @@ class HoldingsManager(Base):
         results = []
         for elem in active_holdings:       
             elem_dict = Converter.to_dict(elem) 
-            vals_adic = self.default_bridge.calc_val_adic(elem)
+            #vals_adic = self.default_bridge.calc_val_adic(elem)
+            bridge = iexcloud_bridge()
+            vals_adic = bridge.calc_val_adic(elem)
             elem_dict.update(vals_adic)
             results.append(elem_dict)        
         return Response().from_raw_data(results)
