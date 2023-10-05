@@ -1,10 +1,14 @@
 <template>
     <div>    
         <q-dialog v-model="visible" >            
-            <q-card style="width:400px;">
-                <q-card-section class="q-pb-none">
-                    <div class="text-h6 text-primary">Seleccion de Fechas</div>
-                </q-card-section>
+            <q-card style="width:500px;">                
+                <q-toolbar>
+                    <q-toolbar-title class="text-blue-10" style="overflow:visible;">
+                        Seleccionar Fechas de Orden
+                    </q-toolbar-title>
+                    <q-space/>
+                    <q-btn icon="close" color="red" dense @click="visible=false"/>
+                </q-toolbar>
                 <q-card-section class="row">
                     <div class="row">
                         <SelectAnyosOrden
@@ -42,6 +46,7 @@
 </template>
 <script>
 import {CLIENT_DATE_FORMAT,ISO_DATE_FORMAT} from '@/common/constants.js'
+import {get_postconfig} from '@/common/request.js'
 import date from 'date-and-time';
 import MessageBox from '@/components/MessageBox.vue'
 import SelectAnyosOrden from '@/components/helpers/SelectAnyosOrden.vue'
@@ -132,6 +137,8 @@ export default {
             this.visible=true
         },        
         init: async function(){  
+            let postconfig = get_postconfig()
+
             this.filter.anyo = this.anyo
             this.filter.mes = this.mes
             
@@ -142,7 +149,7 @@ export default {
             }
 
             /*Si el año o el mes no se han seteado obtenemos la maxima fecha de*/
-            let httpresp = await this.$http.post('/OrdenManager/Buscador/get_max_fch_orden')
+            let httpresp = await this.$http.post('/OrdenManager/Buscador/get_max_fch_orden',{},postconfig)
             let appresp = httpresp.data
             if(appresp.success==false){
                 this.$refs.msgbox.httpresp(httpresp)
@@ -155,11 +162,12 @@ export default {
             this.get_fechas(this.filter.anyo, this.filter.mes)            
         },
         get_fechas:function(anyo, mes){
+            let postconfig = get_postconfig()
             this.data=[]
             this.$http.post('/OrdenManager/Buscador/get_fechas',{
                 anyo:anyo,
                 mes:mes
-            }).then(httpresp => {
+            },postconfig).then(httpresp => {
                 let appresp = httpresp.data
                 if(appresp.success == false){
                     this.$refs.msgbox.httpresp(httpresp)

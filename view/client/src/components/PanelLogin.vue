@@ -46,7 +46,9 @@ export default {
                 console.log(error)
             })
         },
-        set_auth_data:function(appdata){
+        set_auth_data:function(appdata){         
+            localStorage.setItem("id_usuario", appdata.id_usuario)   
+            localStorage.setItem("usuario", appdata.usuario)
             localStorage.setItem("logeado",true)
             localStorage.setItem("token", appdata.token)            
         }

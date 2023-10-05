@@ -4,6 +4,7 @@
         :label="label"
         stack-label
         v-model="symbol"  
+        color="blue-10"                
         use-input
         hide-selected                                              
         fill-input        

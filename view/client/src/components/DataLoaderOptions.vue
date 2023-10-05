@@ -15,7 +15,7 @@
         </q-card-section>                
         <q-card-section class="q-pa-xs">            
             <q-toolbar class="q-pl-xs">                                             
-                <q-btn  label="Procesar" color="primary" @click="procesar"/>                
+                <q-btn  label="Procesar" color="green" @click="procesar"/>                
             </q-toolbar>
             <div class="row q-pl-xs q-pr-xs">
                 <SelectSymbol  
@@ -26,6 +26,7 @@
                     <div class="q-pt-xs text-indigo text-h6">{{symbol}}</div>
                     <div class="q-pt-xs text-subtitle1">{{symbol_nombre}}</div>
                 </div>
+                <q-input v-model="fch_expiracion" label="Expiración" mask="##/##/####" hint="dd/mm/yyyy"/>
             </div>            
         </q-card-section>      
         <q-inner-loading :showing="loading">
@@ -38,6 +39,8 @@
 <script>
 import MessageBox from '@/components/MessageBox.vue'
 import SelectSymbol from '@/components/SelectSymbol.vue'
+import {postconfig} from '@/common/request.js'
+import date from 'date-and-time'
 
 export default {
     name:"DataloaderOptions",
@@ -49,6 +52,7 @@ export default {
         return{
             loading:false,
             symbol:"",
+            fch_expiracion:"",
             symbol_nombre:"",
             symbol_list:[],
             selected_symbol:{}
@@ -94,10 +98,19 @@ export default {
             
         },
         procesar:function(){
+            let fch_expiracion = ""
+
+            if (this.fch_expiracion != ""){
+                fch_expiracion = date.transform(this.fch_expiracion,"DD/MM/YYYY","YYYY-MM-DD")
+            }            
+
             this.loading = true
             this.$http.post('/OpcionesContrato/SymbolLoader/load',{
-                symbol:this.symbol
-            }).then(httpresp => {
+                symbol:this.symbol,
+                fch_expiracion:fch_expiracion,
+            },
+            postconfig()
+            ).then(httpresp => {
                 this.$refs.msgbox.httpresp(httpresp)                
             }).catch(err => {
                 console.log(err)

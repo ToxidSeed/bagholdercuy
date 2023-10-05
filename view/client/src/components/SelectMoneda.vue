@@ -1,4 +1,4 @@
-<template>
+<template>    
     <q-select                                        
         :label="cmp_label"
         v-model="moneda"  
@@ -11,7 +11,7 @@
         @input="sel_moneda"
         :options="list"                            
         clearable          
-    />
+    />    
 </template>
 <script>
 export default {
@@ -21,9 +21,9 @@ export default {
             type:String,
             default:""
         },
-        throwerror:{
-            type:Boolean,
-            default:false
+        in_cod_moneda:{
+            type:String,
+            default:""
         }
     },
     computed:{
@@ -40,6 +40,14 @@ export default {
             moneda:"",
             //moneda_id:"",
             list:[]
+        }
+    },
+    mounted:function(){
+        if (this.in_cod_moneda != ""){
+            this.moneda = {
+                value: this.in_cod_moneda,
+                label: this.in_cod_moneda
+            }
         }
     },
     methods:{

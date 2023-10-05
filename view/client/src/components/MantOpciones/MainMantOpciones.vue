@@ -1,6 +1,26 @@
 <template>
-    <div>      
-        <div class="text-primary q-pl-md text-h6">Contratos de Opciones</div>
+    <div>              
+        <q-toolbar class="text-blue-10">
+            <q-btn flat round dense icon="menu">
+                <q-menu>
+                    <q-list dense>
+                        <q-item clickable v-close-popup :to="{name:'opciones-loader'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga desde <span class="text-blue-10 text-bold">iexcloud</span></div>
+                            </q-item-section>                            
+                        </q-item>
+                        <q-item clickable v-close-popup :to="{name:'opciones-loader-fichero'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga desde <span class="text-blue-10 text-bold">archivo .csv</span></div>                                 
+                            </q-item-section>                            
+                        </q-item>
+                    </q-list>
+                </q-menu>
+            </q-btn>
+            <q-toolbar-title>
+                Contratos de Opciones
+            </q-toolbar-title>
+        </q-toolbar>
         <q-splitter
             v-model="visible"
             :limits="[0, 100]"    
@@ -8,25 +28,35 @@
         >                
             <template v-slot:before>
                 <router-view
-                v-on:procesar-completado="actualizar_lista_opciones"
+                    v-on:procesar-completado="actualizar_lista_opciones"                
+                    v-bind:in_datos_opcion="datos_opcion"
                 ></router-view>
             </template>
-
             <template v-slot:after>
                 <q-toolbar>
-                    <q-btn color="primary" label="Nuevo" :to="{name:'opciones-new'}"></q-btn>                    
-                    <q-btn class="q-ml-xs" color="primary" label="Carga Masiva" :to="{name:'opciones-loader'}"></q-btn>
+                    <q-btn color="blue-10" label="Nuevo" :to="{name:'opciones-new'}"></q-btn>                    
+                    <!--<q-btn class="q-ml-xs" color="blue-10" label="Carga Masiva" :to="{name:'opciones-loader'}"></q-btn>-->
+                    <q-btn class="q-ml-xs text-capitalize"  color="blue-10" flat dense icon="filter_alt" @click="WinFiltrarOpciones.open=true">Filtrar</q-btn>
                 </q-toolbar>
-                <TableListOpciones/>  
+                <TableListOpciones
+                    :infiltros="TableListOpciones.filtros"
+                    v-on:copiar="copiar_opcion"
+                />  
             </template>                
         </q-splitter>
+        <WinFiltrarOpciones 
+            v-model="WinFiltrarOpciones.open"        
+            v-on:btn-aceptar-click="filtrar_lista_opciones"
+        />
     </div>
 </template>
 <script>
 //import PanelMantOpciones from "@/components/MantOpciones/PanelMantOpciones.vue"
 import TableListOpciones from "@/components/MantOpciones/TableListOpciones.vue"
+import WinFiltrarOpciones from "@/components/MantOpciones/WinFiltrarOpciones.vue"
 export default {
     name:"MainMantOpciones",
+
     props:{
         action:{
             type:String,
@@ -35,11 +65,19 @@ export default {
     },
     components:{
         //PanelMantOpciones,
-        TableListOpciones
+        TableListOpciones,
+        WinFiltrarOpciones
     },
     data: () => {
         return {
-            visible:0
+            WinFiltrarOpciones:{
+                open:false
+            },
+            TableListOpciones:{
+                filtros:{}
+            },
+            datos_opcion:{},
+            visible:0,
         }
     },
     mounted:function(){
@@ -63,8 +101,18 @@ export default {
         },
         actualizar_lista_opciones:function(){
             console.log('ola k ase')
+        },
+        filtrar_lista_opciones:function(filtros){
+            this.TableListOpciones.filtros = filtros
+        },
+        copiar_opcion:function(datos_opcion){            
+            if (this.$route.name=="opciones-new"){
+                this.datos_opcion = datos_opcion
+            }else{
+                this.$router.push({name:"opciones-new", params:{in_datos_opcion:datos_opcion}})
+            }            
         }
-    },
+    }/*,
     beforeRouteEnter (to, from, next) {
         console.log(to)
         console.log(next)
@@ -77,6 +125,6 @@ export default {
         console.log(from)
         console.log(next)        
         next()
-    }
+    }*/
 }
 </script>

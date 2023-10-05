@@ -31,7 +31,7 @@ class LoginController:
                 token = self._crear_token(usuario=usuario)
             else:
                 raise AppException(msg="Usuario o password incorrectos")
-            return Response().from_raw_data({"token":token}) 
+            return Response().from_raw_data({"token":token,"id_usuario":userdb.id, "usuario":userdb.usuario}) 
         except NoResultFound as e:
             return Response(msg="Usuario no encontrado").from_exception(e)
         except MultipleResultsFound as e:
@@ -40,7 +40,7 @@ class LoginController:
             return Response().from_exception(e)
 
     def _crear_token(self, usuario=""):
-        td = timedelta(minutes=15)
+        td = timedelta(minutes=60)
         start = datetime.now(tz=timezone.utc)
         exp = start + td
         payload = {

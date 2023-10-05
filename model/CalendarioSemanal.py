@@ -7,3 +7,8 @@ class CalendarioSemanalModel(db.Model):
     semana = db.Column(db.Integer)
     fch_inicio = db.Column(db.Date)
     fch_fin = db.Column(db.Date)
+    fch_lunes = db.Column(db.Date)
+    fch_martes = db.Column(db.Date)
+    fch_miercoles = db.Column(db.Date)
+    fch_jueves = db.Column(db.Date)
+    fch_viernes = db.Column(db.Date)

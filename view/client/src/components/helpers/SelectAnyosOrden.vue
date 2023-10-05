@@ -1,5 +1,6 @@
 <template>    
     <q-select
+        color="blue-10"
         v-model="anyo"
         use-input
         :options="options"
@@ -13,6 +14,7 @@
     </q-select>    
 </template>
 <script>
+import {get_postconfig} from '@/common/request.js';
 export default {    
     name:"SelectAnyosOrden",
     props:{
@@ -33,7 +35,8 @@ export default {
     },
     methods:{
         filterFn:function(val, update){               
-            this.$http.post('/OrdenManager/Buscador/get_anyos')
+            let postconfig = get_postconfig()
+            this.$http.post('/OrdenManager/Buscador/get_anyos',{},postconfig)
             .then(httpresp => {
                 let appresp = httpresp.data
                 if(appresp.success == false){

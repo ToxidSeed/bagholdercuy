@@ -1,9 +1,11 @@
 <template>
     <q-dialog v-model="opened" transition-show="flip-down" transition-hide="flip-up">
-      <q-card> 
-            <q-card-section class="q-pt-xs q-pb-xs" >
-                <q-icon :name="msgdata.icon" size="md" :color="msgdata.color" text-color="white" /> {{title}}            
-            </q-card-section>
+      <q-card style="min-width:400px;"> 
+            <q-toolbar>
+                <q-icon :name="msgdata.icon" size="xs" :color="msgdata.color"/>
+                <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">{{ title }}</q-toolbar-title>           
+                <q-btn icon="close" color="red" flat/>                     
+            </q-toolbar>            
             <q-separator/>
             <q-card-section class="q-pt-md q-pb-xs">
             {{message}}
@@ -18,8 +20,11 @@
                 </div>
             </q-card-section>            
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
-                <div class="text-accent text-weight-bold">URL petición</div><div>{{url}}</div>
+                <div class="text-positive text-weight-bold">caller</div><div>{{caller}}</div>
             </q-card-section>
+            <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
+                <div class="text-accent text-weight-bold">URL petición</div><div>{{url}}</div>
+            </q-card-section>            
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">                
                 <div class="text-red text-weight-bold">Parámetros de Petición</div>
                 <ul class="q-mt-none">
@@ -61,6 +66,7 @@
                 stacktrace:[],
                 url:"",
                 opened: false,
+                caller:"",
                 mostrar_info_error:false,
                 msgdata:{
                     icon:"",
@@ -74,21 +80,50 @@
                     icon:"fa fa-info-circle",
                     color:"primary"
                 },
-                expired:false
+                expired:false,
+                success:false
             }
         },
         watch:{
-            /*config:function(newconf){                
-                if ('httpresp' in newconf){     
-                    this.httpresp(newconf.httpresp,newconf.open)
-                    return;
-                }                                             
-            }*/
+            config:function(newconf){                             
+                this.reset()
+
+                if ('httpresp' in newconf){                     
+                    this.set_httpresp(newconf.httpresp)
+
+                    let appresp = newconf.httpresp.data
+                    this.set_appresp(appresp)
+                }
+
+                if ('onerror' in newconf){
+                    if (this.success == false){
+                        this.opened = true
+                    }else{
+                        this.opened = false
+                    }
+                }else{
+                    this.opened = true
+                }
+
+                if ("caller" in newconf){
+                    this.caller = newconf.caller
+                }
+            }
         },
         mounted:function(){
             //this.interface()
         },
         methods:{    
+            reset:function(){
+                this.opened = false
+                this.expired = false
+                this.title = ""
+                this.message = ""
+                this.caller = ""
+                this.errors = []
+                this.stacktrace = []
+                this.url = ""
+            },
             http_resp:function(httpresp){
                 let appdata = httpresp.data
                 this.set_httpresp(httpresp)
@@ -101,19 +136,37 @@
                 this.set_appresp(appdata)
                 this.opened = true
             },
-            http_resp_on_error:function(httpresp){
-                let appdata = httpresp.data
+            http_resp_on_error:function(httpresp){                                
+                let appdata = httpresp.data                
                 this.set_httpresp(httpresp)
-                this.set_appresp(appdata)
+
+                if (appdata == null){                    
+                    this.resp_data_null(httpresp)
+                    return
+                }
 
                 if (appdata.success == false){
                     this.opened = true
+                    this.success = appdata.success
+                    this.set_appresp(appdata)
                 }
+                                
             },
-            http_error:function(error){
-                console.log(error)
+            http_error:function(httpresp){
+                console.log(httpresp)
             },
-            new:function(args=null){
+            resp_data_null:function(httpresp){
+                this.opened = true
+                this.success = false                                        
+                this.errors = []
+                this.stacktrace=[]
+                this.url = ""                                
+                this.url = httpresp.config.url
+                this.title = "Error"
+                this.message ="httpresp.data null"
+                this.mostrar_info_error = true
+            },
+            open:function(args=null){
                 this.errors = []
                 if (args.title != undefined){
                     this.title = args.title
@@ -124,10 +177,18 @@
                 if (args.message != undefined){
                     this.message = args.message
                 }       
+                if (args.type == "error"){
+                    this.msgdata = this.error
+                    console.log(this.msgdata)
+                }
                 this.opened = true      
             },                                              
-            set_httpresp:function(httpresp){                                   
-                this.request_config = JSON.parse(httpresp.config.data)      
+            set_httpresp:function(httpresp){                    
+                if (httpresp.config.data != null){
+                    if (httpresp.config.data.constructor.name != "FormData"){
+                        this.request_config = JSON.parse(httpresp.config.data)      
+                    }
+                }                
                 this.errors = []
                 this.stacktrace=[]
                 this.url = ""                                
@@ -138,6 +199,7 @@
                 let stacktrace = false
                 //var has_errors = false                                            
                 if (appresp != null){
+                    this.success = appresp.success
                     this.expired = appresp.expired
                     //
                     if (appresp.errors.length > 0){
@@ -171,3 +233,8 @@
         }
     }
 </script>
+<style scoped>
+.q-toolbar {
+    min-height: auto;
+}
+</style>

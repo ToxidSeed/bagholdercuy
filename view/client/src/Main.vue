@@ -11,7 +11,7 @@
           </q-avatar>
           BagHolder
         </q-toolbar-title>
-        <q-btn label="Cerrar Cesión" flat @click="cerrar_cesion"/>
+        <q-btn  color = "red" dense round icon="power_settings_new" @click="cerrar_cesion"/>
       </q-toolbar>
     </q-header>
 

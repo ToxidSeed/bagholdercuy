@@ -13,10 +13,7 @@ from sqlalchemy import func
 
 
 class CurrencyManager(Base):
-    AUTH_REQUIRED = True
-
-    def __init__(self,access_token=None):
-        super().__init__(access_token=access_token)
+    def __init__(self):        
         self.currency = None
 
     def save(self, args={}):

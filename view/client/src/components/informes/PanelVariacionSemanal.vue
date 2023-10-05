@@ -4,48 +4,66 @@
             <q-toolbar class="text-blue-10 q-pb-none q-mb-none">
                 <q-btn flat round dense icon="menu">
                     <q-menu>
-
+                        <q-list dense>
+                            <q-item clickable :to="{name:'variacion-semanal-evolucion'}">
+                                <q-item-section>Evolución</q-item-section>
+                            </q-item>
+                        </q-list>
                     </q-menu>
                 </q-btn>
                 <span class="text-h6 q-pr-md">
                     Variacion Semanal        
                 </span>      
-                <q-btn flat round dense icon="search"></q-btn>      
-            </q-toolbar>            
-            <q-card-section>
-                <span class="text-body1">Instrumento:</span>
-                <div>{{instrument}}</div>
-            </q-card-section>
+                <q-btn flat round dense icon="search" @click="win_filtro_variacion_semanal.open=true"></q-btn>      
+            </q-toolbar>                        
         </q-card>        
         <div class="row">
-            <TableVariacionSemanalCierre class="col-4" :indata="data"/>
-            <TableVariacionSemanalMaximo class="col-4" :indata="data"/>
-            <TableVariacionSemanalMinimo class="col-4" :indata="data"/>
+            <!--
+            <TableVariacionSemanal class="col-12" :indata="data"
+            v-bind:symbol="symbol"
+            v-bind:symbol_nombre="symbol_nombre"
+            />  
+            -->
+            <router-view class="col-12" 
+                :indata="data"          
+                :infiltros="filtros"                  
+            />          
         </div>
+        <WinFiltrosVaracionSemanal 
+        v-model="win_filtro_variacion_semanal.open"        
+        v-on:btn-aceptar-click="filtrar"
+        />
     </div>
 </template>
 <script>
-import TableVariacionSemanalCierre from '@/components/informes/TableVariacionSemanalCierre.vue';
-import TableVariacionSemanalMaximo from '@/components/informes/TableVariacionSemanalMaximo.vue';
-import TableVariacionSemanalMinimo from '@/components/informes/TableVariacionSemanalMinimo.vue';
+//import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
+import WinFiltrosVaracionSemanal from '@/components/informes/WinFiltrosVaracionSemanal.vue';
+
 import {postconfig} from '@/common/request.js';
 
 export default {
     name:"PanelVariacionSemanal",
     components:{
-        TableVariacionSemanalCierre,
-        TableVariacionSemanalMaximo,
-        TableVariacionSemanalMinimo
+//        TableVariacionSemanal,
+        WinFiltrosVaracionSemanal,
+        /*TableVariacionSemanalMaximo,
+        TableVariacionSemanalMinimo*/
     },
     data: () => {
         return {
-            symbol:"SOXL",
+            symbol:"",
+            symbol_nombre:"",
             instrument:"",
-            data:[]
+            data:[],
+            win_filtro_variacion_semanal:{
+                open:false
+            },
+            filtros:{}
         }
     },
     mounted:function(){
-        this.get_variacion_semanal()
+        //this.get_variacion_semanal()
+        console.log('mounted-panel-variacion-semanal')
     },
     methods:{
         get_variacion_semanal:function(){
@@ -72,6 +90,12 @@ export default {
                     this.data.push(element)                    
                 })
             })
+        },
+        filtrar:function(filtros){            
+            this.symbol = filtros.symbol_value
+            this.symbol_nombre = filtros.symbol_text
+            this.filtros = filtros
+            //this.get_variacion_semanal()
         }
     }
 }

@@ -8,10 +8,15 @@ from controller.base import Base
 from model.StockSymbol import StockSymbol as SymbolModel
 from model.OptionContract import OptionContractModel
 
+from reader.symbol import SymbolReader
+
 from common.AppException import AppException
 from common.Response import Response
 from common.api.iexcloud import iexcloud
 import common.logger as logger
+
+from processor.symbol import SymbolRemover
+from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
 
 
 class SymbolManager:
@@ -95,13 +100,11 @@ class SymbolManager:
 class SymbolFinder(Base):    
 
     def get_list(self, args={}):
-        data = SymbolModel.query.order_by(
-            SymbolModel.fec_audit.desc(),
-            SymbolModel.symbol.asc()
-        ).limit(100).all()
+        records = SymbolReader.get_list()
         return Response().from_raw_data(data)
 
     def buscar_por_texto(self, args={}):
+        
         texto = "%{0}%".format(args["texto"])
         data = SymbolModel.query.filter(
             SymbolModel.symbol.ilike(texto)
@@ -143,9 +146,8 @@ class SymbolFinder(Base):
         except Exception as e:
             return Response().from_exception(e)
 
-class DataLoader:
-    def __init__(self):        
-        pass
+class DataLoader(Base):
+    
 
     def do(self, args={}):
         try:
@@ -163,6 +165,9 @@ class DataLoader:
         return data
 
     def _procesar(self, list_symbol=[]):
+
+        #eliminamos lo existente para cargar todo
+        SymbolRemover.eliminar_todo()
         for symbol in list_symbol:
             self._procesar_elemento(symbol)
 
@@ -178,8 +183,8 @@ class DataLoader:
 
     def _procesar_elemento(self, elem=None):
         symbol = elem.get("symbol")
-        if self._existe_symbol(symbol)==True:
-            return
+        #if self._existe_symbol(symbol)==True:
+        #    return        
 
         newsymbol = SymbolModel(
             symbol=symbol,
@@ -190,5 +195,11 @@ class DataLoader:
             fec_audit=datetime.now(),
             moneda_id=elem.get("currency")
         )
+
+        if elem.get("type") == 'cs':
+            newsymbol.asset_type = TIPO_ACTIVO_EQUITY
+        if elem.get("type") == 'et':
+            newsymbol.asset_type = TIPO_ACTIVO_ETF
+
         db.session.add(newsymbol)
 

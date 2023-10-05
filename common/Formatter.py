@@ -4,6 +4,7 @@ from datetime import datetime, date
 class Formatter:
     def __init__(self, custom={}):
         self.custom = custom
+        self.exclude_fields = []
 
     def process_list(self,inlist=[]):
         outlist = []

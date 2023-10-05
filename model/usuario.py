@@ -9,6 +9,7 @@ class UsuarioModel(db.Model):
     nombres = db.Column(db.String)
     apellidos = db.Column(db.String)
     moneda_id = db.Column(db.String(3))
+    id_cuenta_default = db.Column(db.Integer)
     
     def get(usuario_id):        
         user = UsuarioModel.query.filter(

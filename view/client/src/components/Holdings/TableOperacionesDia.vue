@@ -11,28 +11,13 @@
             separator="vertical"    
             dense 
         >
-            <template v-slot:top>                
-                <div class="col-12 text-h6">Reorganizar Ordenes</div>                
-                <div class="row">
-                    <q-input class="col-4" label="Fch. Orden" stack-label
-                    mask="##/##/####" v-model="filter.fch_orden"
-                    fill-mask=""
-                    hint="dd/mm/yyyy"                    
-                    />
-                    <q-space/>
-                    <div>
-                        <q-btn label="Reorganizar" color="primary" />
-                        <q-btn class="q-ml-xs" label="Buscar" color="secondary" @click="get_ordenes_x_fecha(filter.fch_orden)"/>
-                        <q-btn class="q-ml-xs" label="Ver fechas" color="secondary" @click="open_fechas_helper"/>
-                    </div>
-                </div>
-                <q-toolbar class="q-pl-none">
-                    <div>Reorganizar: <span class="text-h7 text-primary text-bold">{{fch_orden}}</span></div>
-                    <q-btn class="q-ml-md" color="green" dense icon="keyboard_arrow_down" @click="mover_abajo"/>                
-                    <div class="q-pl-xs">
+            <template v-slot:top>                                                                  
+                <q-toolbar class="q-pl-none">     
+                    <div class="q-gutter-xs">
+                        <q-btn class="q-ml-md" color="green" dense icon="keyboard_arrow_down" @click="mover_abajo"/>                
                         <q-btn color="primary" dense icon="keyboard_arrow_up" @click="mover_arriba"/>
                     </div>
-                </q-toolbar>                
+                </q-toolbar>
             </template>
         </q-table>
         <MessageBox ref="msgbox"/>
@@ -44,8 +29,10 @@
 <script>
 import MessageBox from '@/components/MessageBox.vue'
 import HelperFechasOrden from '@/components/helpers/HelperFechasOrden.vue'
+
 import date from 'date-and-time'
 import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT}  from '@/common/constants.js'
+import {get_postconfig} from '@/common/request.js'
 
 export default {
     name:"TableOperacionesDia",
@@ -59,6 +46,7 @@ export default {
             filter:{
                 fch_orden:""
             },
+            flg_opcion:false,
             columns:[
                 {
                     label:"N. Orden",
@@ -105,7 +93,7 @@ export default {
         }
     },
     mounted:function(){
-        this.init()
+        //this.init()
     },
     watch:{
         /*fch_orden:function(newval){
@@ -114,7 +102,8 @@ export default {
     },  
     methods:{
         init:async function(){
-            let httpresp = await this.$http.post('/OrdenManager/Buscador/get_max_fch_orden')
+            let postconfig = get_postconfig()
+            let httpresp = await this.$http.post('/OrdenManager/Buscador/get_max_fch_orden',{},postconfig)
             let appdata = httpresp.data
             if(appdata.success == false){
                 this.$refs.msgbox.httpresp(httpresp)
@@ -126,11 +115,13 @@ export default {
             //
             this.get_ordenes_x_fecha(this.filter.fch_orden)    
         },
-        get_ordenes_x_fecha:function(fch_orden){            
+        get_ordenes_x_fecha:function(fch_orden){          
+            let postconfig = get_postconfig()
+
             this.selected=[]            
             this.$http.post('/OrdenManager/Buscador/get_ordenes_x_fecha',{
                 fch_orden:fch_orden
-            }).then(httpresp => {
+            },postconfig).then(httpresp => {
                 let appresp = httpresp.data
                 if(appresp.success == false){
                     this.$refs.msgbox.httpresp(httpresp)

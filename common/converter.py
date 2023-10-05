@@ -1,6 +1,21 @@
 from sqlalchemy import inspect
 from datetime import datetime, date
 
+def to_bool(item, raise_except=False):
+    if item is None:
+        return None
+
+    if item in [True, "true","true"]:
+        return True
+
+    if item in [False, "false", "False"]:
+        return False
+    
+    if raise_except == True:
+        raise AppException(msg="El valor {0} no es un booleando".format(str(item)))
+    else:
+        return None
+
 def to_dict(element, clean=True):
     output = None
     if type(element).__name__ in ['result','LegacyRow', 'Row']:

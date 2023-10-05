@@ -66,9 +66,8 @@ class iexcloud:
         if asset_type == "OPTIONS":
             return (self.get_option_eod_data(args), None)
         
-    def get_contracts(self, args={}):
-        symbol = args.get("symbol")
-        endpoint = "{0}/ref-data/options/symbols/{1}".format(self.base_endpoint,symbol)
+    def get_contracts(self, cod_symbol, fch_expiracion):        
+        endpoint = "{0}/ref-data/options/symbols/{1}/{2}".format(self.base_endpoint,cod_symbol, fch_expiracion)
         headers = {
             'Content-Type': 'application/json'
         }
@@ -95,13 +94,15 @@ class iexcloud:
 
         return result
 
-    def get_option_eod_data(self, args={}):
-        contract_symbol = args["symbol"]
-        jsonrsp = False
-        if "json" in args and args["json"] == True:
-            jsonrsp = True
+    def get_option_eod_data(self, cod_opcion):
+        cod_opcion = cod_opcion
 
-        endpoint = "{0}/options/{1}/chart".format(self.base_endpoint,contract_symbol)
+        strike = int(cod_opcion[-6:])/1000
+        sentido = 'call' if cod_opcion[-9:-8] == 'C'else 'put'
+        expiracion = cod_opcion[-17:-9]
+        cod_subyacente = cod_opcion[:-17]        
+        
+        endpoint = "{0}/stock/{1}/options/{2}".format(self.base_endpoint,cod_subyacente, expiracion)
         headers = {
             'Content-Type': 'application/json'
         }
@@ -110,29 +111,7 @@ class iexcloud:
         }
 
         rsp = requests.get(endpoint,params=params, headers=headers)
-        data = rsp.json()
-
-        elem = next(iter(data))
-        last_trade_date = elem["lastTradeDate"]
-        last_update = date.today()      
-
-        quote = Quote(
-            asset_type="options",
-            symbol=contract_symbol,
-            price_date=last_trade_date,
-            open=elem["open"],
-            high=elem["high"],
-            low=elem["low"],
-            close=elem["close"],
-            volume=elem["volume"],
-            last_update=last_update,
-            last_price_date=last_trade_date
-        )
-
-        if jsonrsp:
-            return Response(input_data=quote).get()
-
-        return quote
+        return rsp.json()
 
     def get_historical_prices(self, args={}):      
 

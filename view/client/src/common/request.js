@@ -16,4 +16,12 @@ let postconfig = function(){
     }
 }
 
-export {config, postconfig}
+let get_postconfig = function(){
+    return {
+        headers:{
+            'Authorization':localStorage.getItem("token")
+        }
+    }
+}
+
+export {config, postconfig, get_postconfig}

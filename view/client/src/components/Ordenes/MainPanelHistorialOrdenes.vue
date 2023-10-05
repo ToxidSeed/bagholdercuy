@@ -61,8 +61,7 @@ export default {
         }
     },
     methods:{
-        ins_orden:function(lugar,row){
-            console.log(lugar)
+        ins_orden:function(lugar,row){            
             this.ref_num_orden = row.num_orden
             this.insertar = lugar
             this.symbol = row.symbol
@@ -73,8 +72,7 @@ export default {
         abrir_opciones:function(symbol, contract){
             this.pnlOptionsChain.symbol.value = symbol
             this.pnlOptionsChain.contract = contract
-            this.pnlOptionsChain.show = true
-            console.log(this.pnlOptionsChain)
+            this.pnlOptionsChain.show = true            
         },
         sel_contract:function(symbol){            
             this.symbol = symbol

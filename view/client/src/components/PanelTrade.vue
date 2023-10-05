@@ -5,7 +5,7 @@
                 
                 <div class="text-h6 text-blue-10">Registro de Orden</div>
                 <q-space/>
-                <!--<q-btn color="primary" @click="btn_opciones_click" :disable="btn_opciones_disable">Opciones</q-btn>         -->
+                <q-btn color="primary" @click="btn_opciones_click" :disable="btn_opciones_disable">Opciones</q-btn>         
                 <q-btn  flat dense color="red" rounded icon="close" @click="btn_close_click_handler"/>
 
                 <!--<div v-show="ref_num_orden_visible">Insertar {{insertar}} de la Orden: <span class="text-primary">{{ref_num_orden}}</span></div>-->
@@ -18,12 +18,12 @@
                 <div class="row">
                     <q-btn-group push  unelevated>
                     <q-btn push label="Buy" icon="fas fa-angle-double-left" 
-                    :color="order.order_type=='B'?'primary':'white'" 
+                    :color="order.order_type=='B'?'blue-10':'white'" 
                     :text-color="order.order_type=='B'?'white':'black'"
                     @click="order.order_type='B'"
                     />
                     <q-btn push label="Sell" icon-right="fas fa-angle-double-right" 
-                    :color="order.order_type=='S'?'red':'white'"
+                    :color="order.order_type=='S'?'red-10':'white'"
                     :text-color="order.order_type=='S'?'white':'black'"
                     @click="order.order_type='S'"
                     />
@@ -61,8 +61,16 @@
                         </q-input>
                     </div>                
                 </div>
-                <div class="q-pt-xs text-h6 text-bold text-deep-purple">{{symbol_info}}</div>
-                <div class="q-pt-xs">{{symbol_info_desc}}</div>
+                
+                <div v-if="order.asset_type == TIPO_ACTIVO_OPT">
+                    <span class="text-h6 text-bold">Subyacente:</span><span class="q-pt-xs q-pl-xs text-h6  text-deep-purple">{{order.subyacente}}</span>
+                    <div class="q-pt-xs">{{symbol_info}}</div>
+                </div>
+                <div v-if="order.asset_type != TIPO_ACTIVO_OPT">
+                    <div class="q-pt-xs text-h6 text-bold text-deep-purple">{{order.symbol}}</div>
+                    <div class="q-pt-xs">{{symbol_info}}</div>
+                </div>
+
                 <div class="row">
                     <div class="col-5">
                         <q-input stack-label  v-model="order.quantity" label="Cantidad" type="number" input-class="text-right"/>
@@ -79,7 +87,7 @@
             <MessageBox ref="msgbox"/>
         </q-card> 
         <q-dialog v-model="win_opciones.visible">
-            <PanelOptionsChain
+            <PanelOptionsChain style="max-width:750px"
                 v-bind:symbol_val="order.symbol"
                 v-bind:symbol_name="order.symbol_name"
                 v-on:option-select="option_selected"
@@ -94,7 +102,8 @@
 import MessageBox from './MessageBox.vue';
 import date from 'date-and-time'
 import PanelOptionsChain from './PanelOptionsChain.vue';
-import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
+import {postconfig} from '@/common/request.js';
+import {CLIENT_DATE_FORMAT, TIPO_ACTIVO_OPT} from '@/common/constants.js'
 
 export default {
     name:"PanelTrade",
@@ -138,7 +147,8 @@ export default {
                 price:"",
                 order_date:"",
                 order_type:"",
-                asset_type:""                
+                asset_type:"",
+                subyacente:""                
             },
             states:{
                 symbol_popup:false
@@ -154,7 +164,9 @@ export default {
             },
             win_opciones:{
                 visible:false
-            }            
+            },
+            TIPO_ACTIVO_OPT:TIPO_ACTIVO_OPT,
+            symbol_info:""            
         }
     },
     watch:{
@@ -170,6 +182,9 @@ export default {
             this.order.symbol = newval
             this.symbol_search = newval
             this.get_datos_symbol()
+        },
+        order_type:function(newval){
+            this.order.order_type = newval
         }
     },
     computed:{      
@@ -182,9 +197,6 @@ export default {
         },
         btn_opciones_disable:function(){            
             return this.order.symbol==""?true:false;
-        },
-        symbol_info:function(){
-            return this.order.contrato==""?this.order.symbol:this.order.contrato;
         },
         symbol_info_desc:function(){
             return this.order.contrato_desc==""?this.order.symbol_name:this.order.contrato_desc;
@@ -224,7 +236,7 @@ export default {
                 let appresp = httpresp.data
                 if(appresp.success == false){
                     this.$refs.msgbox.httpresp(httpresp)                    
-                    return
+                    returnSOXL20240119C00015000
                 }
                 console.log(appresp)
                 //
@@ -247,17 +259,21 @@ export default {
             this.$http.post(    
             'SymbolManager/SymbolFinder/buscar_por_texto',{
                 texto:this.symbol_search
-            }).then(httpresponse => {
+            },
+            postconfig()
+            ).then(httpresponse => {
                 this.$refs.msgbox.http_resp_on_error(httpresponse)    
                 let appresponse = httpresponse.data
                 if (appresponse.success == true){
                     this.symbol_list = appresponse.data
+
+                    console.log(this.symbol_list)
+
                     this.states.symbol_popup = true
                 }                
             });
         },
-        save:function(){            
-            console.log('save')
+        save:function(){                        
             //order_type
             if (!(this.order.order_type == "B" || this.order.order_type == "S")){
                 this.$refs.msgbox.new({
@@ -305,8 +321,7 @@ export default {
                 return;
             }
 
-            //determine if it is buy or sell
-            console.log('befoew-sav')
+            //determine if it is buy or sell            
             this.do_order();
         },
         cerrar:function(){
@@ -318,32 +333,39 @@ export default {
             this.order.symbol_name = item.name
             this.order.moneda_id = item.moneda_id
             this.symbol_search = item.symbol
+            this.order.asset_type = item.asset_type
+            this.symbol_info = item.name
         },
         option_selected:function(option, order_type){
+
+            console.log(option)
             
             this.win_opciones.visible = false
             //this.order.symbol = 
+            this.order.symbol = option.symbol
             this.order.contrato = option.symbol
-            this.order.contrato_desc = option.description
-            //this.symbol_search = option.symbol
+            this.symbol_info = option.description
+            this.order.subyacente = option.underlying
+            this.order.asset_type = TIPO_ACTIVO_OPT
+            this.symbol_search = option.symbol
             //this.order.symbol_name = option.description
             if(this.order.order_type == ""){
                 this.order.order_type = order_type=="buy"?"B":"S";    
             }                        
         },
-        do_order:function(){      
-            let symbol = this.order.contrato==""?this.order.symbol:this.order.contrato;
+        do_order:function(){                  
             
             this.$http.post(
-            'OrdenManager/ProcesadorEntryPoint/procesar',{
-                ref_num_orden:this.ref_num_orden,
-                insertar:this.insertar,
-                symbol:symbol,
-                order_type:this.order.order_type,
-                shares_quantity:this.order.quantity,
-                price_per_share:this.order.price,
-                order_date:this.order.order_date
-            }).then(httpresp => {
+            'OrdenManager/OrdenManager/ejecutar',{
+                ref_num_orden:this.ref_num_orden,                   
+                cod_symbol:this.order.symbol,
+                cod_opcion: this.order.contrato,
+                tipo_orden:this.order.order_type,
+                cantidad:this.order.quantity,
+                imp_accion:this.order.price,
+                fch_orden:this.order.order_date
+            },
+            postconfig()).then(httpresp => {
                 this.$refs.msgbox.httpresp(httpresp)                   
             });
         },
@@ -364,7 +386,7 @@ export default {
             )*/
         },
         btn_close_click_handler:function(){
-            
+            this.$emit('btn-close-click')
         }
     }
 }

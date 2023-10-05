@@ -12,6 +12,7 @@
     </div>
 </template>
 <script>
+import {get_postconfig} from '@/common/request.js'
 export default {
     name:"TableSymbol",
     data: () => {
@@ -53,15 +54,14 @@ export default {
             data:[]
         }
     },
-    mounted:function(){
-        console.log('mounted')
+    mounted:function(){        
         this.get_list()
     },
     methods:{
         get_list:function(){
             this.$http.post('SymbolManager/SymbolFinder/get_list',{
 
-            }).then(httpresponsse => {
+            },get_postconfig()).then(httpresponsse => {
                 var appdata = httpresponsse.data
                 this.data = appdata.data
             })

@@ -1,5 +1,6 @@
 <template>
     <q-select
+        color="blue-10"
         v-model="mes"
         use-input
         :options="options"
@@ -13,6 +14,7 @@
     </q-select>
 </template>
 <script>
+import {get_postconfig} from '@/common/request.js';
 export default {
     name:"SelectMesesOrden",
     props:{
@@ -35,18 +37,17 @@ export default {
         this.mes = this.in_mes
     },
     methods:{
-        filterFn:function(val, update){
+        filterFn:function(val, update){            
+            let postconfig = get_postconfig()
             this.options = []
             this.$http.post('/OrdenManager/Buscador/get_meses',{
                 anyo:this.in_anyo
-            }).then(httpresp => {
+            },postconfig).then(httpresp => {
                 let appresp = httpresp.data
                 if(appresp.success == false){
                     this.$emit("httperror",httpresp)
                     return
-                }
-                console.log(appresp)
-                                
+                }                
                 appresp.data.forEach(element => {
                     this.options.push(element.mes)
                 });                

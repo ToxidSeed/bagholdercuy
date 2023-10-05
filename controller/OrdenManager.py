@@ -1,58 +1,100 @@
 from app import app, db
-from model.OrderModel import OrderModel
+from model.orden import OrdenModel
+
 from datetime import datetime, date, time
 from common.AppException import AppException
 from common.Response import Response
 
 from model.StockSymbol import StockSymbol
-from model.StockTrade import StockTrade
-from model.OrderModel import OrderModel
+from model.posicion import PosicionModel
 
-from controller.Base import Base
+from processor.orden import OrdenProcessor, CargadorMultipleProcessor, ReprocesadorOrdenesProcessor
+
+from reader.symbol import SymbolReader
+from reader.orden import OrdenReader
+
+from controller.base import Base
 
 import sqlalchemy.sql.functions as func
 from sqlalchemy.sql import extract
 
-import json
+import json, csv
 from config.general import CLIENT_DATE_FORMAT
 
 class OrdenManager(Base):
-    def __init__(self, num_orden_ref=0, accion=""):
-        self.num_orden_ref = num_orden_ref
-        self.num_orden_ini = 0
-        self.accion=accion
-        self.prev_orden = None
+    
+    def ejecutar(self, args={}):
+        try:
+            procesador = OrdenProcessor()
+            self.__validar_procesar(args)
+            orden = self.__collect(args)            
+            procesador.ejecutar(orden)
+            db.session.commit()
+            return Response(msg="la orden se procesó correctamente").get()
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
 
-    def gen_operaciones(self, ordenes=[]):
-        from controller.OperacionesManager import GenericManager
-        orden:OrderModel
-        for orden in ordenes:            
-            GenericManager().procesar(orden)   
+    def __collect(self, args={}):        
 
-    def gen_operaciones_x_orden(self, orden:OrderModel):
-        from controller.OperacionesManager import GenericManager
-        GenericManager().procesar(orden)
+        cod_opcion = args.get('cod_opcion')        
+        cod_symbol = args.get('cod_symbol')
 
-    """
-    Las ordenes estan numeradas por fecha y symbol
-    """
-    def _reenumerar_ordenes(self, ordenes=[]):        
-        prev_orden = None
+        cod_symbol = None if cod_opcion != "" and cod_opcion is not None else cod_symbol
+        cod_opcion = None if cod_symbol != "" and cod_symbol is not None else cod_opcion
+               
+        orden = OrdenModel(
+                cod_symbol = cod_symbol,       
+                cod_opcion = cod_opcion,
+                cod_tipo_orden = args["tipo_orden"],
+                cantidad = int(args["cantidad"]),
+                usuario_id = self.usuario.id,
+                imp_accion = float(args["imp_accion"]),
+                fch_orden = datetime.strptime(args["fch_orden"],CLIENT_DATE_FORMAT).date(),
+                fch_registro = datetime.now().date()
+            )        
 
-        orden:OrderModel
-        for orden in ordenes:                        
-            orden.num_orden = self._get_sig_num_orden(orden, prev_orden)
-            prev_orden = orden
+        return orden
 
-    def _get_sig_num_orden(self,orden:OrderModel, prev_orden:OrderModel=None):
-        if prev_orden == None:
-            return 1
-        if orden.order_date != prev_orden.order_date:
-            return 1
-        if orden.symbol != prev_orden.symbol:
-            return 1
+    def __validar_procesar(self, args={}):
+        #validate symbol    
+        errors = []
+        if "cod_symbol" not in args and "cod_opcion" not in args:
+            errors.append("No se ha enviado el instrumento financiero")                        
         
-        return prev_orden.num_orden + 1
+        tipo_orden = args["tipo_orden"]
+        if tipo_orden not in ["B","S"]:
+            errors.append("el valor del parámetro [tipo_orden] es invalido, valor enviado: {}".format(trade_type))
+
+        if "cantidad" not in args:
+            errors.append("No se ha enviado [cantidad] como parámetro del request")
+
+        cantidad = args["cantidad"]
+        cantidad = 0 if cantidad == "" else cantidad
+
+        if float(cantidad) <= 0.00:
+            errors.append("La cantidad de participaciones no puede ser menor o igual a 0")        
+
+        if "fch_orden" not in args:
+            errors.append("No se ha enviado [fch_orden] como parámetro del request")
+        
+        fch_orden = datetime.strptime(args.get("fch_orden"),CLIENT_DATE_FORMAT).date()        
+        if fch_orden is None:
+            errors.append("No se ha enviado una fecha de transacción correcta, valor enviado: {}".format(args["fch_orden"]))
+
+        if "imp_accion" not in args:
+            errors.append("No se ha enviado [imp_accion] como parámetro del request")
+        
+        imp_accion = args.get("imp_accion")
+        imp_accion = 0 if imp_accion == "" else imp_accion
+        if float(imp_accion) <= 0.00:
+            errors.append("El precio de la orden no puede ser menor o igual a 0")
+
+        args["imp_accion"] = float(imp_accion) 
+
+        if len(errors) > 0:
+            raise AppException(msg="Se han encontrado errores de validacion", errors=errors)
+
 
     def get_symbol(self, symbol=""):
         symbol = StockSymbol.query.filter(
@@ -64,119 +106,72 @@ class OrdenManager(Base):
 
         return symbol
 
+class ReprocesadorManager(Base):
+    def ejecutar(self, args={}):
+        try:
+            reprocesador = ReprocesadorOrdenesProcessor()            
+            self.__collect_ejecutar(reprocesador, args=args)
+            reprocesador.reprocesar()
+            db.session.commit()
+            return Response(msg="Se ha completado el reproceso de ordenes")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
 
+    def __collect_ejecutar(self, reprocesador:ReprocesadorOrdenesProcessor, args={}):
+        flg_opcion = args.get("flg_opcion")
+        cod_symbol = args.get("cod_symbol")
+        cod_opcion = args.get("cod_opcion")
+        flg_reprocesar_todo = args.get("flg_reprocesar_todo")
+
+        if flg_reprocesar_todo is None:
+            raise AppException(msg="No se ha enviado el indicador de reproceso total")
+
+        if str(flg_reprocesar_todo).lower() not in ["true","false"]:
+            raise AppException(msg="Valor incorrecto en el indicador de reproceso total")
+        
+        reprocesador.flg_reprocesar_todo = True if str(flg_reprocesar_todo).lower() == "true" else False
+        #asignamos el indicador de reproceso
+        if reprocesador.flg_reprocesar_todo == True:
+            return
+                    
+        if flg_opcion is None:
+            raise AppException(msg="No se ha enviado si el symbol es una opcion")
+
+        if str(flg_opcion).lower() not in ["true","false"]:        
+            raise AppException(msg="Valor incorrecto en el indicador de la opcion")
+
+        reprocesador.flg_opcion = True if str(flg_opcion).lower() == "true" else False
+
+        if cod_symbol in [None,""] and cod_opcion in [None,""]:
+            raise AppException(msg="Se debe seleccionar/ingresar un symbol o una opcion")
+
+
+        reprocesador.cod_symbol = cod_symbol
+        reprocesador.cod_opcion = cod_opcion         
+        reprocesador.usuario_id = self.usuario.id
+            
+
+
+
+
+"""
 class ProcesadorEntryPoint(OrdenManager):
     def __init__(self):
         pass
 
     def procesar(self, args={}):
         try:
-            procesador = Procesador()
+            procesador = OrdenProcessor()
             self._validar_procesar(args)
             orden = self._collect(args)            
-            procesador.procesar(orden)
+            procesador.ejecutar(orden)
             db.session.commit()
             return Response(msg="la orden se procesó correctamente").get()
         except Exception as e:
             db.session.rollback()
-            return Response().from_exception(e)
-
-    def _collect(self, args={}):        
-               
-        order = OrderModel(
-                symbol = args["symbol"],                                
-                order_type = args["order_type"],
-                quantity = int(args["shares_quantity"]),
-                price = float(args["price_per_share"]),
-                order_date = datetime.strptime(args["order_date"],CLIENT_DATE_FORMAT).date(),
-                register_date = datetime.now().date()
-            )        
-
-        return order            
-
-    def _validar_procesar(self, args={}):
-        #validate symbol    
-        errors = []
-        if "symbol" not in args:
-            errors.append("No se ha enviado symbol como parámetro en httprequest")                        
-        
-        trade_type = args["order_type"]
-        if trade_type not in ["B","S"]:
-            errors.append("el valor del parámetro [order_type] es invalido, valor enviado: {}".format(trade_type))
-
-        if "shares_quantity" not in args:
-            errors.append("No se ha enviado [shares_quantity] como parámetro del request")
-
-        shares_quantity = args["shares_quantity"]
-        if float(shares_quantity) <= 0.00:
-            errors.append("La cantidad de participaciones no puede ser menor o igual a 0")
-
-        args["shares_quantity"] = float(shares_quantity)
-
-        if "order_date" not in args:
-            errors.append("No se ha enviado [order_date] como parámetro del request")
-        
-        order_date = datetime.strptime(args.get("order_date"),CLIENT_DATE_FORMAT).date()        
-        if order_date is None:
-            errors.append("No se ha enviado una fecha de transacción correcta, valor enviado: {}".format(args["order_date"]))
-
-        if "price_per_share" not in args:
-            errors.append("No se ha enviado [price_per_share] como parámetro del request")
-        
-        trade_price = float(args["price_per_share"])
-        if float(trade_price) <= 0.00:
-            errors.append("El precio de la orden no puede ser menor o igual a 0")
-
-        args["price_per_share"] = float(trade_price) 
-
-        """
-        if "action" not in args:
-            errors.append("No se ha enviado [action] como parámetro del request")
-        else:
-            if args["action"] not in ["ins_antes","ins_despues",""]:
-                errors.append("El parámetro 'action' tiene el valor no permitido: {0}".format(args["action"]))
-        """
-
-        if len(errors) > 0:
-            raise AppException(msg="Se han encontrado errores de validacion", errors=errors)
-            
-
-class Procesador(OrdenManager):
-    def __init__(self):
-        self.orden = None
-
-    def procesar(self, nu_orden:OrderModel):        
-        self.orden = nu_orden
-        nu_orden.num_orden = self._get_sig_num_orden()
-        symbol_obj = self.get_symbol(nu_orden.symbol)
-
-        nu_orden.asset_type = symbol_obj.asset_type
-
-        nu_orden = self._insertar(nu_orden)
-        self.gen_operaciones_x_orden(nu_orden)
-
-    def _get_sig_num_orden(self):
-        orden = db.session.query(
-            func.max(OrderModel.num_orden).label("num_orden")
-        ).filter(
-            OrderModel.symbol == self.orden.symbol,
-            OrderModel.order_date == self.orden.order_date
-        ).first()
-
-        if orden is None:
-            return 1
-        if orden.num_orden is None:
-            return 1
-        
-        return orden.num_orden + 1
-
-
-    def _insertar(self, orden:OrderModel=None):
-        db.session.add(
-            orden
-        )
-        db.session.flush()
-        return orden
+            return Response().from_exception(e)                 
+"""
 
 class ReprocesadorEntryPoint:
     def __init__(self):
@@ -222,10 +217,10 @@ class Reprocesador(OrdenManager):
         self.gen_operaciones(ordenes)
 
     def _obt_todo_ordenes_reprocesar(self):
-        ordenes = OrderModel.query.order_by(
-            OrderModel.order_date.asc(),
-            OrderModel.symbol.asc(),
-            OrderModel.num_orden.asc()
+        ordenes = OrdenModel.query.order_by(
+            OrdenModel.order_date.asc(),
+            OrdenModel.symbol.asc(),
+            OrdenModel.num_orden.asc()
         ).all()
         return ordenes    
 
@@ -301,23 +296,19 @@ class Eliminador(OrdenManager):
         return symbols
 
 
-class Buscador(OrdenManager):
-    def __init__(self):
-        pass
+class Buscador(OrdenManager):    
 
     def get_historial_ordenes(self, args={}):
-        results = db.session.query(
-            OrderModel
-        ).all()
-        return Response(raw_data=results).get()
+        results = OrdenReader.get_ordenes(self.usuario.id)
+        return Response().from_raw_data(results)
 
     def get_max_fch_orden(self, args={}):
         response = Response()
 
         result = db.session.query(
-            func.max(OrderModel.order_date).label("fch_orden"),
-            extract("year",func.max(OrderModel.order_date)).label("anyo"),
-            extract("month",func.max(OrderModel.order_date)).label("mes")
+            func.max(OrdenModel.fch_orden).label("fch_orden"),
+            extract("year",func.max(OrdenModel.fch_orden)).label("anyo"),
+            extract("month",func.max(OrdenModel.fch_orden)).label("mes")
         ).first()
 
         """
@@ -331,15 +322,15 @@ class Buscador(OrdenManager):
     def get_ordenes_x_fecha(self, args={}):
         fch_orden = args.get("fch_orden")        
 
-        if fch_orden is None:
+        if fch_orden in [None,""]:
             raise AppException(msg="No se ha ingresado una fecha de orden")
 
         fch_orden = datetime.strptime(fch_orden, CLIENT_DATE_FORMAT)
 
         result = db.session.query(
-            OrderModel
+            OrdenModel
         ).filter(
-            OrderModel.order_date == fch_orden
+            OrdenModel.fch_orden == fch_orden
         ).all()
 
         return Response().from_raw_data(result)
@@ -354,13 +345,13 @@ class Buscador(OrdenManager):
             raise AppException(msg="No se ha ingresado el mes")
 
         results = db.session.query(
-            OrderModel.order_date,
+            OrdenModel.fch_orden,
             func.count(1).label("num_ordenes")
         ).filter(
-            extract("year",OrderModel.order_date) == anyo,
-            extract("month",OrderModel.order_date) == mes
+            extract("year",OrdenModel.fch_orden) == anyo,
+            extract("month",OrdenModel.fch_orden) == mes
         ).group_by(
-            OrderModel.order_date
+            OrdenModel.fch_orden
         ).all()
 
         return Response().from_raw_data(results)
@@ -374,7 +365,7 @@ class Buscador(OrdenManager):
 
     def get_anyos(elf, args={}):        
         results = db.session.query(
-            extract("year",OrderModel.order_date).label("anyo")
+            extract("year",OrdenModel.fch_orden).label("anyo")
         ).distinct("anyo").all()
         return Response().from_raw_data(results)             
     
@@ -384,14 +375,46 @@ class Buscador(OrdenManager):
             raise AppException(msg="No se ha ingresado el año")
         
         results = db.session.query(
-            extract("month",OrderModel.order_date).label("mes")
+            extract("month",OrdenModel.fch_orden).label("mes")
         ).filter(
-            extract("year",OrderModel.order_date)==anyo
+            extract("year",OrdenModel.fch_orden)==anyo
         ).distinct().all()
 
         return Response().from_raw_data(results)
 
+class CargadorMultipleManager(Base):
+    def __init__(self):
+        self.fichero = None
 
+    def ejecutar(self, args={}):
+        try:
+            fichero = args.get("files").get("fichero")
+            form = args.get("form")
+
+            flg_procesar_ordenes = form.get("flg_procesar_ordenes")
+
+            if flg_procesar_ordenes is None:
+                raise AppException(msg="No se ha enviado 'flg_procesar_ordenes'")
+
+            if flg_procesar_ordenes.lower() not in ["false","true"]:
+                raise AppException(msg="El indicador para procesar ordenes no es correcto")
+
+            flg_procesar_ordenes = True if flg_procesar_ordenes.lower() == "true" else False
+
+            cargador = CargadorMultipleProcessor()
+            #cargador.flg_procesar_ordenes = bool(flg_procesar_ordenes)
+            cargador.flg_procesar_ordenes = flg_procesar_ordenes
+            cargador.procesar(fichero, self.usuario.id)
+            db.session.commit()
+            return Response(msg="Se ha cargado correctamente las ordenes")            
+        except Exception as e:        
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    
+            
+
+    
 
 
 

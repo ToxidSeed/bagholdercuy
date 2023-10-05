@@ -3,7 +3,7 @@
     <div> 
         <q-card>          
             <q-card-section class="q-pb-none row">
-                <div class="text-h6 text-primary">{{title}}</div>
+                <div class="text-h6 text-blue-10">{{title}}</div>
                 <q-space/>
                 <q-btn flat dense icon="close" @click="close"/>                
                 <!--<div class="text-subtitle2">{{subtitle}}</div>-->
@@ -112,7 +112,7 @@
                         </template>
                     </q-table>
                 </div>
-                <div class="col-6">
+                <div class="col-6 q-pl-sm">
                     <q-table
                     dense
                     title="PUTS"
@@ -158,7 +158,7 @@
 </template>
 <script>
 import SelectSymbol from './SelectSymbol.vue'
-
+import {postconfig} from '@/common/request.js'
 
 export default {
     name:"PanelOptionsChain",
@@ -297,7 +297,7 @@ export default {
             this.filter.strike = selected
             this.get_options_chain()
         },
-        sel_contract:function(row){
+        sel_contract:function(row){            
             this.$emit('sel-contract',row,"")
         },
         input_expiration_date:function(){
@@ -332,12 +332,12 @@ export default {
                  exp_date = ""
             }    
             
-            this.$http.post("OpcionesContratoManager/OpcionesContratoManager/get_options_chain",{
+            this.$http.post("OpcionesContrato/OpcionesContratoManager/get_options_chain",{
                 contract: this.filter.contract,
                 symbol:this.filter.symbol.value,
                 expiration_date:exp_date,
                 strike:this.filter.strike
-            }).then(httpresponse => {
+            },postconfig()).then(httpresponse => {
                 var appresponse = httpresponse.data
                 var appdata = appresponse.data
                 this.calls = appdata["calls"]

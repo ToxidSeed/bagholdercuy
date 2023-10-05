@@ -4,23 +4,17 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from common.Response import Response
-from localStoragePy import localStoragePy
+
+from settings import config
 
 import traceback
 import sys, os
 import json
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
-app = Flask(__name__)
-
-app.config.from_object("config.general")
-#app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
-localStorage = localStoragePy('app', 'json')
-
-CORS(app,expose_headers=["Content-Disposition", "file_name"])
-
-db = SQLAlchemy(app)
-api = Api(app)
+class AppManager:
+    def get_database_uri():
+        env = config["default"]["env"]         
+        return config["database"][env]
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -64,9 +58,12 @@ class Loader:
         if obj_reference.AUTH_REQUIRED == False:
             self.obj = obj_reference()
         else:
-            self.obj = obj_reference(data.get("access_token"))
+            self.obj = obj_reference()            
+            self.obj.validar_token(data.get("access_token"))
+
         method_to_call = getattr(self.obj, method_name)
         self.response = method_to_call(data)
+    
 
 
 class ImageLoader(Resource):
@@ -77,12 +74,20 @@ class ImageLoader(Resource):
         except FileNotFoundError:
             return send_file("./defaults/default.png", mimetype='image/jpg')
 
-"""class ConfirmRegistration(Resource):
-    def get(self):
-        from controller.SessionManager import SessionManager
-        token = request.args.get('token')
-        SessionManager().confirm(token)
-"""
+###############
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
+app = Flask(__name__)
+
+app.config.from_object("config.general")
+#app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
+app.config["SQLALCHEMY_DATABASE_URI"] = AppManager.get_database_uri()
+app.config["SQLALCHEMY_ECHO"] = False
+
+CORS(app,expose_headers=["Content-Disposition", "file_name"])
+
+db = SQLAlchemy(app)
+api = Api(app)
 
 api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["APPNAME"]))
 #api.add_resource(ConfirmRegistration, '/entablar/ConfirmRegistration',endpoint="confirm")

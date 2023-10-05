@@ -1,7 +1,7 @@
 <template>
     <div>
         <q-table
-            title="Historial Operaciones"
+
             :data="data"
             :columns="columns"
             selection="multiple"
@@ -12,12 +12,12 @@
             separator="vertical"                      
         >
             <template v-slot:top>
-                <div class="column">
-                    <div class="text-h5 col">Historial de Operaciones</div>                
-                    <!--<div class="col">                        
-                        <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_opers" />
-                    </div>-->
+                <div>
+                    <div class="text-h5 col text-blue-10">Historial de Operaciones</div>                                    
                 </div>
+                <q-toolbar class="q-pa-none">
+                    <q-btn class="text-capitalize" flat dense color="blue-10" icon="filter_alt">Filtrar</q-btn>
+                </q-toolbar>
             </template>
             <!--<template v-slot:header="props">
                 <q-tr :props="props">
@@ -88,6 +88,7 @@
 </template>
 <script>
 import MessageBox from '@/components/MessageBox.vue';
+import {get_postconfig} from '@/common/request.js';
 export default {
     name:"TableHistorialOperaciones",
     components:{
@@ -99,8 +100,8 @@ export default {
                 {
                     label:"Fch. Operacion",
                     align:"left",
-                    field:"trade_date",
-                    name:"trade_date",
+                    field:"fch_transaccion",
+                    name:"fch_transaccion",
                     style:"width:100px;"
                 },{
                     label:"orden",
@@ -110,15 +111,21 @@ export default {
                     style:"width:50px;"
                 },{
                     label:"N. Operacion",
-                    field:"num_operacion",
+                    field:"num_posicion",
                     align:"left",
-                    name:"num_operacion",
+                    name:"num_posicion",
                     style:"width:50px;"
                 },{
                     label:"Symbol",
                     align:"left",
-                    field:"symbol",
-                    name:"symbol",
+                    field:"cod_symbol",
+                    name:"cod_symbol",
+                    style:"width:100px;"
+                },{
+                    label:"Opcion",
+                    align:"left",
+                    field:"cod_opcion",
+                    name:"cod_opcion",
                     style:"width:100px;"
                 },{
                     label:"Operacion",
@@ -135,8 +142,8 @@ export default {
                 },{
                     label:"Saldo",
                     align:"right",
-                    field:"saldo",
-                    name:"saldo",
+                    field:"ctd_saldo_posicion",
+                    name:"ctd_saldo_posicion",
                     style:"width:100px;"
                 },{
                     label:"Imp. Accion",
@@ -147,22 +154,22 @@ export default {
                 },{
                     label:"Imp. Operacion",
                     align:"right",
-                    field:"imp_operacion",
-                    name:"imp_operacion",
+                    field:"imp_posicion",
+                    name:"imp_posicion",
                     style:"width:100px;"
                 },{
                     label:"G/P",
                     align:"right",
-                    field:"realized_gl",
-                    name:"realized_gl",
+                    field:"imp_gp_realizada",
+                    name:"imp_gp_realizada",
                     style:"width:100px;"
-                },{
+                }/*,{
                     label:"orden_id",
                     align:"left",
                     field:"order_id",
                     name:"order_id",
                     style:"width:100px;"
-                },{
+                }*/,{
                     label:"",
                     align:"",
                     field:"",
@@ -172,7 +179,7 @@ export default {
             data:[],    
             selected:[],
             pagination:{
-                rowsPerPage:30
+                rowsPerPage:25
             }
         }
     },
@@ -182,19 +189,23 @@ export default {
     methods:{
         obt_list:function(){
             this.$http.post(
-                'OperacionesManager/BuscadorOperaciones/obt_historial_oper',{
-                }).then(httpresp => {
+                'operacion/OperacionManager/get_operaciones',{
+                },get_postconfig()).then(httpresp => {
                     this.data = []
                     var appresp = httpresp.data
+                    for (let elem of appresp.data){
+                        this.data.push(elem)
+                    }
+                    console.log(appresp)
                     //console.log(appresp)                    
-                    appresp.data.forEach(element => {
+                    /*appresp.data.forEach(element => {
                         let eltmp = element
                         eltmp.imp_operacion = element.imp_operacion.toFixed(2)
                         eltmp.realized_gl = element.realized_gl.toFixed(2)                        
                         eltmp.imp_accion = element.imp_accion.toFixed(2)                        
                         eltmp.saldo = element.saldo.toFixed(2)                        
                         this.data.push(eltmp)
-                    })
+                    })*/
                     //this.data = appresp.data
                 })
         },        

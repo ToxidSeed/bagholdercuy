@@ -2,15 +2,19 @@
     <div>
         <q-card>
             <q-toolbar > 
-                <q-toolbar-title>
+                <q-toolbar-title class="text-blue-10">
                     Symbols
                 </q-toolbar-title> 
-                <q-btn flat round dense icon="close" to="/opciones" />
+                <q-btn   dense icon="close" to="/opciones" color="red"/>
             </q-toolbar>
-            <q-card-actions class="q-pt-none">
-                <q-btn label="Guardar" color="primary" @click="save"/>                
-                <q-btn label="Carga Masiva" color="primary" @click="confirm=true"/>
-            </q-card-actions>
+            <q-separator/>
+            <q-toolbar>
+                <div class="q-gutter-xs">
+                    <q-btn label="Guardar" color="blue-10" @click="save"/>                
+                    <q-btn label="Carga Masiva" icon="group_work" flat dense color="blue-10" @click="confirm=true" class="text-capitalize"/>
+                </div>
+            </q-toolbar>  
+            <q-separator/>          
             <q-card-section>                
                 <div class="row">
                     <q-input stack-label label="ID" readonly v-model="symbol_id" class="col-5"/>
@@ -29,8 +33,7 @@
             <q-inner-loading :showing="loading">
                 <q-spinner-gears size="50px" color="primary" />
             </q-inner-loading>     
-        </q-card>
-        <MessageBox ref="msgbox"/>
+        </q-card>        
         <q-dialog v-model="confirm" persistent>
             <q-card>
                 <q-card-section class="row items-center">                    
@@ -49,10 +52,13 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
 import MessageBox from '../MessageBox.vue'
+import {postconfig} from '@/common/request.js'
+
 export default {
     name:"PanelSymbol",
     components:{
@@ -95,7 +101,7 @@ export default {
         },
         load:function(){
             this.loading=true
-            this.$http.post('/SymbolManager/DataLoader/do')
+            this.$http.post('/SymbolManager/DataLoader/do',{},postconfig())
             .then(httpresp => {                
                 this.$refs.msgbox.httpresp(httpresp)
             }).catch(error => {

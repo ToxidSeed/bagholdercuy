@@ -2,7 +2,6 @@ import traceback, sys
 from sqlalchemy import inspect
 from common.AppException import AppException
 #from common.Transformer import Transformer
-import common.Converter as Converter
 from common.Formatter import Formatter
 from flask import jsonify
 import json
@@ -23,7 +22,7 @@ class Response:
             "stacktrace":stacktrace
         }
         self.raw_data = raw_data
-        self.formatter = formatter
+        self.formatter = formatter        
         self.formats = {}
 
     def elem(self, key="",element=None):

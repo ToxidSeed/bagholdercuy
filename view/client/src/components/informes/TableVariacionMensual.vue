@@ -7,21 +7,38 @@
         :pagination="pagination"       
         separator="vertical" 
     >
+        <template v-slot:top>
+            <div v-if="symbol_value != ''">
+                <span class="text-blue-10 text-h6 q-pr-xs">{{ symbol_value }}</span><span class="text-body1">{{ symbol_nombre }}</span>
+            </div>
+            <div v-if="symbol_value == ''">
+                <span class="text-body1 text-orange-10">Seleccionar instrumento financiero</span>
+            </div>            
+        </template>
         <template v-slot:header>
+            <q-tr>
+                <q-th colspan="8"></q-th>
+                <q-th colspan="3">Variación</q-th>
+                <q-th></q-th>              
+                <q-th colspan="3">Porcentaje</q-th>
+                <q-th></q-th>
+            </q-tr>
             <q-tr>
                 <q-th class="text-left" style="width:50px;">Año</q-th>
                 <q-th class="text-left" style="width:50px;">mes</q-th>
-                <q-th class="text-right" style="width:50px;">open</q-th>
-                <q-th class="text-right" style="width:50px;">high</q-th>
-                <q-th class="text-right" style="width:50px;">low</q-th>
-                <q-th class="text-right" style="width:50px;">close</q-th>
-                <q-th class="text-right" style="width:50px;">% high</q-th>
-                <q-th class="text-right" style="width:50px;">% low</q-th>
-                <q-th class="text-right" style="width:50px;">% close</q-th>
-                <q-th class="text-right" style="width:50px;">Var. high</q-th>
-                <q-th class="text-right" style="width:50px;">Var. low</q-th>
-                <q-th class="text-right" style="width:50px;">Var. high-low</q-th>
-                <q-th class="text-right" style="width:50px;">Var. close</q-th>
+                <q-th class="text-left" style="width:50px;">Fecha</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Cierre anterior</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Apertura</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Maximo</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Minimo</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Cierre</q-th>
+                <q-th class="text-right" style="width:50px;">Var. Cierre</q-th>
+                <q-th class="text-right" style="width:50px;">Var. Maximo</q-th>
+                <q-th class="text-right" style="width:50px;">Var. Minimo</q-th>  
+                <q-th style="width:5px;"></q-th>              
+                <q-th class="text-right" style="width:50px;">Pct. Cierre</q-th>
+                <q-th class="text-right" style="width:50px;">Pct. Maximo</q-th>
+                <q-th class="text-right" style="width:50px;">Pct. Minimo</q-th>                
                 <q-th class="text-left"></q-th>
             </q-tr>
         </template>
@@ -33,39 +50,43 @@
                 <q-td key="mes" class="text-left">
                     {{props.row.mes}}
                 </q-td>
-                <q-td key="open" class="text-right">
-                    {{props.row.open}}
+                <q-td key="fch_ini_mes" class="text-right">
+                    {{props.row.fch_ini_mes}}
                 </q-td>
-                <q-td key="high" class="text-right">
-                    {{props.row.high}}
+                <q-td key="imp_cierre_ant" class="text-right">
+                    {{props.row.imp_cierre_ant}}
                 </q-td>
-                <q-td key="low" class="text-right">
-                    {{props.row.low}}
+                <q-td key="imp_apertura" class="text-right">
+                    {{props.row.imp_apertura}}
                 </q-td>
-                <q-td key="close" class="text-right">
-                    {{props.row.close}}
+                <q-td key="imp_maximo" class="text-right">
+                    {{props.row.imp_maximo}}
                 </q-td>
-                <q-td key="pct_high" class="text-right">
-                    {{props.row.pct_high}}
+                <q-td key="imp_minimo" class="text-right">
+                    {{props.row.imp_minimo}}
                 </q-td>
-                <q-td key="pct_low" class="text-right">
-                    {{props.row.pct_low}}
+                <q-td key="imp_cierre" class="text-right">
+                    {{props.row.imp_cierre}}
                 </q-td>
-                <q-td key="pct_close" v-bind:class="{'text-red':props.row.pct_close < 0,'text-green':props.row.pct_close >= 0,'text-right':true}">                    
-                    {{props.row.pct_close}}
+                <q-td key="imp_variacion_cierre" v-bind:class="{'bg-green':props.row.imp_variacion_cierre >= 0,'bg-red':props.row.imp_variacion_cierre < 0,'text-right':true, 'text-white':true}">                    
+                    {{props.row.imp_variacion_cierre}}
                 </q-td>
-                <q-td key="var_high" class="text-right">
-                    {{props.row.var_high}}
+                <q-td key="imp_variacion_maximo" :class="{'bg-green':props.row.imp_variacion_maximo >= 1,'bg-red':props.row.imp_variacion_maximo < 1,'text-right':true,'text-white':true}">
+                    {{props.row.imp_variacion_maximo}}
                 </q-td>
-                <q-td key="var_low" class="text-right">
-                    {{props.row.var_low}}
+                <q-td key="imp_variacion_minimo" :class="{'bg-red':props.row.imp_variacion_minimo <= -1,'bg-orange':props.row.imp_variacion_minimo > -1,'text-white':true,'text-right':true}">
+                    {{props.row.imp_variacion_minimo}}
                 </q-td>
-                <q-td key="high_low" class="text-right">
-                    {{props.row.var_high_low}}
-                </q-td>
-                <q-td key="var_close"  v-bind:class="{'bg-red':props.row.var_close < 0,'bg-green':props.row.var_close >= 0,'text-right':true,'text-white':true}">
-                    {{props.row.var_close}}
-                </q-td>
+                <q-td></q-td>
+                <q-td key="pct_variacion_cierre" :class="{'text-right':true}">                    
+                    {{props.row.pct_variacion_cierre}}
+                </q-td>            
+                <q-td key="pct_variacion_maximo" :class="{'text-right':true}">                    
+                    {{props.row.pct_variacion_maximo}}
+                </q-td>                
+                <q-td key="pct_variacion_minimo" :class="{'text-right':true}">                    
+                    {{props.row.pct_variacion_minimo}}
+                </q-td>                
                 <q-td>                    
                 </q-td>
             </q-tr>
@@ -73,10 +94,27 @@
     </q-table>
 </template>
 <script>
-import {headers} from '@/common/common.js'
 
 export default {
     name:"TableVariacionMensual",
+    props:{
+        indata:{
+            default: () => []
+        },
+        symbol_value:{
+            type:String,
+            default:""
+        },
+        symbol_nombre:{
+            type:String,
+            default:""
+        }
+    },
+    watch:{
+        indata:function(newdata){
+            this.data = newdata
+        }
+    },
     data: () => {
         return {
             filter:{
@@ -87,123 +125,18 @@ export default {
             },
             data:[],            
             columns:[
-                {
-                    label:"Año",
-                    align:"left",
-                    field:"anyo",
-                    name:"anyo",
-                    style:"width:50px;"
-                },{
-                    label:"Mes",
-                    align:"left",
-                    field:"mes",
-                    name:"mes",
-                    style:"width:50px;"
-                },{
-                    label:"open",
-                    align:"right",
-                    field:"open",
-                    name:"open",
-                    style:"width:50px;"
-                },{
-                    label:"high",
-                    align:"right",
-                    field:"high",
-                    name:"high",
-                    style:"width:50px;"
-                },{
-                    label:"low",
-                    align:"right",
-                    field:"low",
-                    name:"low",
-                    style:"width:50px;"
-                },{
-                    label:"close",
-                    align:"right",
-                    field:"close",
-                    name:"close",
-                    style:"width:50px;"
-                },{
-                    label:"% high",
-                    align:"right",
-                    field:"pct_high",
-                    name:"pct_high",
-                    style:"width:50px;"
-                },{
-                    label:"% low",
-                    align:"right",
-                    field:"pct_low",
-                    name:"pct_low",
-                    style:"width:50px;"
-                },{
-                    label:"% close",
-                    align:"right",
-                    field:"pct_close",
-                    name:"pct_close",
-                    style:"width:50px;",
-                    class:row => (row.pct_close > 0.00 ? 'bg-green' : 'bg-yellow')
-                },{
-                    label:"Var. High",
-                    align:"right",
-                    field:"var_high",
-                    name:"var_high",
-                    style:"width:50px;"
-                },{
-                    label:"Var. Low",
-                    align:"right",
-                    field:"var_low",
-                    name:"var_low",
-                    style:"width:50px;"
-                },{
-                    label:"Var. close",
-                    align:"right",
-                    field:"var_close",
-                    name:"var_close",
-                    style:"width:50px;"
-                },{
-                    label:"",
-                    align:"",
-                    field:"",
-                    name:"",
-                    style:""
-                }
+                
             ]
         }
     },
     mounted:function(){
-        this.get_variacion_mensual()
+        this.init()
     },
     methods:{
-        get_variacion_mensual:function(){
-            this.data = []
-            this.$http.post('/informe/InformeStockController/get_variacion_mensual',{
-                symbol:this.filter.symbol
-            },{
-                headers:headers()
-            }).then(httpresp => {
-                    let appresp = httpresp.data
-                    console.log(appresp)
-                    if(appresp.success==false){
-                        return
-                    }else{
-                        let data = appresp.data
-                        data.forEach(element => {
-                            element.open = element.open.toFixed(2)
-                            element.high = element.high.toFixed(2)
-                            element.low = element.low.toFixed(2)
-                            element.close = element.close.toFixed(2)                            
-                            element.pct_high = element.pct_high.toFixed(2)
-                            element.pct_low = element.pct_low.toFixed(2)
-                            element.pct_close = element.pct_close.toFixed(2)
-                            element.var_high = element.var_high.toFixed(2)
-                            element.var_low = element.var_low.toFixed(2)
-                            element.var_high_low = element.var_high_low.toFixed(2)
-                            element.var_close = element.var_close.toFixed(2)
-                            this.data.push(element)
-                        }); 
-                    }
-                }
-            )
+        init:function(){
+            if (this.indata.length > 0){
+                this.data = this.indata                
+            }
         }
     }
 }

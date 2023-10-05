@@ -1,22 +1,31 @@
 from cmath import exp
-from app import app, db, localStorage
+from app import app, db
 from model.OptionContract import OptionContractModel
 from model.StockSymbol import StockSymbol
+
+from reader.opcion import OpcionReader
+
+from processor.opcion import OpcionProcessor, OpcionLoader
+
 from datetime import date, datetime
-import common.Converter as Converter
+import common.converter as converter
 from common.AppException import AppException
+
 from config.general import TMP_OPCIONES_CONTRATO_FILE, NUMERIC_DATE_FORMAT
-import json
+import json, os
+
+from controller.base import Base
 
 from common.Response import Response
-from sqlalchemy.sql.functions import func
-
 from common.api.iexcloud import iexcloud
 
-class OpcionesContratoManager:
-    def __init__(self):
-        pass
+from sqlalchemy.sql.functions import func
+from settings import config
 
+
+
+class OpcionesContratoManager(Base):
+    
     def get_options_chain(self, args={}):
         symbol = args["symbol"]
         expiration_date = args["expiration_date"]
@@ -24,10 +33,10 @@ class OpcionesContratoManager:
         puts = self.get_puts(args=args)        
                 
         data = {
-            "calls":Converter.process_list(calls),
-            "puts":Converter.process_list(puts),
-            "exp_dates":Converter.format(self.get_expiration_dates(args=args)),
-            "strikes":Converter.format(self.get_strikes(symbol, expiration_date))
+            "calls":converter.process_list(calls),
+            "puts":converter.process_list(puts),
+            "exp_dates":converter.format(self.get_expiration_dates(args=args)),
+            "strikes":converter.format(self.get_strikes(symbol, expiration_date))
         }
                 
         return Response().from_raw_data(data)
@@ -183,56 +192,104 @@ class OpcionesContratoManager:
 
         return Response().from_raw_data(result)
 
-    def get_list_contratos(self, args={}):
-        result = db.session.query(
-            OptionContractModel.id,
-            OptionContractModel.moneda_id,
-            OptionContractModel.description.label("descripcion"),
-            OptionContractModel.expiration_date.label("fch_expiracion"),
-            OptionContractModel.side.label("lado"),
-            OptionContractModel.strike.label("strike"),
-            OptionContractModel.symbol,
-            OptionContractModel.underlying.label("subyacente"),
-            OptionContractModel.register_date.label("fch_registro")
-        ).order_by(OptionContractModel.expiration_date.desc())\
-        .limit(20)\
-        .all()
+    def get_contratos(self, args={}):
+        cod_subyacente = args.get("cod_symbol")
+        sentidos = args.get("sentidos")
+        fch_expiracion = args.get("fch_expiracion")
+        imp_ejercicio = args.get("imp_ejercicio")
 
-        return Response().from_raw_data(result)
-
-
-
-class SymbolLoader:
-    def __init__(self):
-        pass
-
-    def get_contratos(self, symbol="",fch_exp=""):         
-        filename = localStorage.getItem(TMP_OPCIONES_CONTRATO_FILE)
-        if filename is not None:
-            try:
-                return self.get_contratos_de_tmp(filename)
-            except FileNotFoundError:
-                filename = ""
+        if sentidos is not None:
+            if type(sentidos) is not list:
+                raise AppException("el argumento 'sentidos' no ha sido enviado correctamente")
             
-        #si no existe como fichero temporal se procede a obtener de la API
-        args = {
-            "symbol":symbol
-        }
+            if len(sentidos) > 0 and "call" not in sentidos and "put" not in sentidos:
+                raise AppException("El argumento 'sentidos' contiene datos invalidos")
+        else:
+            sentidos = []
 
-        data = iexcloud().get_contracts(args)
-        filename = "{0}_CONTRATOSOPCIONES.json".format(symbol)
-        localStorage.setItem(TMP_OPCIONES_CONTRATO_FILE,filename)
-        self.guardar_fichero_temp(filename, json.dumps(data))
+        if fch_expiracion not in [None, ""]:
+            fch_expiracion = date.fromisoformat(fch_expiracion)
+        else:
+            fch_expiracion = None
+
+        if imp_ejercicio not in [None, ""]:
+            imp_ejercicio = float(imp_ejercicio)
+        else:
+            imp_ejercicio = 0
+            
+        results = OpcionReader.get_contratos(cod_subyacente=cod_subyacente, sentidos=sentidos, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio, limit=200)
+
+        return Response().from_raw_data(results)
+
+    def guardar(self, args={}):
+        try:
+            opcion = self.__collect_guardar(args)
+            OpcionProcessor().guardar(opcion)
+            db.session.commit()
+            return Response(msg="Se ha guardado correctamente la opcion")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+
+    def __collect_guardar(self, args={}):
+        opcion = OptionContractModel()
+
+        cod_symbol = args.get("cod_symbol")
+        sentido = args.get("sentido")
+        cod_subyacente = args.get("cod_subyacente")
+        fch_expiracion = args.get("fch_expiracion")
+        imp_ejercicio = args.get("imp_ejercicio")
+        ctd_tamano_contrato = args.get("ctd_tamano_contrato")
+        cod_moneda = args.get("cod_moneda")
+
+        if cod_symbol in [None, ""]:
+            raise AppException(msg="No se ha enviado el symbol")
+
+        opcion.symbol = cod_symbol
+
+        if sentido in [None, ""]:
+            raise AppException(msg="No se ha indicado el 'sentido' del contrato")
+
+        if sentido not in ["call", "put"]:
+            raise AppException(msg="el sentido {0} no es valido".format(sentido))
+
+        opcion.side = sentido
+
+        if cod_subyacente in [None, ""]:
+            raise AppException(msg="No se ha enviado el 'cod_subyacente'")
+        
+        opcion.underlying = cod_subyacente
+
+        if fch_expiracion in [None, ""]:
+            raise AppException(msg="No se ha enviado 'fch_expiracion'")
+
+        opcion.expiration_date = date.fromisoformat(fch_expiracion)
+
+        if imp_ejercicio in [None, "",0]:
+            raise AppException(msg="No se ha enviado 'imp_ejercicio'")
+
+        opcion.strike = float(imp_ejercicio)
+
+        if ctd_tamano_contrato in [None, "", 0]:
+            raise AppException(msg="No se ha indicado el tamaño del contrato")
+
+        opcion.contract_size = int(ctd_tamano_contrato)
+
+        if cod_moneda in [None, ""]:
+            raise AppException(msg="No se ha indicado la moneda")
+
+        opcion.moneda_id = cod_moneda
+        opcion.fch_audit = datetime.now()
+        opcion.register_date = date.today()
+
+        return opcion
+    
+class SymbolLoader(Base):    
+
+    def get_contratos(self, symbol="",fch_exp=""):                 
+        data = iexcloud().get_contracts(symbol, fch_expiracion=fch_exp)        
         return data
-
-    def get_contratos_de_tmp(self, filename=""):
-        with open('tmp/'+filename) as f:
-            contratos = f.read()
-        return contratos
-
-    def guardar_fichero_temp(self, filename="", data=""):
-        with open('tmp/'+filename,'w') as f:
-            f.write(data)   
 
     def get_symbol(self, symbol=""):
         sym = db.session.query(
@@ -255,17 +312,19 @@ class SymbolLoader:
 
     def load(self, args={}) :
         symbol=args.get("symbol")
+        fch_expiracion = args.get("fch_expiracion")
+
         if symbol is None or symbol == "":
             raise AppException(msg="No se ha ingresado el symbol")
 
+        if fch_expiracion in [None, ""]:
+            raise AppException(msg="No se ha ingresado la fecha de expiracion")
+
         symbolobj = self.get_symbol(symbol)
         
-        fch_exp = args.get("fch_exp")
-        if fch_exp is not None and fch_exp != "":
-            fch_ex_date = datetime.strptime(fch_exp,NUMERIC_DATE_FORMAT)
+        fch_expiracion = date.fromisoformat(fch_expiracion).strftime("%Y%m%d")
 
-        contratos = self.get_contratos(symbol, fch_exp)
-        contratos = json.loads(contratos)
+        contratos = self.get_contratos(symbol, fch_expiracion)        
         for elem in contratos:
             contrato_symbol = elem.get("symbol")
             contrato = self.get_contrato(contrato_symbol)   
@@ -287,3 +346,58 @@ class SymbolLoader:
                 db.session.add(oc)
         db.session.commit()
         return Response(msg="Se han cargado correctamente los symbol de los contratos para {}".format(symbol)).get()
+
+class CsvLoader(Base):
+    def __init__(self):
+        self.fichero_ruta = None
+
+    def procesar(self, args={}):        
+        try:
+            tmp_fichero = args.get("files").get("fichero")
+            self.__guardar_fichero_temporal(tmp_fichero)
+            opcion_loader = self.__collect_procesador(args=args)
+            opcion_loader.procesar()
+            db.session.commit()
+            return Response(msg="Se ha procesado correctamente el fichero con los codigos de opcion")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_raw_data(e)
+        
+
+    def __guardar_fichero_temporal(self, tmp_fichero=None):
+        tmp_dir = config.get("rutas","tmp_dir")
+        fch_actual_iso = date.today().isoformat()
+        fichero_nombre = "tmp_cod_symbol_{0}_{1}.csv".format(self.usuario.id, fch_actual_iso)
+        self.fichero_ruta = os.path.join(tmp_dir,fichero_nombre)
+        tmp_fichero.save(self.fichero_ruta)
+
+    def __collect_procesador(self, args={}):
+        params = args.get("form")        
+        opcion_loader = OpcionLoader()
+        opcion_loader.fichero = self.fichero_ruta
+        cod_moneda = params.get("cod_moneda")
+        if cod_moneda in [None, ""]:
+            raise AppException(msg="No se ha ingresado la moneda")
+
+        opcion_loader.cod_moneda = cod_moneda
+
+        ctd_multiplicador = params.get("ctd_multiplicador")
+        if ctd_multiplicador in [None, "", 0]:
+            raise AppException(msg="No se ha ingresado el multiplicador")
+        
+        opcion_loader.ctd_multiplicador = ctd_multiplicador
+
+        formato_cod_opcion = params.get("formato_cod_opcion")
+        if formato_cod_opcion in [None, ""]:
+            raise AppException(msg="No se ha ingresado el formato del codigo de la opcion")
+
+        opcion_loader.formato_cod_opcion = formato_cod_opcion
+
+        flg_excluir_errores = params.get("flg_excluir_errores")
+        if flg_excluir_errores in [None, ""]:
+            raise AppException(msg="No se ha ingresado el indicador para excluir errores")
+
+        opcion_loader.flg_excluir_errores = flg_excluir_errores
+        return opcion_loader
+
+

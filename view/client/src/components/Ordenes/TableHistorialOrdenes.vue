@@ -1,6 +1,10 @@
 <template>
-    <div>
-        <div class="text-h5 q-pa-xs">Historial de Ordenes</div>
+    <div>    
+        <q-toolbar>
+            <q-toolbar-title class="text-blue-10">
+                Historial de Ordenes
+            </q-toolbar-title>
+        </q-toolbar>
         <q-table
             title="Historial de Ordenes"
             :data="data"
@@ -13,9 +17,11 @@
             dense
         >
             <template v-slot:top>
-                <q-btn color="primary"  label="Nuevo" />
-                <q-btn class="q-ml-sm" color="red"  label="Eliminar" @click="del_ordenes" />
-                <q-btn class="q-ml-sm" color="warning"  label="Reprocesar Todo" @click="rep_todo" />
+                <div class="q-gutter-xs">
+                    <q-btn color="blue-10"  label="Nuevo" />
+                    <q-btn flat dense color="red" icon="delete" label="Eliminar" class="text-capitalize" @click="del_ordenes" />                    
+                    <q-btn flat dense color="blue-10" icon="all_out" label="Reprocesar Todo" class="text-capitalize" @click="rep_todo" />
+                </div>
             </template>
             <template v-slot:header="props">
                 <q-tr :props="props">
@@ -32,6 +38,9 @@
                     <q-th class="text-left"
                     style="width:30px"
                     >Symbol</q-th>
+                    <q-th class="text-left"
+                    style="width:30px"
+                    >Codigo de Opcion</q-th>
                     <q-th class="text-left"
                     style="width:30px"
                     >T. Activo</q-th>                    
@@ -57,23 +66,26 @@
                         </q-list>
                     </q-menu>
                     <q-td class="text-center"><q-checkbox v-model="props.row.selected" dense/></q-td>                    
-                    <q-td key="order_date" :props="props">
-                        {{  props.row.order_date }}
+                    <q-td key="fch_orden" :props="props">
+                        {{  props.row.fch_orden }}
                     </q-td>
                     <q-td key="num_orden" :props="props">
                         {{ props.row.num_orden }}
                     </q-td>
-                    <q-td key="order_type" :props="props">
-                        {{  props.row.order_type }}
+                    <q-td key="cod_tipo_orden" :props="props">
+                        {{  props.row.cod_tipo_orden }}
                     </q-td>                    
-                    <q-td key="symbol" :props="props">
-                        {{  props.row.symbol }}
+                    <q-td key="cod_symbol" :props="props">
+                        {{  props.row.cod_symbol }}
                     </q-td>                    
-                    <q-td key="asset_type" :props="props">
-                        {{  props.row.asset_type }}
+                    <q-td key="cod_opcion" :props="props">
+                        {{  props.row.cod_opcion }}
                     </q-td>                    
-                    <q-td key="quantity" :props="props">
-                        {{  props.row.quantity }}
+                    <q-td key="cod_tipo_activo" :props="props">
+                        {{  props.row.cod_tipo_activo }}
+                    </q-td>                    
+                    <q-td key="cantidad" :props="props">
+                        {{  props.row.cantidad }}
                     </q-td>
                     <q-td></q-td> 
                 </q-tr>
@@ -84,6 +96,7 @@
 </template>
 <script>
 import MessageBox from '@/components/MessageBox.vue';
+import {get_postconfig} from '@/common/request.js'
 export default {
     name:"TableHistorialOrdenes",
     components:{
@@ -110,28 +123,33 @@ export default {
                 },{
                     label:"Tipo",
                     align:"left",
-                    name:"order_type",
-                    field:"order_type"
+                    name:"cod_tipo_orden",
+                    field:"cod_tipo_orden"
                 },{
                     label:"Symbol",
                     align:"left",
-                    name:"symbol",
-                    field:"symbol"
+                    name:"cod_symbol",
+                    field:"cod_symbol"
+                },{
+                    label:"Codigo de Opcion",
+                    align:"left",
+                    name:"cod_opcion",
+                    field:"cod_opcion"
                 },{
                     label:"T. Activo",
                     align:"left",
-                    name:"asset_type",
-                    field:"asset_type"
+                    name:"cod_tipo_activo",
+                    field:"cod_tipo_activo"
                 },{
                     label:"Cantidad",
                     align:"right",
-                    name:"quantity",
-                    field:"quantity"
+                    name:"cantidad",
+                    field:"cantidad"
                 },{
                     label:"F. Orden",
                     align:"left",
-                    name:"order_date",
-                    field:"order_date"
+                    name:"fch_orden",
+                    field:"fch_orden"
                 }
             ],
             selected:[],
@@ -147,10 +165,11 @@ export default {
     },
     methods:{
         get_historial_ordenes(){
+            let postconfig = get_postconfig()
             this.$http.post(
                 'OrdenManager/Buscador/get_historial_ordenes',{
 
-            }).then(httpresp => {
+            },postconfig).then(httpresp => {
                 var appdata = httpresp.data
                 appdata.data.forEach(element => {
                     element.selected = false

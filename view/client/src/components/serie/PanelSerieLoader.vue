@@ -1,13 +1,13 @@
 <template>
     <div>
         <q-card>
-            <q-card-section class="row q-pa-xs">
-                <div class="text-h6">Cargar Series</div>    
+            <q-card-section class="row q-pl-md q-pb-xs">
+                <div class="text-h6 text-blue-10">Cargar Multiple de Series</div>    
                 <q-space/>
-                <q-btn flat rounded icon="close"/>                          
+                <q-btn flat rounded icon="close" color="red"/>                          
             </q-card-section>
             <q-card-actions class="q-pt-none q-pl-xs">
-                <q-btn color="primary" label="Procesar" class="q-mt-xs" @click="procesar"/>
+                <q-btn color="blue-10" icon="play_arrow" label="Procesar" class="q-mt-xs text-capitalize" flat dense @click="procesar"/>
                 <!--<q-btn color="primary" label="Reset" class="q-mt-xs q-ml-xs" @click="load"/>
                 -->
             </q-card-actions>

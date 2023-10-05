@@ -19,8 +19,17 @@ import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
 import PanelVariacionSemanal from '@/components/informes/PanelVariacionSemanal.vue';
+import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
+
+//Rentabilidad operaciones
+import PanelRentabilidadOperaciones from '@/components/informes/PanelRentabilidadOperaciones.vue';
+//import TableRentabilidadOperacionesDiaria from '@/components/informes/TableRentabilidadOperacionesDiaria.vue';
+import PanelRentabilidadOperacionesDiaria from '@/components/informes/PanelRentabilidadOperacionesDiaria.vue';
+
 import PanelMantOpciones from '@/components/MantOpciones/PanelMantOpciones.vue'
 import DataLoaderOptions from '@/components/DataLoaderOptions.vue'
+import PanelOpcionCargaFichero from '@/components/MantOpciones/PanelOpcionCargaFichero.vue'
+
 import MainMantSerie from '@/components/serie/MainMantSerie.vue'
 import PanelDeposit from '@/components/Funds/PanelDeposit.vue'
 import PanelWithdraw from '@/components/Funds/PanelWithdraw.vue'
@@ -30,6 +39,25 @@ import PanelLogin from '@/components/PanelLogin.vue'
 import PanelReorganizarFondos from '@/components/Funds/PanelReorganizarFondos.vue'
 import PanelCurrencyExchangeRate from '@/components/CurrencyExchange/PanelCurrencyExchangeRate.vue';
 import PanelCurrencyExchangeRateLoader from '@/components/CurrencyExchange/PanelCurrencyExchangeRateLoader.vue'
+
+import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
+import PanelEvolucionSemanal from '@/components/informes/PanelEvolucionSemanal.vue'
+
+//Configuracion
+import PanelCalendarioSemanalLoader from '@/components/Configuracion/PanelCalendarioSemanalLoader.vue'
+import PanelCalendarioDiarioLoader from '@//components/Configuracion/PanelCalendarioDiarioLoader.vue'
+
+//
+import PanelBroker from '@/components/broker/PanelBroker.vue'
+import MainBroker from '@/components/broker/MainBroker.vue'
+//Cuenta
+import PanelCuenta from '@/components/cuenta/PanelCuenta.vue'
+import MainCuenta from '@/components/cuenta/MainCuenta.vue'
+
+//Usuario
+import PanelUsuario from '@/components/usuario/PanelUsuario.vue'
+import MainUsuario from '@/components/usuario/MainUsuario.vue'
+
 import Main from '@/Main.vue'
 
 Vue.use(VueRouter);
@@ -114,6 +142,12 @@ const routes =  [
           },{
             path:'/currency/:action=:moneda_id', component:MainPanelCurrency, props:true
           },{
+            path:'/calendariosemanalloader', component:PanelCalendarioSemanalLoader, props:true,
+            name:"calendario-semanal-loader"
+          },{
+            path:'/calendariodiarioloader', component: PanelCalendarioDiarioLoader, props: true,
+            name:'calendario-diario-loader'            
+          },{
             path:'/currency/:action', component:MainPanelCurrency, props:true
           },{
             path:"/symbols", component:MainPanelSymbol
@@ -127,7 +161,8 @@ const routes =  [
               {
                 path:"mant/new",
                 name:"opciones-new",
-                component:PanelMantOpciones
+                component:PanelMantOpciones,
+                props:true
               },{
                 path:"mant/edit/:id",
                 name:"opciones-edit",
@@ -136,6 +171,10 @@ const routes =  [
                 path:"loader",
                 name:"opciones-loader",
                 component:DataLoaderOptions
+              },{
+                path:"loader/fichero",
+                name:"opciones-loader-fichero",
+                component:PanelOpcionCargaFichero
               }
             ]
           },{
@@ -143,10 +182,104 @@ const routes =  [
           },{
             path:"/variacionmensual",component:PanelVariacionMensual
           },{
-            path:"/variacionsemanal",component:PanelVariacionSemanal
+            path:"/variacionsemanal",component:PanelVariacionSemanal,
+            children:[
+              {
+                path:"",
+                name:"variacion-semanal-series",
+                props:true,
+                component: TableVariacionSemanal
+              },{
+                path:"evolucion",
+                name:"variacion-semanal-evolucion",
+                props:true,
+                component: PanelEvolucionSemanal
+              }
+            ]
+          },{
+            path:"/variaciondiaria",component:PanelVariacionDiaria
+          },{
+            path:"/rentabilidadoperaciones", component:PanelRentabilidadOperaciones,
+            name:"rentabilidad-operaciones",
+            children:[
+              {
+                path:"",
+                name:"rentabilidad-operaciones-diaria",
+                props:true,
+                component: PanelRentabilidadOperacionesDiaria
+              }
+            ]
           },{
             path:"/series",
             component:MainMantSerie
+          },{
+            path:"/broker",
+            name:"broker",
+            component:MainBroker,
+            props:true,
+            children:[
+              {
+                path:"new",
+                name:"broker-new",
+                component:PanelBroker
+              },
+              {
+                path:"ver/:id_broker",
+                name:"broker-ver",
+                props:true,
+                component:PanelBroker
+              },
+              {
+                path:"editar/:id_broker",
+                name:"broker-editar",
+                props:true,
+                component:PanelBroker
+              }
+            ]
+          },{
+            path:"/cuenta",
+            name:"cuenta",
+            component: MainCuenta,
+            props:true,
+            children:[
+              {
+                path:"nuevo",
+                name:"cuenta-nuevo",
+                component:PanelCuenta
+              },
+              {
+                path:"ver",
+                name:"cuenta-ver/:id_cuenta",
+                props:true,
+                component:PanelCuenta
+              },
+              {
+                path:"editar",
+                name:"cuenta-editar/:id_cuenta",
+                props:true,
+                component:PanelCuenta
+              }
+            ]
+          },
+          {
+            path:"/usuario",
+            name:"usuario",
+            component:MainUsuario,
+            props:true,
+            children:[
+              {
+                path:"nuevo",
+                name:"usuario-nuevo",
+                props:true,
+                component: PanelUsuario                
+              },
+              {
+                path:"configurar/:id_usuario",
+                name:"usuario-config",
+                props:true,
+                component: PanelUsuario
+              }
+            ]
           }
       ]         
     },{

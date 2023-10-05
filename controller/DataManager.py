@@ -14,7 +14,7 @@ from model.StockSymbol import StockSymbol
 #from common.api.MarketAPI import MarketAPI
 from common.api.Quote import Quote
 from common.Response import Response
-import common.Converter as Converter
+import common.converter as converter
 import common.Markets as Markets
 from datetime import datetime, date
 
@@ -330,8 +330,8 @@ class Symbol:
 
         puts = puts_query.all()
         
-        calls = Converter.process_list(calls)
-        puts = Converter.process_list(puts)
+        calls = converter.process_list(calls)
+        puts = converter.process_list(puts)
                 
         return Response().from_raw_data({"calls":calls,"puts":puts})
             
