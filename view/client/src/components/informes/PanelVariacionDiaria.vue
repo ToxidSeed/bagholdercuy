@@ -58,6 +58,7 @@ export default {
 
                 appresp.data.forEach(element => {                    
                     element.imp_cierre_ant = element.imp_cierre_ant.toFixed(2)
+                    element.num_dia_semana = new Date(element.fch_serie).getDay()+1
                     element.imp_apertura = element.imp_apertura.toFixed(2)
                     element.imp_maximo = element.imp_maximo.toFixed(2)
                     element.imp_minimo = element.imp_minimo.toFixed(2)
@@ -72,7 +73,9 @@ export default {
                     element.pct_variacion_minimo = element.pct_variacion_minimo.toFixed(2)                    
                     this.data.push(element)
                 })
+                console.log(this.data)
             })
+            
         },
         filtrar:function(filtros){
             this.symbol_value = filtros.symbol_value

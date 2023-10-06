@@ -42,7 +42,7 @@
             </q-tr>
         </template>
         <template v-slot:body="props">            
-            <q-tr :props="props">
+            <q-tr :props="props" :class="props.row.num_dia_semana==1?'text-green text-bold':'text-black'">
                 <q-td key="anyo"  class="text-left">
                     {{props.row.anyo}}
                 </q-td>                
