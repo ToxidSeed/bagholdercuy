@@ -24,6 +24,13 @@ class CuentaManager(Base):
         except Exception as e:
             return Response().from_exception(e)
 
+    def get_cuenta(self, args={}):
+        try:
+            id_cuenta = CuentaParser.parse_id_cuenta(args=args)
+            return Response().from_raw_data(CuentaReader.get(id_cuenta))                         
+        except Exception as e:
+            return Response().from_exception(e)
+
     def get_cuentas(self, args={}):
         try:
             args = CuentaParser.parse_args_get_cuentas(args=args)

@@ -53,31 +53,25 @@ export default {
             }
         },
         filter_fn:function(val, update){            
-            if (val == ''){
-                update(() => {
-                    this.list = []
-                })
-            }else{
-                this.$http.post('/broker/BrokerManager/get_brokers',{
+            this.$http.post('/broker/BrokerManager/get_brokers',{
                     nombre:val,
                     flg_activo:this.flg_activo
-                },postconfig()).then(httpresponse => {
-                    this.$refs.msgbox.http_resp_on_error(httpresponse)
+            },postconfig()).then(httpresponse => {
+                this.$refs.msgbox.http_resp_on_error(httpresponse)
 
-                    var appdata = httpresponse.data
-                    var options = []
-                    for (let elem of appdata.data){
-                        options.push({
-                            "value":elem["id_broker"],
-                            "label":elem["nom_broker"]
-                        })
-                    }
-                    
-                    update(() =>{
-                       this.list = options
-                   })
+                var appdata = httpresponse.data
+                var options = []
+                for (let elem of appdata.data){
+                    options.push({
+                        "value":elem["id_broker"],
+                        "label":elem["nom_broker"]
+                    })
+                }
+                
+                update(() =>{
+                    this.list = options
                 })
-            }
+            })
         }
     }
 }

@@ -1,8 +1,8 @@
 from app import db
 from model.orden import OrdenModel
-from model.posicion import PosicionModel
+from model.transaccion import TransaccionModel
 
-from reader.posicion import PosicionReader
+from reader.transaccion import TransaccionReader
 
 from config.negocio import ORDEN_TIPO_COMPRA, ORDEN_TIPO_VENTA
 from config.negocio import TIPO_ACTIVO_OPT
@@ -11,30 +11,30 @@ from settings import config
 from datetime import datetime
 from sqlalchemy import delete
 
-class PosicionProcessor:
+class TransaccionProcessor:
 
     def __init__(self):
         self.orden = None
-        self.posiciones = []
+        self.trans_con_saldo = []
         self.ctd_saldo_orden = 0
 
-    def procesar_orden(self, orden:OrdenModel):
+    def generar_desde_orden(self, orden:OrdenModel):
         try:
             self.orden = orden      
             num_orden = orden.num_orden
             cod_opcion = orden.cod_opcion
 
             self.ctd_saldo_orden = orden.cantidad if orden.cod_tipo_orden == config.get("tipo.orden","compra") else orden.cantidad * -1    
-            self.posiciones = self.__get_posiciones_abiertas()
+            self.trans_con_saldo = self.__get_transacciones_con_saldo()
             self.__gen_posiciones()
         except Exception as e:
             raise e
 
-    def __get_posiciones_abiertas(self):
+    def __get_transacciones_con_saldo(self):
         if str(self.orden.cod_tipo_activo) == str(config.get("tipo.activo","opcion")):
-            return PosicionReader.get_posiciones_abiertas_x_opcion(self.orden.usuario_id, self.orden.cod_opcion)
+            return TransaccionReader.get_posiciones_abiertas_x_opcion(self.orden.usuario_id, self.orden.cod_opcion)
         else:
-            return PosicionReader.get_posiciones_abiertas_x_symbol(self.orden.usuario_id, self.orden.cod_symbol)
+            return TransaccionReader.get_posiciones_abiertas_x_symbol(self.orden.usuario_id, self.orden.cod_symbol)
     
     def __gen_posiciones(self):
         for posicion in self.posiciones:
@@ -47,7 +47,7 @@ class PosicionProcessor:
         if self.ctd_saldo_orden != 0:
             PosicionWriter().insertar(self.orden, self.ctd_saldo_orden)
 
-    def __procesar_posicion(self, posicion:PosicionModel):
+    def __procesar_posicion(self, posicion:TransaccionModel):
         ctd_nueva_posicion = self.__cerrar(posicion, self.orden, self.ctd_saldo_orden)
 
         if ctd_nueva_posicion == 0:
@@ -59,14 +59,14 @@ class PosicionProcessor:
         #Crear posicion        
         PosicionWriter().insertar(self.orden, ctd_nueva_posicion, pos_referencia=posicion)          
 
-    def __cerrar(self, posicion:PosicionModel, orden:OrdenModel, cantidad):
+    def __cerrar(self, posicion:TransaccionModel, orden:OrdenModel, cantidad):
         if orden.cod_tipo_orden == ORDEN_TIPO_COMPRA:
             return self.__cerrar_venta(posicion, cantidad)
 
         if orden.cod_tipo_orden == ORDEN_TIPO_VENTA:
             return self.__cerrar_compra(posicion, cantidad)
 
-    def __cerrar_venta(self, posicion:PosicionModel, cantidad):
+    def __cerrar_venta(self, posicion:TransaccionModel, cantidad):
         ctd_cierre = 0
 
         #Si la posicion es una posicion de compra cuando se quiere cerrar una posicon de venta        
@@ -88,7 +88,7 @@ class PosicionProcessor:
 
         return ctd_cierre
 
-    def __cerrar_compra(self, posicion:PosicionModel, cantidad):
+    def __cerrar_compra(self, posicion:TransaccionModel, cantidad):
 
         ctd_cierre = 0
         #Si la posicion es una posicion de venta no se continua
@@ -111,29 +111,29 @@ class PosicionProcessor:
 class PosicionEliminador:
     def eliminar_x_opcion(usuario_id, cod_opcion):
         stmt = delete(
-            PosicionModel
+            TransaccionModel
         ).where(
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_opcion == cod_opcion
+            TransaccionModel.usuario_id == usuario_id,
+            TransaccionModel.cod_opcion == cod_opcion
         )
 
         db.session.execute(stmt)
 
     def eliminar_x_otros_activos(usuario_id, cod_symbol):
         stmt = delete(
-            PosicionModel
+            TransaccionModel
         ).where(
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_symbol == cod_symbol
+            TransaccionModel.usuario_id == usuario_id,
+            TransaccionModel.cod_symbol == cod_symbol
         )
 
         db.session.execute(stmt)
 
     def eliminar_todo(usuario_id):
         stmt = delete(
-            PosicionModel
+            TransaccionModel
         ).where(
-            PosicionModel.usuario_id == usuario_id
+            TransaccionModel.usuario_id == usuario_id
         )
         
         db.session.execute(stmt)
@@ -142,7 +142,7 @@ class PosicionWriter:
     def __init__(self):
         self.orden = None
 
-    def insertar(self, orden:OrdenModel, ctd_operacion, pos_referencia:PosicionModel=None):
+    def insertar(self, orden:OrdenModel, ctd_operacion, pos_referencia:TransaccionModel=None):
 
         self.orden = orden      
 
@@ -182,7 +182,7 @@ class PosicionWriter:
                 imp_gp_realizada = float(ctd_operacion * imp_accion_origen) - float(ctd_operacion * imp_accion)
                 
         
-        posicion = PosicionModel(            
+        posicion = TransaccionModel(            
             orden_id = orden.orden_id,
             num_orden = orden.num_orden,            
             num_posicion=self.__get_sig_num_posicion(),
@@ -212,7 +212,7 @@ class PosicionWriter:
         
 
     def __get_sig_num_posicion(self):
-        num_posicion =  PosicionReader.get_max_num_posicion(self.orden.usuario_id, self.orden.fch_orden, self.orden.cod_symbol, self.orden.cod_opcion)
+        num_posicion =  TransaccionReader.get_max_num_posicion(self.orden.usuario_id, self.orden.fch_orden, self.orden.cod_symbol, self.orden.cod_opcion)
         if num_posicion is None:
             return 1
         else:

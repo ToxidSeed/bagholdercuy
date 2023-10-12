@@ -12,6 +12,7 @@
                 <q-btn label="Nuevo" icon="add" dense flat class="text-capitalize text-blue-10" @click="nuevo"/>
                 <q-btn label="Guardar" icon="save" dense flat class="text-capitalize text-blue-10" @click="btn_guardar_click" :disable="config.lectura==true"/>
                 <q-btn label="Configurar" icon="settings" dense flat class="text-capitalize text-blue-10" :to="{name:'usuario-config', params:{id_usuario:id_usuario}}" :disable="config.lectura==false"/>
+                <q-btn label="Credenciales" icon="key" dense flat class="text-capitalize text-blue-10" @click="btn_credenciales_click" :disable="config.editar==false"/>
             </q-toolbar>
             <q-card-section class="q-col-gutter-xs row">                
                 <div class="col-3">
@@ -57,7 +58,8 @@
                     />
                 </div>         
                 <div>
-                    <SelectCuenta :id_usuario="id_usuario"/>
+                    <SelectCuenta :id_usuario="id_usuario" label="Cuenta por defecto" :ocultar_sel="true" v-on:select="sel_cuenta"/>
+                    <div class="q-pt-xs text-bold">{{ cuenta_default.desc }}</div>
                 </div>       
                 <q-checkbox v-model="flg_activo" label="Activo" color="blue-10" :true-value="1" :false-value="0" :disable="config.lectura==true"/>
             </q-card-section>
@@ -92,7 +94,10 @@ export default {
             apellidos:"",
             password:"",
             re_password:"",
-            id_cuenta_default:"",
+            cuenta_default:{
+                id_cuenta:"",
+                desc:""
+            },
             flg_activo:1,
             confirmar:{
                 visible:false,
@@ -178,7 +183,7 @@ export default {
             this.config.nuevo = false
             this.config.editar = false
             //
-            this.get_usuario()
+            this.get_usuario()            
         },
         get_usuario:function(){
             this.$http.post(
@@ -194,8 +199,26 @@ export default {
                 this.codigo = appdata.usuario
                 this.nombres = appdata.nombres
                 this.apellidos= appdata.apellidos
-                this.id_cuenta_default = appdata.id_cuenta_default                
+                this.cuenta_default.id_cuenta = appdata.id_cuenta_default                
+
+                //#endregion
+                if (appdata.id_cuenta_default  != null){
+                    this.get_cuenta()
+                }                
             })            
+        },
+        get_cuenta:function(){
+            this.$http.post(
+                "/cuenta/CuentaManager/get_cuenta",{
+                    id_cuenta: this.cuenta_default.id_cuenta
+                },
+                postconfig()
+            ).then(httpresp => {
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+
+                let appdata = httpresp.data.data
+                this.cuenta_default.desc = appdata.cod_cuenta + " - " + appdata.nom_cuenta
+            })
         },
         configurar:function(){
             //            
@@ -239,7 +262,7 @@ export default {
                     apellidos:this.apellidos,                    
                     password:this.password,                                        
                     flg_activo: this.flg_activo,
-                    id_cuenta_default: this.id_cuenta_default
+                    id_cuenta_default: this.cuenta_default.id_cuenta
                 },
                 postconfig()
             ).then(httpresp => {
@@ -272,10 +295,12 @@ export default {
         },
         actualizar:function(){            
             this.$http.post(
-                "/usuario/UsuarioManager/registrar",{                    
+                "/usuario/UsuarioManager/actualizar",{                    
                     id_usuario:this.id_usuario,
-                    nom_usuario:this.nom_usuario,
-                    flg_activo: this.flg_activo
+                    nombres:this.nombres,
+                    apellidos:this.apellidos,                    
+                    flg_activo: this.flg_activo,
+                    id_cuenta_default: this.cuenta_default.id_cuenta
                 },
                 postconfig()
             ).then(httpresp => {                                
@@ -287,6 +312,14 @@ export default {
                 }
                 this.$emit('reload-usuarios')
             })
+        },
+        btn_credenciales_click:function(){
+            console.log("btn credenciales click")
+        },
+        sel_cuenta:function(selected){
+            this.cuenta_default.id_cuenta = selected["value"]
+            this.cuenta_default.desc = selected["label"]       
+            console.log(this.cuenta_default.desc)     
         }
     }
 }

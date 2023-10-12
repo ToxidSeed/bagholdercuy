@@ -8,7 +8,7 @@ class UsuarioProcessor:
 
     def actualizar(self, args={}):
         id_usuario = args.get("id_usuario")
-        usuario = UsuarioReader.get()
+        usuario = UsuarioReader.get(id_usuario)
 
         if "codigo" in args:
             usuario.codigo = args.get("codigo")

@@ -11,7 +11,7 @@ class CuentaReader:
         )
 
         result = db.session.execute(stmt)
-        return result.scalars().all()
+        return result.scalars().one()
 
     def get_cuentas(args={}):
 
@@ -26,7 +26,7 @@ class CuentaReader:
             )
         
         text = args.get("text")
-        if text != "":
+        if text not in [None, ""]:
             stmt = stmt.where(
                 CuentaModel.nom_cuenta.ilike("%{0}%".format(text))
             )

@@ -70,7 +70,7 @@ export default {
             form_data.append("fichero", this.fichero)
             form_data.append("flg_procesar_ordenes", this.flg_procesar_ordenes)
             this.$http.post(
-                '/OrdenManager/CargadorMultipleManager/ejecutar',form_data,postconfig
+                '/orden/CargadorMultipleManager/ejecutar',form_data,postconfig
             ).then(httpresp => {
                 this.msgbox = {
                     httpresp:httpresp

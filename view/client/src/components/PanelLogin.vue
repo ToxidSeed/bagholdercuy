@@ -50,7 +50,10 @@ export default {
             localStorage.setItem("id_usuario", appdata.id_usuario)   
             localStorage.setItem("usuario", appdata.usuario)
             localStorage.setItem("logeado",true)
-            localStorage.setItem("token", appdata.token)            
+            localStorage.setItem("token", appdata.token)                                    
+            localStorage.setItem("id_cuenta",appdata.id_cuenta_default)
+            localStorage.setItem("cod_cuenta",appdata.cod_cuenta)
+            localStorage.setItem("nom_cuenta",appdata.nom_cuenta)
         }
     }
 }

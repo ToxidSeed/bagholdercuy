@@ -274,6 +274,12 @@ const routes =  [
                 component: PanelUsuario                
               },
               {
+                path:"ver/:id_usuario",
+                name:"usuario-ver",
+                props:true,
+                component: PanelUsuario                
+              },
+              {
                 path:"configurar/:id_usuario",
                 name:"usuario-config",
                 props:true,

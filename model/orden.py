@@ -11,6 +11,6 @@ class OrdenModel(db.Model):
     cod_tipo_activo = db.Column(db.String(20))
     cantidad = db.Column(db.Integer)
     imp_accion = db.Column(db.Numeric(15,4))
-    usuario_id = db.Column(db.Integer)
+    cuenta_id = db.Column(db.Integer)
     fch_registro = db.Column(db.Date)
     fch_orden = db.Column(db.Date)    
