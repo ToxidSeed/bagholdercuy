@@ -1,26 +1,26 @@
 <template>
     <div class="row">
         <q-toolbar class="bg-white">
-            <q-toolbar-title class="text-blue-10">Rentabilidad Diaria</q-toolbar-title>
+            <q-toolbar-title class="text-blue-10">Rentabilidad Mensual</q-toolbar-title>
             <q-btn label="filtrar" icon="filter_alt" color="blue-10" dense flat class="text-capitalize"/>                
         </q-toolbar>
         <div class="col-2">
-            <TableRentabilidadOperacionesDiaria/>
+            <TableRentabilidadOperacionesMensual/>
         </div>
         <div class="col-10 q-pl-xs">
-            <ChartRentabilidadOperacionesDiaria/>
+            <ChartRentabilidadOperacionesMensual/>
         </div>
     </div>
 </template>
 <script>
-import TableRentabilidadOperacionesDiaria from "@/components/informes/TableRentabilidadOperacionesDiaria.vue"
-import ChartRentabilidadOperacionesDiaria from "@/components/informes/ChartRentabilidadOperacionesDiaria.vue"
+import TableRentabilidadOperacionesMensual from "@/components/operaciones/rentabilidadoperaciones/TableRentabilidadOperacionesMensual.vue"
+import ChartRentabilidadOperacionesMensual from "@/components/operaciones/rentabilidadoperaciones/ChartRentabilidadOperacionesMensual.vue"
 
 export default {
     name:"PanelRentabilidadOperacionesDiaria",
     components:{
-        TableRentabilidadOperacionesDiaria,
-        ChartRentabilidadOperacionesDiaria
+        TableRentabilidadOperacionesMensual,
+        ChartRentabilidadOperacionesMensual
     },
     data(){
         return {

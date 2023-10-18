@@ -10,7 +10,8 @@
                     <q-file
                         v-model="fichero"
                         label="Seleccionar fichero"
-                        use-chips                        
+                        use-chips                
+                        color="blue-10"        
                     >                
                         <template v-slot:prepend>
                         <q-icon name="attach_file" />
@@ -69,6 +70,7 @@ export default {
 
             form_data.append("fichero", this.fichero)
             form_data.append("flg_procesar_ordenes", this.flg_procesar_ordenes)
+            form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
             this.$http.post(
                 '/orden/CargadorMultipleManager/ejecutar',form_data,postconfig
             ).then(httpresp => {

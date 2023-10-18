@@ -33,7 +33,9 @@ export default {
     methods:{
         get_rentabilidades_x_periodo:function(){
             this.$http.post(
-                '/operacion/OperacionManager/get_rentabilidades_x_periodo',{},
+                '/operacion/OperacionManager/get_rentabilidades_x_periodo',{
+                    id_cuenta:localStorage.getItem("id_cuenta")
+                },
                 postconfig()
             ).then(httpresp => {
                 this.msgbox = {

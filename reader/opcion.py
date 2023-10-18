@@ -3,12 +3,12 @@ from model.OptionContract import OptionContractModel
 
 class OpcionReader:
 
-    def get(symbol):
+    def get(cod_contrato_opcion):
 
         stmt = db.select(
             OptionContractModel
         ).where(
-            OptionContractModel.symbol == symbol
+            OptionContractModel.symbol == cod_contrato_opcion
         )
 
         result = db.session.execute(stmt)

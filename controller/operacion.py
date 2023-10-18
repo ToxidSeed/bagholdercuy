@@ -1,19 +1,23 @@
 from re import S
 from app import app, db
 from common.AppException import AppException
+from common.Formatter import Formatter
+from common.Response import Response
+from common.Error import Error
+
 #from model.StockTrade import StockTrade
 from model.StockSymbol import StockSymbol
 from model.orden import OrdenModel
-from model.posicion import PosicionModel
+from model.transaccion import TransaccionModel
 from model.TipoModel import TipoModel
 
-from reader.posicion import PosicionReader
-from reader.operacion import OperacionReader
+from reader.transaccion import TransaccionReader
 from reader.calendariodiario import CalendarioDiarioReader
 
+from parser.operacion import OperacionParser
+
 from datetime import datetime, date, time, timedelta
-from common.Response import Response
-from common.Error import Error
+
 from sqlalchemy import desc
 from sqlalchemy.orm import join
 import sqlalchemy.sql.functions as func
@@ -32,7 +36,35 @@ class OperacionManager(Base):
         records = PosicionReader.get_operaciones(self.usuario.id)
         return Response().from_raw_data(records)
 
-    def get_rentabilidad_ult30dias(self, args={}):                
+    def get_rentabilidad_diaria(self, args={}):        
+        args = OperacionParser.parse_args_get_rentabilidad_diaria(args=args)         
+        id_cuenta = args.get("id_cuenta")
+        fch_desde = args.get("fch_desde")
+        fch_hasta = args.get("fch_hasta")
+        records = TransaccionReader.get_rentabilidad_diaria(id_cuenta, fch_desde, fch_hasta)
+        return Response().from_raw_data(records)   
+
+    def get_rentabilidad_mensual(self, args={}):
+        args = OperacionParser.parse_args_get_rentabilidad_mensual(args=args)
+        id_cuenta = args.get("id_cuenta")
+        cod_mes_desde = args.get("cod_mes_desde")
+        cod_mes_hasta = args.get("cod_mes_hasta")
+        records = TransaccionReader.get_rentabilidad_mensual(id_cuenta=id_cuenta,cod_mes_desde=cod_mes_desde, cod_mes_hasta=cod_mes_hasta )
+        
+        records_output = []
+        for elemento in records:
+            desc_mes_transaccion = "{0}/{1}".format(str(elemento.cod_mes_transaccion)[:4], str(elemento.cod_mes_transaccion)[-2:])            
+            elemento = Formatter().format(elemento)
+            elemento["desc_mes_transaccion"] = desc_mes_transaccion
+            records_output.append(elemento)            
+
+        return Response().from_raw_data(records_output)
+
+    def get_rentabilidad_semanal(self, args={}):
+        pass
+
+    def get_rentabilidad_ult30dias(self, args={}): 
+        id_cuenta = args.get("id_cuenta")               
         fechas = {}
         rows = []
 
@@ -40,7 +72,7 @@ class OperacionManager(Base):
         fch_actual = date.today()    
         fch_desde = fch_actual - d        
         
-        records = OperacionReader.get_rentabilidad_diaria(self.usuario.id, fch_desde=fch_desde, fch_hasta=fch_actual)
+        records = TransaccionReader.get_rentabilidad_dias_calendarios(id_cuenta, fch_desde=fch_desde, fch_hasta=fch_actual)
 
         for elem in records:
             rows.append({
@@ -52,31 +84,38 @@ class OperacionManager(Base):
 
     def get_rentabilidades_x_periodo(self, args={}):
         records = []
+        id_cuenta = args.get("id_cuenta")        
 
         #rentabilidad ultimo dia
-        rent_ultdia = OperacionReader.get_rentabilidad_ultdia(usuario_id=self.usuario.id)
+        rent_ultdia = TransaccionReader.get_rentabilidad_ultdia(id_cuenta=id_cuenta)
 
-        records.append({
-            "periodo":"Dia - {0}".format(rent_ultdia.fch_transaccion.strftime("%d/%m/%Y")),
-            "imp_rentabilidad": rent_ultdia.imp_rentabilidad
-        })
+        if rent_ultdia is not None:
+            records.append({
+                "periodo":"Dia - {0}".format(rent_ultdia.fch_transaccion.strftime("%d/%m/%Y")),
+                "imp_rentabilidad": rent_ultdia.imp_rentabilidad
+            })
+        else:
+            records.append({
+                "periodo":"Dia - {0}".format("00/00/0000"),
+                "imp_rentabilidad": 0
+            })
 
         #rentabilidad ultima semana
-        anyo, semana, imp_rentabilidad = OperacionReader.get_rentabilidad_ultsemana(usuario_id=self.usuario.id)
+        anyo, semana, imp_rentabilidad = TransaccionReader.get_rentabilidad_ultsemana(id_cuenta=id_cuenta)
         records.append({
             "periodo": "Semana - {0}/{1}".format(anyo, semana),
             "imp_rentabilidad": imp_rentabilidad
         })
 
         #rentabilidad ultimo mes
-        anyo, mes, imp_rentabilidad = OperacionReader.get_rentabilidad_ultmes(usuario_id=self.usuario.id)
+        anyo, mes, imp_rentabilidad = TransaccionReader.get_rentabilidad_ultmes(id_cuenta=id_cuenta)
         records.append({
             "periodo": "Mes - {0}/{1}".format(anyo, mes),
             "imp_rentabilidad": imp_rentabilidad
         })
 
         #rentabilidad ultimo anyo
-        anyo, imp_rentabilidad = OperacionReader.get_rentabilidad_ultanyo(usuario_id=self.usuario.id)
+        anyo, imp_rentabilidad = TransaccionReader.get_rentabilidad_ultanyo(id_cuenta=id_cuenta)
         records.append({
             "periodo": "Año - {0}".format(anyo),
             "imp_rentabilidad": imp_rentabilidad

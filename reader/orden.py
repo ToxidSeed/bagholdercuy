@@ -5,28 +5,24 @@ from model.orden import OrdenModel
 
 class OrdenReader:
 
-    def get_max_num_orden(usuario_id, fch_orden, cod_symbol=None, cod_opcion=None):
-        num_orden = None
+    def get_max_num_orden(id_cuenta, fch_orden):        
 
         stmt = db.session.query(
             func.max(OrdenModel.num_orden).label("num_orden")
         ).filter(
-            OrdenModel.usuario_id == usuario_id,            
+            OrdenModel.id_cuenta == id_cuenta,            
             OrdenModel.fch_orden == fch_orden
         )
-
-        if cod_symbol is not None and cod_symbol != "":
-            stmt = stmt.where(OrdenModel.cod_symbol == cod_symbol)
-        else:
-            stmt = stmt.where(OrdenModel.cod_opcion == cod_opcion)           
 
         result = db.session.execute(stmt)
         record = result.first()
 
-        if record is not None:
-            num_orden = record.num_orden
-
-        return num_orden
+        if record is None:
+            return 0
+        if record.num_orden is None:
+            return 0
+        else:
+            return 0
 
     def get_ordenes(usuario_id, cod_symbol=None, cod_opcion=None):
         stmt = db.session.query(

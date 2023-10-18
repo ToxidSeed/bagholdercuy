@@ -1,7 +1,22 @@
 <template>
     <div>
         <q-toolbar class="text-blue-10">
-            <q-btn flat round dense icon="menu" />
+            <q-btn flat round dense icon="menu">
+                <q-menu>
+                    <q-list dense>
+                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-mensual'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">mensual</span></div>
+                            </q-item-section>                            
+                        </q-item>     
+                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-semanal'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">Semanal</span></div>
+                            </q-item-section>                            
+                        </q-item>                        
+                    </q-list>
+                </q-menu>
+            </q-btn>
             <q-toolbar-title>
                 Rentabilidad de Operaciones
             </q-toolbar-title>

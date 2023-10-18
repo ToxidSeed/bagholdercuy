@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div >
         <q-toolbar class="text-blue-10">
             <q-btn flat round dense icon="menu"></q-btn>
             <q-toolbar-title>
@@ -34,7 +34,7 @@
                     v-on:vender="table_btn_vender_click"
                     v-on:comprar="table_btn_comprar_click"
                 />
-                <TablePosicionesOpcion/>
+                <TablePosicionesOpcion class="q-pt-xs q-pb-xs"/>
             </template>
             <q-inner-loading :showing="progress">
                 <q-spinner-gears size="50px" color="primary" />

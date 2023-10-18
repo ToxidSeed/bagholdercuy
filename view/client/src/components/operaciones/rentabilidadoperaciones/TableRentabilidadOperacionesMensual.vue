@@ -18,7 +18,7 @@ import {postconfig} from '@/common/request.js';
 import MessageBox from '@/components/MessageBox.vue';
 
 export default {
-    name:"TableRentabilidadOperacionesDiaria",
+    name:"TableRentabilidadOperacionesMensual",
     components:{
         MessageBox
     },
@@ -28,10 +28,10 @@ export default {
             data:[],
             columns:[
                 {
-                    name: 'fch_transaccion',                    
-                    label: 'Fch. Transaccion',
+                    name: 'desc_mes_transaccion',                    
+                    label: 'Mes. transaccion',
                     align: 'left',                    
-                    field: "fch_transaccion"
+                    field: "desc_mes_transaccion"
                 },
                 {
                     name: 'imp_rentabilidad',                    
@@ -51,7 +51,7 @@ export default {
     methods:{
         get_rentabilidad_ult30dias:function(){
             this.$http.post(
-                "/operacion/OperacionManager/get_rentabilidad_diaria",{
+                "/operacion/OperacionManager/get_rentabilidad_mensual",{
                     id_cuenta: localStorage.getItem("id_cuenta")
                 },postconfig()
             ).then(httpresp => {

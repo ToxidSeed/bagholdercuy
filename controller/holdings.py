@@ -13,7 +13,7 @@ from common.api.iexcloud import iexcloud
 from common.AppException import AppException
 from common.api.MarketAPI import MarketAPI
 
-from reader.posicion import PosicionReader
+from reader.transaccion import TransaccionReader
 
 from pytz import HOUR, timezone
 from datetime import datetime, date
@@ -46,12 +46,6 @@ class HoldingsManager(Base):
         .all()
 
         return holdings
-
-
-
-
-    
-
 
     def get_list(self, args={}):                             
         active_holdings = self.__get_active_holdings()

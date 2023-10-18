@@ -1,14 +1,14 @@
 from model.orden import OrdenModel
 from model.StockSymbol import StockSymbol
 
-from processor.posicion import PosicionProcessor, PosicionEliminador
+from processor.transaccion import TransaccionProcessor
 
 from reader.symbol import SymbolReader
 from reader.orden import OrdenReader
 from reader.opcion import OpcionReader
 
 from common.AppException import AppException
-from config.negocio import TIPO_ACTIVO_OPT, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
+from config.negocio import TIPO_ACTIVO_OPT, TIPO_ACTIVO_OTROS, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
 from settings import config
 from common.Formatter import Formatter
 
@@ -79,17 +79,18 @@ class CargadorMultipleProcessor:
         self.fichero = None
         self.symbols = {}
         self.usuario_id = None
+        self.id_cuenta = None
         self.correlativos = {}
         self.flg_procesar_ordenes = True
 
-    def procesar(self, fichero, usuario_id):           
-        self.usuario_id = usuario_id
+    def procesar(self, fichero, id_cuenta):           
+        self.id_cuenta = id_cuenta
         #self.fichero = fichero
         fch_actual = date.today().strftime("%Y%m%d")
 
         tmp_dir = config.get("rutas","tmp_dir")        
 
-        fichero_nombre = "{0}-{1}.csv".format(usuario_id, fch_actual)
+        fichero_nombre = "{0}-{1}.csv".format(id_cuenta, fch_actual)
         self.fichero = os.path.join(tmp_dir, fichero_nombre)
         fichero.save(self.fichero)        
 
@@ -104,8 +105,8 @@ class CargadorMultipleProcessor:
                 if not self.flg_procesar_ordenes:
                     continue
 
-                #Genrear posiciones
-                PosicionProcessor().procesar_orden(orden)
+                TransaccionProcessor().generar_desde_orden(orden=orden)                
+
                 try:
                     db.session.flush()
                 except Exception as e:
@@ -122,53 +123,78 @@ class CargadorMultipleProcessor:
         #Quantity
         ctd_orden = int(record[3])
         #TradePrice
-        imp_accion = record[4]                
+        imp_accion = float(record[4])
 
-        cod_symbol = None
-        cod_opcion = None
+        id_symbol = None
+        id_contrato_opcion = None
         cod_tipo_activo = None
         num_orden = None
 
-        if cod_subyacente == "":
-            cod_symbol = cod_instrumento
-            cod_tipo_activo = self.__get_tipo_activo(cod_symbol)
-            num_orden = self.__get_num_orden(fch_orden, cod_symbol=cod_symbol)
-        else:
-            cod_opcion = self.__format_cod_opcion(cod_instrumento)
-            self.__validar_opcion(cod_opcion=cod_opcion)
-            cod_tipo_activo = TIPO_ACTIVO_OPT
-            num_orden = self.__get_num_orden(fch_orden, cod_opcion=cod_opcion)
+        instrumento, cod_tipo_activo = self.__get_instrumento(cod_instrumento=cod_instrumento)
 
-        cod_tipo_orden = TIPO_ORDEN_COMPRA if ctd_orden > 0 else TIPO_ORDEN_VENTA
-        
+        if cod_tipo_activo == TIPO_ACTIVO_OPT:
+            subyacente, cod_tipo_activo_subyacente = self.__get_subyacente(cod_symbol=cod_subyacente)
+            id_symbol = subyacente.id
+            id_contrato_opcion = instrumento.id
+        else:
+            id_symbol = instrumento.id
+       
         orden = OrdenModel(
-            num_orden = num_orden,
-            cod_tipo_orden = cod_tipo_orden,
-            cod_symbol = cod_symbol,
-            cod_opcion = cod_opcion,
+            id_cuenta = self.id_cuenta,
+            num_orden = self.__get_siguiente_num_orden(fch_orden),
+            cod_tipo_orden = self.__get_tipo_orden(ctd_orden=ctd_orden),
+            id_symbol = id_symbol,
+            id_contrato_opcion = id_contrato_opcion,       
             cod_tipo_activo = cod_tipo_activo,
             cantidad = abs(ctd_orden),
             imp_accion = imp_accion,
-            usuario_id = self.usuario_id,
             fch_registro = date.today(),
             fch_orden = fch_orden
         )    
 
-        db.session.add(orden)    
+        db.session.add(orden)  
+        db.session.flush()  
         return orden
 
-    def __get_tipo_activo(self, cod_symbol):
+    def __get_instrumento(self, cod_instrumento):
+        if cod_instrumento in self.symbols:
+            return self.symbols[cod_instrumento]
+
+        symbol = SymbolReader.get(cod_symbol=cod_instrumento)
+        contrato_opcion = None
+
+        if symbol is not None:            
+            self.symbols[symbol.symbol] = (symbol, TIPO_ACTIVO_OTROS)
+            return (symbol, TIPO_ACTIVO_OTROS)
+
+        cod_opcion = self.__format_cod_opcion(cod_instrumento)
+        contrato_opcion = OpcionReader.get(cod_contrato_opcion=cod_opcion)
+        if contrato_opcion is not None:
+            self.symbols[contrato_opcion.symbol] = (contrato_opcion, TIPO_ACTIVO_OPT)
+            return (contrato_opcion, TIPO_ACTIVO_OPT)
+        else:
+            raise AppException(msg=f"No se ha encontrado el instrumento {cod_instrumento}")
+
+    def __get_subyacente(self, cod_symbol):
         if cod_symbol in self.symbols:
-            return self.symbols[cod_symbol].asset_type
+            return self.symbols[cod_symbol]
 
-        symbol = SymbolReader.get(cod_symbol)
-        if symbol is None:
-            raise AppException(msg="No se ha encontado el symbol {0}".format(cod_symbol))
+        symbol = SymbolReader.get(cod_symbol=cod_symbol)
 
-        if symbol.symbol not in self.symbols:
-            self.symbols[symbol.symbol] = symbol
+        if symbol is not None:
+            return (symbol, TIPO_ACTIVO_OTROS)
+        else:
+            raise AppException(msg=f"No se ha encontrado el subyacente {cod_symbol}")
 
-        return symbol.asset_type
+    def __get_tipo_orden(self, ctd_orden=0):
+        if ctd_orden == 0:
+            raise AppException(msg="El importe de la orden no puede ser 0")
+        
+        if ctd_orden > 0:
+            return TIPO_ORDEN_COMPRA
+        else:
+            return TIPO_ORDEN_VENTA
+        
 
     def __format_cod_opcion(self, cod_opcion):
         cod_opcion = cod_opcion.replace(" ","")
@@ -178,33 +204,15 @@ class CargadorMultipleProcessor:
         cod_opcion_nuevo = "{0}20{1}{2}".format(cod_subyacente, fch_exp_yymmdd, resto)
         return cod_opcion_nuevo    
 
-    def __validar_opcion(self, cod_opcion):
-        opcion_reader = OpcionReader.get(cod_opcion)
-        if opcion_reader is None:
-            raise AppException(msg="No existe la opcion {0}".format(cod_opcion))
+    def __get_siguiente_num_orden(self, fch_orden):        
 
-    def __get_num_orden(self, fch_orden, cod_symbol=None, cod_opcion=None):
-        
-        cod_correlativo = None
-        cod_fch_orden = date.strftime(fch_orden, "%Y%m%d")
-
-        if cod_symbol is not None:
-            cod_correlativo = "{0}{1}".format(cod_symbol, cod_fch_orden)    
-
-        if cod_opcion is not None:
-            cod_correlativo = "{0}{1}".format(cod_opcion, cod_fch_orden)    
+        cod_correlativo = fch_orden.strftime("%Y%m%d")
 
         if cod_correlativo in self.correlativos:
             return int(self.correlativos[cod_correlativo]) + 1
-        
-
-        num_orden = OrdenReader.get_max_num_orden(self.usuario_id, fch_orden, cod_symbol=cod_symbol, cod_opcion=cod_opcion)
-
-        if num_orden is None:
-            self.correlativos[cod_correlativo] = 1
-            return 1
-                
-        num_orden = num_orden + 1        
+                       
+        num_orden = OrdenReader.get_max_num_orden(self.id_cuenta, fch_orden)
+        num_orden += 1                        
         self.correlativos[cod_correlativo] = num_orden
         return num_orden
 

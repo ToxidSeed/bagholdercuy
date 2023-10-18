@@ -392,6 +392,7 @@ class CargadorMultipleManager(Base):
             form = args.get("form")
 
             flg_procesar_ordenes = form.get("flg_procesar_ordenes")
+            id_cuenta = form.get("id_cuenta")
 
             if flg_procesar_ordenes is None:
                 raise AppException(msg="No se ha enviado 'flg_procesar_ordenes'")
@@ -399,12 +400,15 @@ class CargadorMultipleManager(Base):
             if flg_procesar_ordenes.lower() not in ["false","true"]:
                 raise AppException(msg="El indicador para procesar ordenes no es correcto")
 
+            if id_cuenta in [None, ""]:
+                raise AppException(msg="No se ha indicado el identificador de la cuenta")
+
             flg_procesar_ordenes = True if flg_procesar_ordenes.lower() == "true" else False
 
             cargador = CargadorMultipleProcessor()
             #cargador.flg_procesar_ordenes = bool(flg_procesar_ordenes)
             cargador.flg_procesar_ordenes = flg_procesar_ordenes
-            cargador.procesar(fichero, self.usuario.id)
+            cargador.procesar(fichero, id_cuenta)
             db.session.commit()
             return Response(msg="Se ha cargado correctamente las ordenes")            
         except Exception as e:        

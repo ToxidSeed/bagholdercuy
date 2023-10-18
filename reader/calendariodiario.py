@@ -37,6 +37,6 @@ class CalendarioDiarioReader:
         
         result = db.session.execute(stmt)
         records = result.scalars().all()
-        return records
+        return records  
 
     
