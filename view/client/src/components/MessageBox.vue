@@ -8,9 +8,9 @@
             </q-toolbar>            
             <q-separator/>
             <q-card-section class="q-pt-md q-pb-xs">
-            {{message}}
+            <span class="text-subtitle1">{{message}}</span>
             </q-card-section>            
-            <q-card-section class="q-pt-none q-mt-none" >
+            <q-card-section class="q-pt-none q-mt-none" v-if="errors.length > 0">
                 <div>
                     <ul class="q-mt-none">
                         <li v-for="item in errors" v-bind:key="item">
@@ -20,13 +20,13 @@
                 </div>
             </q-card-section>            
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
-                <div class="text-positive text-weight-bold">caller</div><div>{{caller}}</div>
+                <div class="text-subtitle1 text-red text-weight-bold">Caller</div><div>{{caller}}</div>
             </q-card-section>
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
-                <div class="text-accent text-weight-bold">URL petición</div><div>{{url}}</div>
+                <div class="text-subtitle1 text-red text-weight-bold">URL petición</div><div>{{url}}</div>
             </q-card-section>            
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">                
-                <div class="text-red text-weight-bold">Parámetros de Petición</div>
+                <div class="text-subtitle1 text-red text-weight-bold">Parámetros de Petición</div>
                 <ul class="q-mt-none">
                     <li v-for="(value, key) in request_config" v-bind:key="key">
                         {{key}}:{{value}}
@@ -34,7 +34,7 @@
                 </ul>
             </q-card-section>
             <q-card-section class="q-pt-none q-mt-none" v-if="mostrar_info_error">
-                <div class="text-red text-weight-bold">Stacktrace</div>
+                <div class="text-subtitle1 text-red text-weight-bold">Stacktrace</div>
                 <div v-for="error in stacktrace" v-bind:key="error">
                     {{error}}
                 </div>

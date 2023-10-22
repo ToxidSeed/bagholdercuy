@@ -10,7 +10,7 @@
         >
             
         </q-table>
-        <MessageBox :config="msgbox"/>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
@@ -23,8 +23,7 @@ export default {
         MessageBox
     },
     data(){
-        return {
-            msgbox:{},            
+        return {            
             data:[],
             columns:[
                 {
@@ -46,19 +45,17 @@ export default {
         }
     },
     mounted:function(){
-        this.get_rentabilidad_ult30dias()
+        this.get_rentabilidad_semanal()
     },
     methods:{
-        get_rentabilidad_ult30dias:function(){
+        get_rentabilidad_semanal:function(){
             this.$http.post(
                 "/operacion/OperacionManager/get_rentabilidad_semanal",{
-                    id_cuenta: localStorage.getItem("id_cuenta")
+                    id_cuenta: localStorage.getItem("id_cuenta"),
+                    flg_ascendente: false
                 },postconfig()
             ).then(httpresp => {
-                this.msgbox = {
-                    httpresp: httpresp,
-                    onerror:true
-                }
+                this.$refs.msgbox.http_resp_on_error(httpresp)
 
                 let records = httpresp.data.data
                 this.data = []

@@ -1,7 +1,7 @@
 <template>
     <div class="row">
         <q-toolbar class="bg-white">
-            <q-toolbar-title class="text-blue-10">Rentabilidad Mensual</q-toolbar-title>
+            <q-toolbar-title class="text-blue-10">Rentabilidad Semanal</q-toolbar-title>
             <q-btn label="filtrar" icon="filter_alt" color="blue-10" dense flat class="text-capitalize"/>                
         </q-toolbar>
         <div class="col-2">

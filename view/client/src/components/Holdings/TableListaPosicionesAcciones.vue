@@ -9,11 +9,9 @@
         dense
 
         >
-            <!--<template v-slot:top>
-                <q-btn color="blue-10" label="Buy" @click="comprar()"/>                
-                <q-btn color="red-10 " label="Sell" @click="vender()" class="q-ml-xs" />                
-                <q-btn color="green" label="Options Chain" to="/order" class="q-ml-xs" />                
-            </template>-->
+            <template v-slot:top>
+                <q-toolbar  class="text-blue-10"><q-toolbar-title>Acciones</q-toolbar-title></q-toolbar>
+            </template>
             <template v-slot:body-cell-cod_symbol="props">                
                 <q-td :props="props">                    
                     <q-menu
@@ -39,9 +37,16 @@
                     </div>
                 </q-td>                
             </template>
-            <template v-slot:body-cell-total_pl="props">
+            <template v-slot:body-cell-imp_ganancia="props">
                 <q-td :props="props">
-                    <div v-bind:class="{'text-red':props.row.total_change < 0,'text-green':props.row.total_change >= 0}">
+                    <div v-bind:class="{'text-red':props.row.imp_ganancia < 0,'text-green':props.row.imp_ganancia >= 0}">
+                        {{props.value}}
+                    </div>
+                </q-td>                
+            </template>     
+            <template v-slot:body-cell-ctd_saldo_posicion="props">
+                <q-td :props="props">
+                    <div v-bind:class="{'text-red':props.row.ctd_saldo_posicion < 0,'text-green':props.row.ctd_saldo_posicion >= 0}">
                         {{props.value}}
                     </div>
                 </q-td>                
@@ -56,7 +61,7 @@ import {postconfig} from '@/common/request.js';
 import date from 'date-and-time';
 
 export default {
-    name:"TableHoldings",
+    name:"TableListaPosicionesAcciones",
     components:{
         MessageBox
     },
@@ -66,8 +71,8 @@ export default {
                 {
                     label:"Instrumento",
                     align: 'left',
-                    field:"cod_symbol",
-                    name:"cod_symbol",
+                    field:"symbol",
+                    name:"symbol",
                     style:"width:150px;"                              
                 },{
                     label:"En cartera desde",
@@ -77,7 +82,7 @@ export default {
                     style:"width:100px;"
                 },{
                     label:"Cantidad",
-                    align:"left",
+                    align:"right",
                     field:"ctd_saldo_posicion",
                     name:"ctd_saldo_posicion",
                     style:"width:100px;"
@@ -119,7 +124,7 @@ export default {
                     name:"imp_valor_actual_posicion",
                     style:"width:100px;"                    
                 },{
-                    label:"Ganancia/Perdida",
+                    label:"Imp. rentabilidad",
                     align:"right",
                     field:"imp_ganancia",
                     name:"imp_ganancia",
@@ -157,7 +162,8 @@ export default {
             }
 
             this.$http.post(
-            'holdings/PosicionAccionesReporter/get_posiciones',{
+            'posicion/PosicionManager/get_posiciones_acciones',{
+                id_cuenta: localStorage.getItem("id_cuenta")
             },postconfig()).then(httpresp =>{                
                 this.data = []
                 this.$refs.msgbox.http_resp_on_error(httpresp)
@@ -165,7 +171,7 @@ export default {
                 var appresp = httpresp.data
                 if(appresp.success){                    
                     appresp.data.forEach(elem => {
-                        elem.ctd_saldo_posicion = elem.ctd_saldo_posicion.toFixed(2)
+                        elem.ctd_saldo_posicion = elem.ctd_saldo_posicion.toFixed(0)
                         elem.imp_posicion_incial = elem.imp_posicion_incial.toFixed(2)
                         elem.imp_min_accion = elem.imp_min_accion.toFixed(2)
                         elem.imp_max_accion = elem.imp_max_accion.toFixed(2)
@@ -180,6 +186,7 @@ export default {
                     //obtenemos las cotizaciones
                     this.get_cotizaciones()
 
+                    //
                     this.iniciar_intervalo_ejecucion()
                 }                                
             })
@@ -268,7 +275,7 @@ export default {
             this.data.forEach( async(elem) => {                                
                 let res = await this.$http.post(
                 'cotizacion/CotizacionManager/get_cotizacion',{
-                    cod_symbol:elem.cod_symbol
+                    symbol:elem.symbol
                 },
                 postconfig()
                 )

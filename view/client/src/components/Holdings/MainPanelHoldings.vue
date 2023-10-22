@@ -30,7 +30,7 @@
                     @click="WinReprocesarOrdenes.open=true"
                     ></q-btn>
                 </q-toolbar>
-                <TableHoldings
+                <TableListaPosicionesAcciones
                     v-on:vender="table_btn_vender_click"
                     v-on:comprar="table_btn_comprar_click"
                 />
@@ -50,7 +50,7 @@
     </div>
 </template>
 <script>
-import TableHoldings from '@/components/Holdings/TableHoldings.vue';
+import TableListaPosicionesAcciones from '@/components/Holdings/TableListaPosicionesAcciones.vue';
 import TablePosicionesOpcion from '@/components/Holdings/TablePosicionesOpcion.vue';
 import WinCargaMultiple from '@/components/Holdings/WinCargaMultiple.vue';
 import WinReprocesarOrdenes from '@/components/Holdings/WinReprocesarOrdenes.vue';
@@ -64,7 +64,7 @@ export default {
         //PanelTrade,
         //-->PanelResumen,
         //PanelOptionsChain,
-        TableHoldings,
+        TableListaPosicionesAcciones,
         TablePosicionesOpcion,
         WinCargaMultiple,
         WinReprocesarOrdenes,

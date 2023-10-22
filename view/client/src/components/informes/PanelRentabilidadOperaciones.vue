@@ -4,16 +4,26 @@
             <q-btn flat round dense icon="menu">
                 <q-menu>
                     <q-list dense>
-                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-mensual'}">
+                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-diaria'}">
                             <q-item-section class="text-subtitle1">
-                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">mensual</span></div>
+                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">Diaria</span></div>
                             </q-item-section>                            
-                        </q-item>     
+                        </q-item>
                         <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-semanal'}">
                             <q-item-section class="text-subtitle1">
                                 <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">Semanal</span></div>
                             </q-item-section>                            
-                        </q-item>                        
+                        </q-item>
+                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-mensual'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">Mensual</span></div>
+                            </q-item-section>                            
+                        </q-item>                             
+                        <q-item clickable v-close-popup :to="{name:'rentabilidad-operaciones-anual'}">
+                            <q-item-section class="text-subtitle1">
+                                <div>Rentabilidad de operaciones <span class="text-blue-10 text-bold">Anual</span></div>
+                            </q-item-section>                            
+                        </q-item>                             
                     </q-list>
                 </q-menu>
             </q-btn>

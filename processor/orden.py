@@ -96,21 +96,22 @@ class CargadorMultipleProcessor:
 
         with open(self.fichero) as csv_fichero:
             csv_reader = csv.reader(csv_fichero, delimiter=",")
-            for rownum, record in enumerate(csv_reader, start=1):                                
-                if rownum == 1:
-                    continue
+            for rownum, record in enumerate(csv_reader, start=1):     
+                try:                           
+                    if rownum == 1:
+                        continue
 
-                orden = self.__crear_orden(record)
+                    orden = self.__crear_orden(record)
 
-                if not self.flg_procesar_ordenes:
-                    continue
+                    if not self.flg_procesar_ordenes:
+                        continue
 
-                TransaccionProcessor().generar_desde_orden(orden=orden)                
-
-                try:
+                    TransaccionProcessor().generar_desde_orden(orden=orden)                                    
                     db.session.flush()
+                    
                 except Exception as e:
-                    raise AppException(msg="Error al procesar la orden {0}, exception: {1} ".format(str(record), str(e)))
+                    raise AppException(msg=f"Error procesando la linea {rownum}: {str(e)}")
+
 
     def __crear_orden(self, record):
         #symbol

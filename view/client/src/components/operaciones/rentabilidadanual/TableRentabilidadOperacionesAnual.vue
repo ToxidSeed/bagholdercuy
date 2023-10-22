@@ -10,7 +10,7 @@
         >
             
         </q-table>
-        <MessageBox :config="msgbox"/>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
@@ -18,20 +18,19 @@ import {postconfig} from '@/common/request.js';
 import MessageBox from '@/components/MessageBox.vue';
 
 export default {
-    name:"TableRentabilidadOperacionesMensual",
+    name:"TableRentabilidadOperacionesAnual",
     components:{
         MessageBox
     },
     data(){
-        return {
-            msgbox:{},            
+        return {            
             data:[],
             columns:[
                 {
-                    name: 'desc_mes_transaccion',                    
-                    label: 'Mes. transaccion',
+                    name: 'anyo_transaccion',                    
+                    label: 'Anyo',
                     align: 'left',                    
-                    field: "desc_mes_transaccion"
+                    field: "anyo_transaccion"
                 },
                 {
                     name: 'imp_rentabilidad',                    
@@ -46,20 +45,17 @@ export default {
         }
     },
     mounted:function(){
-        this.get_rentabilidad_mensual()
+        this.get_rentabilidad_anual()
     },
     methods:{
-        get_rentabilidad_mensual:function(){
+        get_rentabilidad_anual:function(){
             this.$http.post(
-                "/operacion/OperacionManager/get_rentabilidad_mensual",{
+                "/operacion/OperacionManager/get_rentabilidad_anual",{
                     id_cuenta: localStorage.getItem("id_cuenta"),
-                    flg_ascendente:false
+                    orden_resultados:"desc"
                 },postconfig()
             ).then(httpresp => {
-                this.msgbox = {
-                    httpresp: httpresp,
-                    onerror:true
-                }
+                this.$refs.msgbox.http_resp_on_error(httpresp)
 
                 let records = httpresp.data.data
                 this.data = []

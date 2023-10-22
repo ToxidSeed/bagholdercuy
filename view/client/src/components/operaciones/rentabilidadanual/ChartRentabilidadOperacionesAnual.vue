@@ -17,7 +17,7 @@ import * as am4charts from "@amcharts/amcharts4/charts";
 //import {postconfig} from '@/common/request.js';
 
 export default {
-    name:"ChartRentabilidadOperacionesSemanal",
+    name:"ChartRentabilidadOperacionesAnual",
     components:{
         //MessageBox
     },
@@ -38,7 +38,7 @@ export default {
             this.chart.padding(15, 15, 15, 15);            
 
             var categoryX = this.chart.xAxes.push(new am4charts.CategoryAxis());
-            categoryX.dataFields.category = "desc_semana_transaccion"
+            categoryX.dataFields.category = "anyo_transaccion"
             
             //necesario definir ValueAxis
             var valueAxis = this.chart.yAxes.push(new am4charts.ValueAxis());
@@ -46,7 +46,7 @@ export default {
             
             //series
             var series = this.chart.series.push(new am4charts.ColumnSeries());
-            series.dataFields.categoryX = "desc_semana_transaccion";
+            series.dataFields.categoryX = "anyo_transaccion";
             series.dataFields.valueY = "imp_rentabilidad";                             
             series.name = "Rentabilidad";
 
@@ -64,13 +64,13 @@ export default {
             })
 
             //
-            this.get_rentabilidad_semanal()
+            this.get_rentabilidad_anual()
         },
-        get_rentabilidad_semanal:function(){
+        get_rentabilidad_anual:function(){
             this.$http.post(
-                "/operacion/OperacionManager/get_rentabilidad_semanal",{
+                "/operacion/OperacionManager/get_rentabilidad_anual",{
                     id_cuenta: localStorage.getItem("id_cuenta"),
-                    flg_ascendente: true
+                    orden_resultados: "asc"
                 },postconfig()
             ).then(httpresp => {
                 this.msgbox = {

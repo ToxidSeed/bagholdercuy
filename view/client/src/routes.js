@@ -27,6 +27,7 @@ import PanelRentabilidadOperaciones from '@/components/informes/PanelRentabilida
 import PanelRentabilidadOperacionesDiaria from '@/components/informes/PanelRentabilidadOperacionesDiaria.vue';
 import MainRentabilidadOperacionesMensual from '@/components/operaciones/rentabilidadoperaciones/MainRentabilidadOperacionesMensual.vue';
 import MainRentabilidadOperacionesSemanal from '@/components/operaciones/rentabilidadsemanal/MainRentabilidadOperacionesSemanal.vue';
+import MainRentabilidadOperacionesAnual from '@/components/operaciones/rentabilidadanual/MainRentabilidadOperacionesAnual.vue';
 
 import PanelMantOpciones from '@/components/MantOpciones/PanelMantOpciones.vue'
 import DataLoaderOptions from '@/components/DataLoaderOptions.vue'
@@ -215,6 +216,12 @@ const routes =  [
                 name:"rentabilidad-operaciones-mensual",
                 props:true,
                 component: MainRentabilidadOperacionesMensual
+              },
+              {
+                path:"/rentabilidadoperaciones/anual",
+                name:"rentabilidad-operaciones-anual",
+                props:true,
+                component: MainRentabilidadOperacionesAnual
               },
               {
                 path:"/rentabilidadoperaciones/semanal",

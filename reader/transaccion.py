@@ -2,6 +2,7 @@ from app import db
 from model.transaccion import TransaccionModel
 from model.OptionContract import OptionContractModel
 from model.calendariodiario import CalendarioDiarioModel
+from model.StockSymbol import StockSymbol as StockSymbolModel
 
 from reader.calendariosemanal import CalendarioSemanalReader
 
@@ -189,7 +190,35 @@ class TransaccionReader:
         result = db.session.execute(stmt)
         return result.all()
 
-    def get_rentabilidad_mensual(id_cuenta, cod_mes_desde, cod_mes_hasta):
+    def get_rentabilidad_semanal(id_cuenta, cod_semana_desde, cod_semana_hasta, flg_ascendente=True):
+        stmt = db.select(
+            TransaccionModel.id_cuenta, 
+            TransaccionModel.cod_semana_transaccion,
+            func.sum(TransaccionModel.imp_rentabilidad).label("imp_rentabilidad")
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.cod_mes_transaccion >= cod_semana_desde,
+            TransaccionModel.cod_mes_transaccion <= cod_semana_hasta
+        ).group_by(
+            TransaccionModel.id_cuenta,
+            TransaccionModel.cod_semana_transaccion
+        ).order_by(
+            TransaccionModel.id_cuenta
+        )
+
+        if flg_ascendente == True:
+            stmt = stmt.order_by(
+                TransaccionModel.cod_semana_transaccion.asc()
+            )
+        else:
+            stmt = stmt.order_by(
+                TransaccionModel.cod_semana_transaccion.desc()
+            )
+
+        result = db.session.execute(stmt)
+        return result.all()
+    
+    def get_rentabilidad_mensual(id_cuenta, cod_mes_desde, cod_mes_hasta, flg_ascendente=True):
         """
         :param int fch_ini_mes: mes inicio desde el que se va a filtrar, formato yyyymm
         :param int mes_hasta: mes fin desde el que se va a filtrar, formato yyyymm
@@ -207,10 +236,45 @@ class TransaccionReader:
         ).group_by(
             TransaccionModel.id_cuenta,
             TransaccionModel.cod_mes_transaccion
+        ).order_by(
+            TransaccionModel.id_cuenta            
         )
+
+        if flg_ascendente is True:
+            stmt = stmt.order_by(TransaccionModel.cod_mes_transaccion.asc())
+        else:
+            stmt = stmt.order_by(TransaccionModel.cod_mes_transaccion.desc())
 
         result = db.session.execute(stmt)
         return result.all()
+    
+    def get_rentabilidad_anual(id_cuenta, anyo_desde, anyo_hasta, orden="asc"):
+        stmt = db.select(
+            TransaccionModel.id_cuenta,
+            extract("year",TransaccionModel.fch_transaccion).label("anyo_transaccion"),
+            func.sum(TransaccionModel.imp_rentabilidad).label("imp_rentabilidad")
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            extract("year",TransaccionModel.fch_transaccion) >= anyo_desde,
+            extract("year",TransaccionModel.fch_transaccion) <= anyo_hasta,
+        ).group_by(
+            TransaccionModel.id_cuenta,
+            extract("year",TransaccionModel.fch_transaccion)
+        )
+
+        if orden == "asc":
+            stmt = stmt.order_by(
+                extract("year",TransaccionModel.fch_transaccion).asc()
+            )
+        
+        if orden == "desc":
+            stmt = stmt.order_by(
+                extract("year",TransaccionModel.fch_transaccion).desc()
+            )
+
+        result = db.session.execute(stmt)
+        return result.all()
+        
 
     def get_rentabilidad_dias_calendarios(id_cuenta, fch_desde=None, fch_hasta=None):
 
@@ -271,94 +335,67 @@ class TransaccionReader:
         anyo_ult_transaccion = fch_ult_transaccion.year
         return TransaccionReader.get_rentabilidad_x_anyo(id_cuenta=id_cuenta, anyo=anyo_ult_transaccion)        
     
-    def get_pos_abiertas_agrup_x_opcion(usuario_id, cod_opcion=None, cod_subyacente=None, anyo_expiracion=None, mes_expiracion=None
-    , dia_expiracion=None, flg_call=True, flg_put=True):
+    def get_pos_abiertas_agrup_x_contrato_opcion(id_cuenta):
         stmt = db.select(                        
-            TransaccionModel.cod_opcion,
-            TransaccionModel.cod_tipo_activo,
+            TransaccionModel.id_cuenta,
+            TransaccionModel.id_symbol,
+            TransaccionModel.id_contrato_opcion,
+            OptionContractModel.symbol,
             func.min(TransaccionModel.fch_transaccion).label('fch_primera_posicion'),
-            func.sum(TransaccionModel.ctd_saldo_posicion).label("ctd_saldo_posicion"),
-            func.sum(TransaccionModel.ctd_saldo_posicion * TransaccionModel.imp_accion*100).label("imp_posicion_incial"),
+            func.sum(TransaccionModel.ctd_saldo_transaccion).label("ctd_saldo_posicion"),
+            func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion*100).label("imp_posicion_incial"),
             func.min(TransaccionModel.imp_accion).label('imp_min_accion'),
             func.max(TransaccionModel.imp_accion).label('imp_max_accion'),
-            func.sum(TransaccionModel.ctd_saldo_posicion*TransaccionModel.imp_accion).label('imp_posicion'),
-            (func.sum(TransaccionModel.ctd_saldo_posicion * TransaccionModel.imp_accion)/func.sum(TransaccionModel.ctd_saldo_posicion)).label("imp_prom_accion")            
+            func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion).label('imp_posicion'),
+            (func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion)/func.sum(TransaccionModel.ctd_saldo_transaccion)).label("imp_prom_accion")            
         ).select_from(
             TransaccionModel
         ).join(
             OptionContractModel, and_(
-                TransaccionModel.cod_opcion == OptionContractModel.symbol,
-                OptionContractModel.expiration_date >= date.today()
+                TransaccionModel.id_contrato_opcion == OptionContractModel.id
             )
         ).filter(
-            TransaccionModel.ctd_saldo_posicion != 0,            
-            TransaccionModel.usuario_id == usuario_id,
-            TransaccionModel.cod_tipo_activo == TIPO_ACTIVO_OPT
+            TransaccionModel.ctd_saldo_transaccion != 0,            
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.id_contrato_opcion != None
         ).group_by(
-            TransaccionModel.cod_symbol,
-            TransaccionModel.cod_opcion
+            TransaccionModel.id_cuenta,
+            TransaccionModel.id_symbol,
+            TransaccionModel.id_contrato_opcion,
+            OptionContractModel.symbol
         )
-
-        if cod_opcion is not None:
-            stmt = stmt.where(
-                TransaccionModel.cod_opcion == cod_opcion
-            )
-        if cod_subyacente is not None:
-            stmt = stmt.where(
-                OptionContractModel.underlying == cod_subyacente
-            )
-                
-        if anyo_expiracion is not None:
-            stmt = stmt.where(
-                extract("year", OptionContractModel.expiration_date) == anyo_expiracion
-            )
-        if mes_expiracion is not None:
-            stmt = stmt.where(
-                extract("month", OptionContractModel.expiration_date) == mes_expiracion
-            )
-        if dia_expiracion is not None:
-            stmt = stmt.where(
-                extract("day", OptionContractModel.expiration_date) == dia_expiracion
-            )   
-
-        tipos_opciones = []
-
-        if flg_call == True:
-            tipos_opciones.append("call")             
-        
-        if flg_put == True:
-            tipos_opciones.append("put")
-
-        if len(tipos_opciones) > 0:
-            stmt = stmt.where(
-                OptionContractModel.side.in_(tipos_opciones)
-            )
-
-
 
         result = db.session.execute(stmt)
         records = result.all()
         return records
 
-    def get_pos_abiertas_agrup_x_accion(usuario_id):
+    def get_pos_abiertas_agrup_x_accion(id_cuenta):
         stmt = db.select(                        
-            TransaccionModel.cod_symbol,
-            TransaccionModel.cod_tipo_activo,
+            TransaccionModel.id_cuenta,
+            TransaccionModel.id_symbol,
+            StockSymbolModel.symbol,
             func.min(TransaccionModel.fch_transaccion).label('fch_primera_posicion'),
-            func.sum(TransaccionModel.ctd_saldo_posicion).label("ctd_saldo_posicion"),
-            func.sum(TransaccionModel.ctd_saldo_posicion * TransaccionModel.imp_accion).label("imp_posicion_incial"),
+            func.sum(TransaccionModel.ctd_saldo_transaccion).label("ctd_saldo_posicion"),
+            func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion).label("imp_posicion_incial"),
             func.min(TransaccionModel.imp_accion).label('imp_min_accion'),
             func.max(TransaccionModel.imp_accion).label('imp_max_accion'),
-            func.sum(TransaccionModel.ctd_saldo_posicion*TransaccionModel.imp_accion).label('imp_posicion'),
-            (func.sum(TransaccionModel.imp_accion)/func.sum(TransaccionModel.ctd_saldo_posicion)).label("imp_prom_accion")            
-        ).filter(
-            TransaccionModel.ctd_saldo_posicion != 0,            
-            TransaccionModel.usuario_id == usuario_id,
-            TransaccionModel.cod_tipo_activo != TIPO_ACTIVO_OPT
+            func.sum(TransaccionModel.ctd_saldo_transaccion*TransaccionModel.imp_accion).label('imp_posicion'),
+            (func.sum(TransaccionModel.imp_accion)/func.sum(TransaccionModel.ctd_saldo_transaccion)).label("imp_prom_accion")            
+        ).select_from(
+            TransaccionModel
+        ).outerjoin(
+            StockSymbolModel, and_(
+                TransaccionModel.id_symbol == StockSymbolModel.id                
+            )
+        ).filter(            
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.ctd_saldo_transaccion != 0,
+            TransaccionModel.id_contrato_opcion == None
         ).group_by(
-            TransaccionModel.cod_symbol,
-            TransaccionModel.cod_opcion
-        )
+            TransaccionModel.id_cuenta,
+            TransaccionModel.id_symbol,
+            StockSymbolModel.symbol
+        )        
 
         result = db.session.execute(stmt)
         records = result.all()

@@ -1,9 +1,12 @@
 from re import S
 from app import app, db
+
 from common.AppException import AppException
 from common.Formatter import Formatter
 from common.Response import Response
 from common.Error import Error
+
+from domain.semana import CodigoSemana
 
 #from model.StockTrade import StockTrade
 from model.StockSymbol import StockSymbol
@@ -17,7 +20,6 @@ from reader.calendariodiario import CalendarioDiarioReader
 from parser.operacion import OperacionParser
 
 from datetime import datetime, date, time, timedelta
-
 from sqlalchemy import desc
 from sqlalchemy.orm import join
 import sqlalchemy.sql.functions as func
@@ -49,7 +51,8 @@ class OperacionManager(Base):
         id_cuenta = args.get("id_cuenta")
         cod_mes_desde = args.get("cod_mes_desde")
         cod_mes_hasta = args.get("cod_mes_hasta")
-        records = TransaccionReader.get_rentabilidad_mensual(id_cuenta=id_cuenta,cod_mes_desde=cod_mes_desde, cod_mes_hasta=cod_mes_hasta )
+        flg_ascendente = args.get("flg_ascendente")
+        records = TransaccionReader.get_rentabilidad_mensual(id_cuenta=id_cuenta,cod_mes_desde=cod_mes_desde, cod_mes_hasta=cod_mes_hasta, flg_ascendente=flg_ascendente )
         
         records_output = []
         for elemento in records:
@@ -59,9 +62,32 @@ class OperacionManager(Base):
             records_output.append(elemento)            
 
         return Response().from_raw_data(records_output)
+    
+    def get_rentabilidad_anual(self, args={}):
+        args = OperacionParser.parse_args_get_rentabilidad_anual(args=args)
+        id_cuenta = args.get("id_cuenta")
+        anyo_desde = args.get("num_anyo_desde")
+        anyo_hasta = args.get("num_anyo_hasta")
+        orden_resultado = args.get("orden_resultado")
+        records = TransaccionReader.get_rentabilidad_anual(id_cuenta=id_cuenta, anyo_desde=anyo_desde, anyo_hasta=anyo_hasta , orden=orden_resultado)
+        return Response().from_raw_data(records)
 
     def get_rentabilidad_semanal(self, args={}):
-        pass
+        args = OperacionParser.parse_args_get_rentabilidad_semanal(args=args)
+        id_cuenta = args.get("id_cuenta")
+        cod_semana_desde = args.get("cod_semana_desde")
+        cod_semana_hasta = args.get("cod_semana_hasta")
+        flg_ascendente = args.get("flg_ascendente")
+        records = TransaccionReader.get_rentabilidad_semanal(id_cuenta=id_cuenta, cod_semana_desde=cod_semana_desde, cod_semana_hasta=cod_semana_hasta, flg_ascendente=flg_ascendente)
+
+        output = []
+        for element in records:
+            desc_semana_transaccion = CodigoSemana(element.cod_semana_transaccion).format()
+            element = Formatter().format(element)
+            element["desc_semana_transaccion"] = desc_semana_transaccion
+            output.append(element)
+
+        return Response().from_raw_data(output)            
 
     def get_rentabilidad_ult30dias(self, args={}): 
         id_cuenta = args.get("id_cuenta")               

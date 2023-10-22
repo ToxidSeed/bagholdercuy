@@ -7,8 +7,8 @@ class CotizacionManager(Base):
         self.api = iexcloud()
 
     def get_cotizacion(self, args={}):
-        cod_symbol = args.get('cod_symbol')
-        quote = self.api.get_quote({"symbol":cod_symbol})
+        symbol = args.get('symbol')
+        quote = self.api.get_quote({"symbol":symbol})
 
         cotizacion = {
             "cod_symbol": quote.get("symbol"),

@@ -70,7 +70,8 @@ export default {
         get_rentabilidad_mensual:function(){
             this.$http.post(
                 "/operacion/OperacionManager/get_rentabilidad_mensual",{
-                    id_cuenta: localStorage.getItem("id_cuenta")
+                    id_cuenta: localStorage.getItem("id_cuenta"),
+                    flg_ascendente:true
                 },postconfig()
             ).then(httpresp => {
                 this.msgbox = {

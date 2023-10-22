@@ -12,7 +12,7 @@
         >        
             <template v-slot:top>
                 <q-toolbar  class="text-blue-10">
-                    <q-btn flat round dense icon="menu"></q-btn>
+                    <!--<q-btn flat round dense icon="menu"></q-btn>-->
                     <q-toolbar-title>Opciones</q-toolbar-title>
                     <q-btn  flat dense icon="filter_alt" outline class="text-capitalize" @click="WinFiltrosPosicionOpciones.open = true">Filtros</q-btn>
                 </q-toolbar>
@@ -51,16 +51,16 @@ export default {
             },
             columns:[
                 {                    
-                    label:"Opcion",
+                    label:"Contrato",
                     align:"left",
-                    field:"cod_opcion",
-                    name:"cod_opcion",
+                    field:"symbol",
+                    name:"symbol",
                     style:"width:100px;"      
                 },{                    
                     label:"Subyacente",
                     align:"left",
-                    field:"cod_subyacente",
-                    name:"cod_subyacente",
+                    field:"cod_symbol_subyacente",
+                    name:"cod_symbol_subyacente",
                     style:"width:100px;"      
                 },{                    
                     label:"Expiracion",
@@ -80,15 +80,15 @@ export default {
                     align:"right",
                     field:"imp_ejercicio",
                     name:"imp_ejercicio",                    
-                    style:"width:20px;"     ,
+                    style:"width:20px;"     /*,
                     classes: row => (
                         (row.cod_tipo_opcion == 'C' && row.ctd_saldo_posicion >= 0 && row.imp_valor_subyacente >= row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'C' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente < row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion >= 0 && row.imp_valor_subyacente < row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente > row.imp_ejercicio)
                         ?'bg-green text-white':'bg-red text-white'
-                    ) 
-                },{
+                    ) */
+                }/*,{
                     label:"Rentable en ejercicio",
                     align:"right",
                     field:"imp_rentable",
@@ -102,7 +102,7 @@ export default {
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente > row.imp_rentable)
                         ?'bg-green text-white':'bg-red text-white'
                     ) 
-                },{
+                }*/,{
                     label:"En cartera desde",
                     align:"right",
                     field:"fch_primera_posicion",
@@ -139,14 +139,14 @@ export default {
                     field:"imp_max_accion",
                     name:"imp_max_accion",
                     style:"width:100px;"      
-                },{
+                }/*,{
                     label:"Valor subyacente",
                     align:"right",
                     field:"imp_valor_subyacente",
                     name:"imp_valor_subyacente",       
                     headerStyle:"white-space:normal !important;",             
                     style:"width:50px;"                          
-                },{
+                }*/,{
                     label:"",
                     align:"left",
                     field:"",
@@ -193,14 +193,8 @@ export default {
         },
         get_posiciones_opcion:function(){            
             this.$http.post(
-                '/holdings/PosicionOpcionReporter/get_posiciones_opcion',{
-                    cod_subyacente: this.filtros.cod_subyacente,
-                    cod_opcion: this.filtros.cod_opcion,
-                    anyo_expiracion: this.filtros.anyo_expiracion,
-                    mes_expiracion: this.filtros.mes_expiracion,
-                    dia_expiracion: this.filtros.dia_expiracion,
-                    flg_call: this.filtros.flg_call,
-                    flg_put: this.filtros.flg_put
+                '/posicion/PosicionManager/get_posiciones_contratos_opciones',{
+                    id_cuenta:localStorage.getItem("id_cuenta")
                 },
                 postconfig()
             ).then(httpresp => {
@@ -214,7 +208,7 @@ export default {
                 for (let elem of appdata.data){                    
                     this.cotizacion[elem.cod_subyacente] = null                    
                     let row = Object.assign({}, elem);
-                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYYMMDD","DD/MM/YYYY")
+                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
                     row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
                     row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
                     row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
@@ -222,18 +216,18 @@ export default {
                     row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
                     row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
                     row["imp_valor_subyacente"] = 0                    
-                    row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
-                    row["imp_ganancia_perdida"] = elem["imp_ganancia_perdida"].toFixed(2)         
+                    /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
+                    row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
                     if (elem.cod_tipo_opcion == "C"){
                         row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
                     }else{
                         row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }
+                    }*/
                     
                     this.data.push(row) 
                 }
                     
-                this.iniciar_intervalo_cotizaciones()
+                //this.iniciar_intervalo_cotizaciones()
             })
         },
         iniciar_intervalo_cotizaciones: function(){            

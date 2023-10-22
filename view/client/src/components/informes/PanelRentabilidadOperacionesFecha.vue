@@ -6,7 +6,7 @@
             </q-card-section>
             <q-separator/>
             <q-card-section class="text-h3 text-center">
-                {{ item.imp_rentabilidad }}
+                <span :class="item.imp_rentabilidad>0?'text-green':'text-red'">{{ item.imp_rentabilidad }}</span>
             </q-card-section>
         </q-card>
         <MessageBox :config="msgbox"/>

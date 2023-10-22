@@ -51,6 +51,17 @@ export default {
             series.name = "Rentabilidad";
             series.columns.template.fillOpacity = .8;
 
+            series.columns.template.adapter.add("fill", function(fill, target){
+                console.log(fill)
+                //console.log(target)
+                //console.log(target.dataItem)                
+                if (target.dataItem.values.valueY.value < 0){
+                    return "red"
+                }else{
+                    return "green"                    
+                }
+            })
+
             //
             this.get_rentabilidad_ult30dias()
         },
