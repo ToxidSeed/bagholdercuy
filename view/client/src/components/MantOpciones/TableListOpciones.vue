@@ -131,6 +131,7 @@ export default {
     },
     watch:{
         infiltros:function(newval){
+            this.id_contrato_opcion = newval.id_contrato_opcion
             this.cod_symbol = newval.cod_symbol
             this.sentidos = newval.sentidos
             this.fch_expiracion = newval.fch_expiracion
@@ -153,6 +154,7 @@ export default {
             this.$http.post(
                 '/OpcionesContrato/OpcionesContratoManager/get_contratos',
                 {
+                    id_contrato_opcion: this.id_contrato_opcion,
                     cod_symbol: this.cod_symbol,
                     sentidos: this.sentidos,
                     fch_expiracion: this.fch_expiracion,

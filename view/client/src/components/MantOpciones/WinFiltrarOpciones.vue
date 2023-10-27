@@ -6,8 +6,11 @@
             </q-toolbar>
             <q-separator/>
             <q-card-section>
+                <div >
+                    <q-input color="blue-10" stack-label v-model="id_contrato_opcion" label="Identificador contrato opcion"/>
+                </div>
                 <SelectSymbol
-                    v-on:select-symbol="sel_symbol"
+                    v-on:select-symbol="sel_symbol" :label="'Subyacente'"
                 />
                 <div class="q-pt-xs text-blue-10 text-h6">{{ cod_symbol }}</div>
                 <div>{{ nom_symbol }}</div>
@@ -61,6 +64,7 @@ export default {
     data(){
         return {
             open:this.value,
+            id_contrato_opcion:"",
             selection:[],
             cod_symbol:"",
             fch_expiracion:"",
@@ -82,6 +86,7 @@ export default {
 
             this.$emit(
                 'btn-aceptar-click',{
+                    id_contrato_opcion: this.id_contrato_opcion,
                     cod_symbol:this.cod_symbol,
                     sentidos:this.selection,
                     fch_expiracion:fch_exp_iso_format,

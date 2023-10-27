@@ -16,11 +16,16 @@ class OpcionReader:
         return record
 
     
-    def get_contratos(cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=0, limit=0):
+    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=0, limit=0):
 
         stmt = db.select(
             OptionContractModel
         )
+
+        if id_contrato_opcion is not None:
+            stmt = stmt.where(
+                OptionContractModel.id == id_contrato_opcion
+            )
 
         if cod_subyacente is not None:
             stmt = stmt.where(

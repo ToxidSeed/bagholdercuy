@@ -193,7 +193,16 @@ class OpcionesContratoManager(Base):
         return Response().from_raw_data(result)
 
     def get_contratos(self, args={}):
+        id_contrato_opcion = args.get("id_contrato_opcion")
+        if id_contrato_opcion in [None,""]:
+            id_contrato_opcion = None
+        else:
+            id_contrato_opcion = int(id_contrato_opcion)
+
         cod_subyacente = args.get("cod_symbol")
+        if cod_subyacente in [None,""]:
+            cod_subyacente = None
+
         sentidos = args.get("sentidos")
         fch_expiracion = args.get("fch_expiracion")
         imp_ejercicio = args.get("imp_ejercicio")
@@ -217,7 +226,7 @@ class OpcionesContratoManager(Base):
         else:
             imp_ejercicio = 0
             
-        results = OpcionReader.get_contratos(cod_subyacente=cod_subyacente, sentidos=sentidos, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio, limit=200)
+        results = OpcionReader.get_contratos(id_contrato_opcion=id_contrato_opcion, cod_subyacente=cod_subyacente, sentidos=sentidos, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio, limit=200)
 
         return Response().from_raw_data(results)
 
