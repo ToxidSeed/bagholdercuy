@@ -29,7 +29,7 @@
 import MessageBox from '@/components/MessageBox.vue';
 import WinFiltrosPosicionOpciones from '@/components/Holdings/WinFiltrosPosicionOpciones.vue';
 import {postconfig} from '@/common/request.js';
-import date from 'date-and-time'
+//import date from 'date-and-time'
 
 export default {
     name:"TablePosicionesOpcion",
@@ -59,8 +59,8 @@ export default {
                 },{                    
                     label:"Subyacente",
                     align:"left",
-                    field:"cod_symbol_subyacente",
-                    name:"cod_symbol_subyacente",
+                    field:"cod_subyacente",
+                    name:"cod_subyacente",
                     style:"width:100px;"      
                 },{                    
                     label:"Expiracion",
@@ -111,8 +111,8 @@ export default {
                 },{
                     label:"Cantidad",
                     align:"right",
-                    field:"ctd_saldo_posicion",
-                    name:"ctd_saldo_posicion",
+                    field:"cantidad",
+                    name:"cantidad",
                     style:"width:60px;"      
                 },{
                     label:"imp. valor inicial posicion",
@@ -124,20 +124,20 @@ export default {
                 },{
                     label:"Imp. valor minimo",
                     align:"right",
-                    field:"imp_min_accion",
-                    name:"imp_min_accion",
+                    field:"imp_minimo",
+                    name:"imp_minimo",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor promedio",
                     align:"right",
-                    field:"imp_prom_accion",
-                    name:"imp_prom_accion",
+                    field:"imp_promedio",
+                    name:"imp_promedio",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor maximo",
                     align:"right",
-                    field:"imp_max_accion",
-                    name:"imp_max_accion",
+                    field:"imp_maximo",
+                    name:"imp_maximo",
                     style:"width:100px;"      
                 }/*,{
                     label:"Valor subyacente",
@@ -205,7 +205,11 @@ export default {
                 let appdata = httpresp.data
                 this.data = []
 
-                for (let elem of appdata.data){                    
+                for (let elem of appdata.data){    
+                    elem.imp_minimo = elem.imp_minimo.toFixed(2)                
+                    elem.imp_maximo = elem.imp_maximo.toFixed(2)
+                    elem.imp_promedio = elem.imp_promedio.toFixed(2)
+                    /*
                     this.cotizacion[elem.cod_subyacente] = null                    
                     let row = Object.assign({}, elem);
                     row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
@@ -215,7 +219,9 @@ export default {
                     row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
                     row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
                     row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
-                    row["imp_valor_subyacente"] = 0                    
+                    row["imp_valor_subyacente"] = 0
+                    */
+
                     /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
                     row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
                     if (elem.cod_tipo_opcion == "C"){
@@ -224,7 +230,7 @@ export default {
                         row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
                     }*/
                     
-                    this.data.push(row) 
+                    this.data.push(elem) 
                 }
                     
                 //this.iniciar_intervalo_cotizaciones()

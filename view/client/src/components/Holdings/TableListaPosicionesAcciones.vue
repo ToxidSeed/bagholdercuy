@@ -83,8 +83,8 @@ export default {
                 },{
                     label:"Cantidad",
                     align:"right",
-                    field:"ctd_saldo_posicion",
-                    name:"ctd_saldo_posicion",
+                    field:"cantidad",
+                    name:"cantidad",
                     style:"width:100px;"
                 },
                 {
@@ -96,20 +96,20 @@ export default {
                 },{
                     label:"Imp. valor minimo ",
                     align:"right",
-                    field:"imp_min_accion",
-                    name:"imp_min_accion",
+                    field:"imp_minimo",
+                    name:"imp_minimo",
                     style:"width:100px;"                    
                 },{
                     label:"Imp. valor promedio",
                     align:"right",
-                    field:"imp_prom_accion",
-                    name:"imp_prom_accion",
+                    field:"imp_promedio",
+                    name:"imp_promedio",
                     style:"width:100px;"
                 },{
                     label:"Imp. valor maximo",
                     align:"right",
-                    field:"imp_max_accion",
-                    name:"imp_max_accion",
+                    field:"imp_maximo",
+                    name:"imp_maximo",
                     style:"width:100px;"    
                 },{
                     label:"Imp. valor actual x accion",
@@ -171,23 +171,26 @@ export default {
                 var appresp = httpresp.data
                 if(appresp.success){                    
                     appresp.data.forEach(elem => {
-                        elem.ctd_saldo_posicion = elem.ctd_saldo_posicion.toFixed(0)
-                        elem.imp_posicion_incial = elem.imp_posicion_incial.toFixed(2)
-                        elem.imp_min_accion = elem.imp_min_accion.toFixed(2)
+                        elem.cantidad = elem.cantidad.toFixed(0)
+                        elem.imp_minimo = elem.imp_minimo.toFixed(2)
+                        elem.imp_promedio = elem.imp_promedio.toFixed(2)
+                        elem.imp_maximo = elem.imp_maximo.toFixed(2)
+                        //elem.imp_posicion_incial = elem.imp_posicion_incial.toFixed(2)
+                        /*elem.imp_min_accion = elem.imp_min_accion.toFixed(2)
                         elem.imp_max_accion = elem.imp_max_accion.toFixed(2)
                         elem.imp_posicion = elem.imp_posicion.toFixed(2)
                         elem.imp_prom_accion = elem.imp_prom_accion.toFixed(2)
                         elem.imp_valor_actual = "0.00"
                         elem.imp_valor_actual_posicion = "0.00"
-                        elem.imp_ganancia = "0.00"
+                        elem.imp_ganancia = "0.00"*/
                         this.data.push(elem)
                     })                    
                     
                     //obtenemos las cotizaciones
-                    this.get_cotizaciones()
+                    //this.get_cotizaciones()
 
                     //
-                    this.iniciar_intervalo_ejecucion()
+                    //this.iniciar_intervalo_ejecucion()
                 }                                
             })
         },

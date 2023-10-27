@@ -35,7 +35,7 @@ class OperacionProcessor:
             id_tipo_operacion = orden.cod_tipo_orden,
             id_symbol = orden.id_symbol,
             id_contrato_opcion = orden.id_contrato_opcion,
-            cantidad = ctd_nueva_posicion,
+            cantidad = ctd_operacion,
             ctd_posicion = ctd_nueva_posicion,
             dsc_glosa_operacion = dsc_glosa_operacion,
             fch_registro = date.today()
