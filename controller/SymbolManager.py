@@ -15,6 +15,8 @@ from common.Response import Response
 from common.api.iexcloud import iexcloud
 import common.logger as logger
 
+from parser.symbol import SymbolFinderParser
+
 from processor.symbol import SymbolRemover
 from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
 
@@ -100,8 +102,9 @@ class SymbolManager:
 class SymbolFinder(Base):    
 
     def get_list(self, args={}):
-        records = SymbolReader.get_list()
-        return Response().from_raw_data(data)
+        args = SymbolFinderParser.parse_args_get_list(args=args)
+        records = SymbolReader.get_list(args=args)
+        return Response().from_raw_data(records)
 
     def buscar_por_texto(self, args={}):
         

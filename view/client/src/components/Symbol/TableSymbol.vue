@@ -7,14 +7,26 @@
             dense     
             :pagination="pagination"       
         >
-            
+        <template v-slot:top>
+                <q-toolbar  class="text-blue-10">
+                    <!--<q-btn flat round dense icon="menu"></q-btn>-->
+                    <q-toolbar-title>Ticker symbols</q-toolbar-title>
+                    <q-btn  flat dense icon="filter_alt" outline class="text-capitalize" @click="WinFiltrarSymbols.open = true">Filtros</q-btn>
+                </q-toolbar>
+                <!--<div class="text-h6">Opciones</div>-->
+        </template>   
         </q-table>
+        <WinFiltrarSymbols v-model="WinFiltrarSymbols.open" v-on:btn-aceptar-click="get_list"/>
     </div>
 </template>
 <script>
 import {get_postconfig} from '@/common/request.js'
+import WinFiltrarSymbols from '@/components/Symbol/WinFiltrarSymbols.vue';
 export default {
     name:"TableSymbol",
+    components:{
+        WinFiltrarSymbols
+    },
     data: () => {
         return {
             pagination:{
@@ -23,8 +35,8 @@ export default {
             columns:[{
                 label:"ID",
                 aling:"left",
-                field:"symbol_id",
-                name:"symbol_id"
+                field:"id",
+                name:"id"
             },{
                 label:"Symbol",
                 align:"left",
@@ -51,16 +63,19 @@ export default {
                 name:"asset_type",
                 field:"asset_type"
             }],
-            data:[]
+            data:[],
+            WinFiltrarSymbols:{
+                open:false
+            }
         }
     },
     mounted:function(){        
-        this.get_list()
+        this.get_list({})
     },
-    methods:{
-        get_list:function(){
+    methods:{        
+        get_list:function(filtros){
             this.$http.post('SymbolManager/SymbolFinder/get_list',{
-
+                id_symbol: filtros.id_symbol
             },get_postconfig()).then(httpresponsse => {
                 var appdata = httpresponsse.data
                 this.data = appdata.data

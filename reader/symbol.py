@@ -1,5 +1,6 @@
 from model.StockSymbol import StockSymbol
 from common.AppException import AppException
+from config.general import DEFAULT_LIMIT
 
 from app import db
 
@@ -25,15 +26,26 @@ class SymbolReader:
                 StockSymbol.id == id_symbol
             )
 
-            result = db.session.execute(stmt)
-            return result.scalars().first()
+        result = db.session.execute(stmt)
+        return result.scalars().first()
 
-    def get_list():
+    def get_list(args={}):
+        id_symbol = args["id_symbol"]
+
         stmt = db.select(
             StockSymbol
-        ).order_by(
+        )
+        
+        if id_symbol is not None:
+            stmt = stmt.where(
+                StockSymbol.id == id_symbol
+            )
+
+        stmt = stmt.order_by(
             StockSymbol.symbol.asc()
         )
+
+        stmt = stmt.limit(DEFAULT_LIMIT)
 
         results = db.session.execute(stmt)
         return results.scalars().all()

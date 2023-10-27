@@ -149,6 +149,7 @@ class CargadorMultipleProcessor:
 
         #le indicamos a la operacion, la posicion  y la operacion previa
         operacion = processor.procesar_orden(orden=orden, posicion=posicion_tmp, operacion=operacion, num_orden_operacion=num_orden_operacion)
+        db.session.flush()
 
         #Indicamos el cambio en la posicion temporal
         self.__guardar_cambio_temporal_posicion(posicion=posicion_tmp, operacion=operacion)
