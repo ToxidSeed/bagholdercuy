@@ -31,3 +31,5 @@ class PosicionManager(Base):
             records_output.append(posicion_dict)
 
         return Response().from_raw_data(records_output)
+    
+    
