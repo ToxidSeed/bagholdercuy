@@ -1,5 +1,8 @@
 from common.AppException import AppException
 from reader.transaccion import TransaccionReader
+from reader.opcion import OpcionReader
+from reader.symbol import SymbolReader
+
 from datetime import date, timedelta, datetime
 from domain.semana import CodigoSemana
 from domain.mes import CodigoMes
@@ -8,6 +11,59 @@ from domain.anyo import Anyo
 from parser.base import BaseParser
 
 class OperacionParser:
+    def get_operaciones(args={}):  
+        newargs = {}
+        id_cuenta = args.get("id_cuenta")
+        if id_cuenta in [None,""]:
+            raise AppException(msg="No se ha enviado id_cuenta")
+        
+        newargs["id_cuenta"] = id_cuenta
+        
+        orden_resultados = args.get("orden_resultados")
+        if orden_resultados in [None,""]:
+            newargs["orden_resultados"] = orden_resultados
+        else:
+            if orden_resultados not in ["asc","desc"]:
+                raise AppException(msg="el orden de los resultados solo puedes ser asc o desc")
+            
+            newargs["orden_resultados"] = orden_resultados
+
+        #cod_symbol
+        cod_symbol = args.get("cod_symbol")
+        id_symbol = OperacionParser.__parse_cod_symbol_a_id(cod_symbol=cod_symbol)        
+        newargs["id_symbol"] = id_symbol                    
+
+        #flg_opciones
+        flg_opciones = BaseParser.parse_boolean(args.get("flg_opciones"))
+        newargs["flg_opciones"] = flg_opciones
+
+        #cod_contrato_opcion
+        cod_contrato_opcion = args.get("cod_contrato_opcion")
+        id_contrato_opcion = OperacionParser.__parse_cod_contrato_opcion_a_id(cod_contrato_opcion=cod_contrato_opcion)
+        newargs["id_contrato_opcion"] = id_contrato_opcion
+
+        return newargs
+    
+    def __parse_cod_symbol_a_id(cod_symbol):
+        if cod_symbol in [None,""]:
+            return None
+        
+        symbol = SymbolReader.get(cod_symbol=cod_symbol)
+        if symbol is None:
+            raise AppException(msg=f"El ticker con codigo {cod_symbol} no existe")
+        
+        return symbol.id
+    
+    def __parse_cod_contrato_opcion_a_id(cod_contrato_opcion):
+        if cod_contrato_opcion in [None,""]:
+            return None
+
+        contrato = OpcionReader.get(cod_contrato_opcion=cod_contrato_opcion)
+        if contrato is None:
+            raise AppException(msg=f"el contrato {cod_contrato_opcion} no existe o no se encuentra registrado")
+        
+        return contrato.id
+
     def parse_args_get_rentabilidad_diaria(args={}):
         num_dias_profundidad_default = 31
         num_dias_profundidad_max = 365

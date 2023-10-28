@@ -13,10 +13,10 @@
         >
             <template v-slot:top>
                 <div>
-                    <div class="text-h5 col text-blue-10">Historial de Operaciones</div>                                    
+                    <div class="text-h5 col text-blue-10">Operaciones</div>                                    
                 </div>
                 <q-toolbar class="q-pa-none">
-                    <q-btn class="text-capitalize" flat dense color="blue-10" icon="filter_alt">Filtrar</q-btn>
+                    <q-btn class="text-capitalize" flat dense color="blue-10" icon="filter_alt" @click="WinFiltrarOperaciones.open=true">Filtrar</q-btn>
                 </q-toolbar>
             </template>
             <!--<template v-slot:header="props">
@@ -84,15 +84,19 @@
             </template>-->
         </q-table>  
         <MessageBox ref="msgbox"/>      
+        <WinFiltrarOperaciones v-model="WinFiltrarOperaciones.open" v-on:btn-aceptar-click="filtrar"/>
     </div>
 </template>
 <script>
 import MessageBox from '@/components/MessageBox.vue';
 import {get_postconfig} from '@/common/request.js';
+import WinFiltrarOperaciones from "@/components/operaciones/WinFiltrarOperaciones.vue"
+
 export default {
-    name:"TableHistorialOperaciones",
+    name:"TableListaOperaciones",
     components:{
-        MessageBox     
+        MessageBox,
+        WinFiltrarOperaciones 
     },
     data: () => {
         return {
@@ -100,20 +104,14 @@ export default {
                 {
                     label:"Fch. Operacion",
                     align:"left",
-                    field:"fch_transaccion",
-                    name:"fch_transaccion",
+                    field:"fch_operacion",
+                    name:"fch_operacion",
                     style:"width:100px;"
                 },{
-                    label:"orden",
+                    label:"N. orden operacion",
                     align:"left",
                     field:"num_orden",
                     name:"num_orden",
-                    style:"width:50px;"
-                },{
-                    label:"N. Operacion",
-                    field:"num_posicion",
-                    align:"left",
-                    name:"num_posicion",
                     style:"width:50px;"
                 },{
                     label:"Symbol",
@@ -122,28 +120,16 @@ export default {
                     name:"cod_symbol",
                     style:"width:100px;"
                 },{
-                    label:"Opcion",
+                    label:"Contrato de opcion",
                     align:"left",
-                    field:"cod_opcion",
-                    name:"cod_opcion",
-                    style:"width:100px;"
-                },{
-                    label:"Operacion",
-                    align:"left",
-                    field:"tipo_oper_nombre",
-                    name:"tipo_oper_nombre",
+                    field:"cod_contrato_opcion",
+                    name:"cod_contrato_opcion",
                     style:"width:100px;"
                 },{
                     label:"Cantidad",
                     align:"right",
                     field:"cantidad",
                     name:"cantidad",
-                    style:"width:100px;"
-                },{
-                    label:"Saldo",
-                    align:"right",
-                    field:"ctd_saldo_posicion",
-                    name:"ctd_saldo_posicion",
                     style:"width:100px;"
                 },{
                     label:"Imp. Accion",
@@ -154,22 +140,22 @@ export default {
                 },{
                     label:"Imp. Operacion",
                     align:"right",
-                    field:"imp_posicion",
-                    name:"imp_posicion",
+                    field:"imp_operacion",
+                    name:"imp_operacion",
                     style:"width:100px;"
                 },{
-                    label:"G/P",
+                    label:"Ctd. Posicion",
                     align:"right",
-                    field:"imp_gp_realizada",
-                    name:"imp_gp_realizada",
+                    field:"ctd_posicion",
+                    name:"ctd_posicion",
                     style:"width:100px;"
-                }/*,{
-                    label:"orden_id",
+                },{
+                    label:"Glosa",
                     align:"left",
-                    field:"order_id",
-                    name:"order_id",
+                    field:"dsc_glosa_operacion",
+                    name:"dsc_glosa_operacion",
                     style:"width:100px;"
-                }*/,{
+                },{
                     label:"",
                     align:"",
                     field:"",
@@ -180,33 +166,44 @@ export default {
             selected:[],
             pagination:{
                 rowsPerPage:25
+            },
+            WinFiltrarOperaciones:{
+                open:false
             }
         }
     },
     mounted:function(){
-        this.obt_list()
+        this.filtrar({})
     },
     methods:{
-        obt_list:function(){
+        filtrar:function(filtros){                                    
             this.$http.post(
                 'operacion/OperacionManager/get_operaciones',{
+                    id_cuenta: localStorage.getItem("id_cuenta"),
+                    orden_resultados:"desc",
+                    cod_symbol:filtros.cod_symbol,
+                    flg_opciones: filtros.flg_opciones,
+                    cod_contrato_opcion: filtros.cod_contrato_opcion
                 },get_postconfig()).then(httpresp => {
+                    this.$refs.msgbox.http_resp_on_error(httpresp)
+
                     this.data = []
                     var appresp = httpresp.data
                     for (let elem of appresp.data){
                         this.data.push(elem)
                     }
-                    console.log(appresp)
-                    //console.log(appresp)                    
-                    /*appresp.data.forEach(element => {
+                    
+                    /*
+                    appresp.data.forEach(element => {
                         let eltmp = element
                         eltmp.imp_operacion = element.imp_operacion.toFixed(2)
                         eltmp.realized_gl = element.realized_gl.toFixed(2)                        
                         eltmp.imp_accion = element.imp_accion.toFixed(2)                        
                         eltmp.saldo = element.saldo.toFixed(2)                        
                         this.data.push(eltmp)
-                    })*/
-                    //this.data = appresp.data
+                    })
+                    */
+                    this.data = appresp.data
                 })
         },        
         ins_row:function(rclicked_row){

@@ -13,7 +13,7 @@ import MainPanelFunds from './components/Funds/MainPanelFunds.vue'
 import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCurrencyExchange.vue';
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
 import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
-import PanelHistorialOperaciones from '@/components/Holdings/PanelHistorialOperaciones.vue';
+import MainOperacion from '@/components/operaciones/MainOperacion.vue';
 import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
@@ -139,7 +139,7 @@ const routes =  [
 
             ]
           },{
-            path:'/historial_operaciones', component:PanelHistorialOperaciones
+            path:'/operacion', component:MainOperacion
           },{
             path:'/currency', component:MainPanelCurrency
           },{

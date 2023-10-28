@@ -29,8 +29,8 @@
                     </q-item>
                     <q-item 
                     active-class="my-menu-link"
-                    to="/historial_operaciones">
-                        <q-item-section>Historial Operaciones</q-item-section>
+                    to="/operacion">
+                        <q-item-section>Operaciones</q-item-section>
                     </q-item>
                     <q-item 
                     active-class="my-menu-link"

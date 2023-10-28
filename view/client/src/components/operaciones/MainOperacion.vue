@@ -1,6 +1,6 @@
 <template>
     <div>
-        <TableHistorialOperaciones
+        <TableListaOperaciones
             v-on:ins_row="ins_row_handler"
         />
         <q-dialog v-model="panelTradeVisible">
@@ -13,13 +13,13 @@
     </div>
 </template>
 <script>
-import TableHistorialOperaciones from '@/components/Holdings/TableHistorialOperaciones.vue'
+import TableListaOperaciones from '@/components/operaciones/TableListaOperaciones.vue'
 import PanelTrade from '@/components/PanelTrade.vue';
 
 export default {
-    name:"PanelHistorialOperaciones",
+    name:"MainOperacion",
     components:{
-        TableHistorialOperaciones,
+        TableListaOperaciones,
         PanelTrade
     },
     data: () => {

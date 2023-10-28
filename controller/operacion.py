@@ -16,6 +16,7 @@ from model.TipoModel import TipoModel
 
 from reader.transaccion import TransaccionReader
 from reader.calendariodiario import CalendarioDiarioReader
+from reader.operacion import OperacionReader
 
 from parser.operacion import OperacionParser
 
@@ -34,8 +35,14 @@ class OperacionManager(Base):
     def _get_handler(self, asset_type="equity"):
         return self.handlers[asset_type]
 
-    def get_operaciones(self, args={}):
-        records = PosicionReader.get_operaciones(self.usuario.id)
+    def get_operaciones(self, args={}):        
+        args = OperacionParser.get_operaciones(args=args)
+        id_cuenta = args.get("id_cuenta")
+        orden_resultados = args.get("orden_resultados")
+        id_symbol = args.get("id_symbol")
+        flg_opciones = args.get("flg_opciones")
+        id_contrato_opcion = args.get("id_contrato_opcion")
+        records = OperacionReader.get_operaciones(id_cuenta, id_symbol=id_symbol, flg_opciones=flg_opciones, id_contrato_opcion=id_contrato_opcion, orden_resultados=orden_resultados)
         return Response().from_raw_data(records)
 
     def get_rentabilidad_diaria(self, args={}):        
