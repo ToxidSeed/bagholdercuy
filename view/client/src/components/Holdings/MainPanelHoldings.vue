@@ -23,12 +23,17 @@
                 <q-toolbar>
                     <q-btn color="blue-10" label="Buy" @click="comprar()"/>                
                     <q-btn color="red-10 " label="Sell" @click="vender()" class="q-ml-xs" />                
-                    <!--<q-btn color="green" label="Options Chain" to="/order" class="q-ml-xs" />-->
+                    <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="transfer_within_a_station"
+                    >Transferir posiciones</q-btn>
+                    <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="calculate"
+                    >Calcular Rentabilidad</q-btn>
+                    <!--
                     <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="upload"
-                    @click="WinCargaMultiple.open=true">Carga multiple</q-btn>
+                    @click="WinCargaMultiple.open=true">Carga multiple</q-btn>                    
                     <q-btn flat outline color="blue-10" label="Reprocesar Ordenes" class="q-ml-xs text-capitalize" icon="sync"
                     @click="WinReprocesarOrdenes.open=true"
                     ></q-btn>
+                    -->
                 </q-toolbar>
                 <TableListaPosicionesAcciones
                     v-on:vender="table_btn_vender_click"

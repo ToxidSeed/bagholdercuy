@@ -32,11 +32,16 @@
                     to="/operacion">
                         <q-item-section>Operaciones</q-item-section>
                     </q-item>
+                    <!--<q-item 
+                    active-class="my-menu-link"
+                    to="/orden">
+                        <q-item-section>Ordenes</q-item-section>
+                    </q-item>
                     <q-item 
                     active-class="my-menu-link"
-                    to="/historial_ordenes">
-                        <q-item-section>Historial Ordenes</q-item-section>
-                    </q-item>
+                    to="/orden">
+                        <q-item-section>Transferencias</q-item-section>
+                    </q-item>-->
                     <q-item 
                     active-class="my-menu-link"
                     to="/reorganizarorden">
@@ -142,7 +147,7 @@
 </template>
 <script>
 export default {
-    name:"OptionsList",
+    name:"MenuPrincipal",
     data:()=>{
         return {
 

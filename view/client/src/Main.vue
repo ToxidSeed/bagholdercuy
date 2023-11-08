@@ -17,7 +17,7 @@
     </q-header>
 
     <q-drawer show-if-above v-model="left"  bordered>
-      <OptionsList/>
+      <MenuPrincipal/>
     </q-drawer>
 
     <q-page-container>
@@ -29,14 +29,14 @@
 </template>
 
 <script>
-import OptionsList from './components/OptionsList.vue'
+import MenuPrincipal from './components/MenuPrincipal.vue'
 //import PanelSimulationDataEntry from './components/PanelSimulationDataEntry.vue'
 
 export default {
   name: 'Main',
 
   components: {
-    OptionsList
+    MenuPrincipal
     //GrowthPotential
     //PanelSimulationDataEntry
   },

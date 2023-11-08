@@ -11,10 +11,7 @@
             :pagination="pagination"  
             separator="vertical"                      
         >
-            <template v-slot:top>
-                <div>
-                    <div class="text-h5 col text-blue-10">Operaciones</div>                                    
-                </div>
+            <template v-slot:top>                
                 <q-toolbar class="q-pa-none">
                     <q-btn class="text-capitalize" flat dense color="blue-10" icon="filter_alt" @click="WinFiltrarOperaciones.open=true">Filtrar</q-btn>
                 </q-toolbar>

@@ -14,7 +14,7 @@ import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCu
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
 import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
 import MainOperacion from '@/components/operaciones/MainOperacion.vue';
-import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue';
+import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
@@ -155,7 +155,7 @@ const routes =  [
           },{
             path:"/symbols", component:MainPanelSymbol
           },{
-            path:"/historial_ordenes", component:MainPanelHistorialOrdenes
+            path:"/orden", component:MainOrden
           },{
             path:"/opciones", component:MainMantOpciones,
             name:"opciones",
@@ -200,7 +200,9 @@ const routes =  [
               }
             ]
           },{
-            path:"/variaciondiaria",component:PanelVariacionDiaria
+            path:"/variaciondiaria",
+            component:PanelVariacionDiaria,
+            name:"variacion-diaria"
           },{
             path:"/rentabilidadoperaciones", component:PanelRentabilidadOperaciones,
             name:"rentabilidad-operaciones",

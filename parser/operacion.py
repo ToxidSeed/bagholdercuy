@@ -1,14 +1,17 @@
 from common.AppException import AppException
 from reader.transaccion import TransaccionReader
-from reader.opcion import OpcionReader
+from reader.contratoopcion import ContratoOpcionReader
 from reader.symbol import SymbolReader
-
-from datetime import date, timedelta, datetime
+from model.cuenta import CuentaModel
+from model.operacion import OperacionModel
 from domain.semana import CodigoSemana
 from domain.mes import CodigoMes
 from domain.anyo import Anyo
-
 from parser.base import BaseParser
+from config.general import RUTA_TMP_DIR
+
+import os, uuid
+from datetime import date, timedelta, datetime
 
 class OperacionParser:
     def get_operaciones(args={}):  
@@ -185,3 +188,76 @@ class OperacionParser:
         args["flg_ascendente"] = flg_ascendente
 
         return args
+
+
+class CargadorTransferenciasParser:
+    def __init__(self):
+        self.contrato_opcion_reader = ContratoOpcionReader(buffer=True)
+        self.symbol_reader = SymbolReader(buffer=True)
+
+    @staticmethod
+    def parse_args_procesar(args={}):
+        newargs = {}
+        form = args.get("form")
+        id_cuenta = form.get("id_cuenta")
+        id_cuenta = BaseParser.parse_int(id_cuenta)
+        newargs["id_cuenta"] = id_cuenta
+
+        fichero_enviado = args.get("files").get("fichero")
+        ruta_fichero_enviado = CargadorTransferenciasParser.__guardar_fichero_temporal(id_cuenta=id_cuenta, fichero_enviado=fichero_enviado)
+        newargs["ruta_fichero_transferencia"] = ruta_fichero_enviado
+        return newargs
+
+    @staticmethod
+    def __guardar_fichero_temporal(id_cuenta, fichero_enviado):                        
+        fichero_nombre = f"fichero-transf-enviado-tmp-{id_cuenta}-{uuid.uuid1()}.csv"
+        ruta_fichero = os.path.join(RUTA_TMP_DIR, fichero_nombre)
+        fichero_enviado.save(ruta_fichero)
+        return ruta_fichero
+        
+    def parse_linea_transf_a_operacion(self, registro, cuenta_origen:CuentaModel):
+        cod_asset_class = registro[3]
+        if cod_asset_class == "CASH":
+            return None
+
+        operacion = OperacionModel()
+        cod_cuenta = registro[0]
+        if cod_cuenta != cuenta_origen.cod_cuenta:
+            raise AppException(msg="La cuenta de origen no coincide con la cuenta seleccionada")
+        
+        operacion.id_cuenta = cuenta_origen.id_cuenta
+
+        #symbol, hay que determinar si es un contrato de opciones o acciones
+        cod_symbol = registro[1]
+        cod_subyacente = registro[2]        
+
+        if cod_subyacente is not None:
+            #obtenemos el identificador del subyacente
+            instrumento = self.symbol_reader.get(cod_symbol=cod_subyacente)
+            if instrumento is None:
+                raise AppException(msg=f"No se encuentra el subyacente {cod_subyacente}")
+            
+            operacion.id_symbol = instrumento.id
+
+            contrato_opcion = self.contrato_opcion_reader.get(cod_contrato_opcion=cod_symbol)
+            if contrato_opcion is None:
+                raise AppException(msg=f"El contrato de opciones {cod_symbol} no existe")
+            
+            operacion.id_contrato_opcion = contrato_opcion.id            
+        else:
+            instrumento = self.symbol_reader.get(cod_symbol=cod_symbol)
+            if instrumento is None:
+                raise AppException(msg=f"No se encuentra el subyacente {cod_subyacente}")
+            
+            operacion.id_symbol = instrumento.id                
+                
+        operacion.fch_operacion = datetime.strptime(registro[4],"%Y%m%d").date()
+        operacion.ctd_posicion = int(registro[5])
+        return operacion        
+
+
+
+
+
+
+

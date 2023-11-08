@@ -1,6 +1,6 @@
 <template>
     <div>
-        <TableHistorialOrdenes
+        <TableListaOrdenes
             v-on:ins-orden="ins_orden"
         />
         <q-dialog v-model="panelTradeVisible">
@@ -30,14 +30,14 @@
     </div>
 </template>
 <script>
-import TableHistorialOrdenes from '@/components/Ordenes/TableHistorialOrdenes.vue'
+import TableListaOrdenes from '@/components/Ordenes/TableListaOrdenes.vue'
 import PanelTrade from '@/components/PanelTrade.vue';
 import PanelOptionsChain from '@/components/PanelOptionsChain.vue'
 
 export default {
-    name:"MainPanelHistorialOrdenes",
+    name:"MainOrden",
     components:{
-        TableHistorialOrdenes,
+        TableListaOrdenes,
         PanelTrade,
         PanelOptionsChain
     },

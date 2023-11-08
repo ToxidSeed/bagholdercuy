@@ -24,27 +24,24 @@ class OrdenReader:
         else:
             return 0
 
-    def get_ordenes(usuario_id, cod_symbol=None, cod_opcion=None):
+    def get_ordenes(id_cuenta, id_symbol=None, id_contrato_opcion=None):
         stmt = db.session.query(
-            OrdenModel
+            OrdenModel.id_orden,
+            OrdenModel.id_operacion,
+            OrdenModel.id_cuenta,
+            OrdenModel.num_orden,
+            OrdenModel.cod_tipo_orden,
+            OrdenModel.id_symbol,
+            OrdenModel.id_contrato_opcion,
+            OrdenModel.cod_tipo_activo,
+            OrdenModel.cantidad,
+            OrdenModel.imp_accion,
+            OrdenModel.fch_registro,
+            OrdenModel.fch_orden
+        ).join(
+            
         ).where(
-            OrdenModel.usuario_id == usuario_id
-        )
-
-        if cod_symbol is not None:
-            stmt = stmt.where(
-                OrdenModel.cod_symbol == cod_symbol
-            )
-
-        if cod_opcion is not None:
-            stmt = stmt.where(
-                OrdenModel.cod_opcion == cod_opcion
-            )
-
-        stmt = stmt.order_by(
-            OrdenModel.fch_orden,
-            OrdenModel.cod_opcion,
-            OrdenModel.cod_symbol
+            OrdenModel.id_cuenta == id_cuenta
         )
 
         result = db.session.execute(stmt)

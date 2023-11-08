@@ -10,6 +10,7 @@ from datetime import date
 
 class SerieDiariaReader:
     
+    @staticmethod
     def get_series_desde_fecha(symbol, fch_serie=None):
         
         stmt = db.select(
@@ -39,6 +40,7 @@ class SerieDiariaReader:
         record = result.scalars().first()
         return record
 
+    @staticmethod
     def get_serie(symbol, fch_serie):
         stmt = db.select(
             SerieDiariaModel
@@ -132,6 +134,25 @@ class SerieDiariaReader:
         result = db.session.execute(stmt)
         return result.first()
 
+    def get_serie_anterior_a_fecha(self, cod_symbol, fch_serie, incluir_fecha=True):
+        query = db.select(
+            func.max(SerieDiariaModel.fch_serie).label("fch_serie")
+        ).where(
+            SerieDiariaModel.symbol == cod_symbol            
+        )
+
+        if incluir_fecha is True:
+            query = query.where(SerieDiariaModel.fch_serie <= fch_serie)
+        else:
+            query = query.where(SerieDiariaModel.fch_serie < fch_serie)
+
+        result = db.session.execute(query)
+        record_aux = result.first()
+
+        if record_aux is None:
+            return None
+        
+        return SerieDiariaReader.get_serie(symbol=cod_symbol, fch_serie=record_aux.fch_serie)
 
     def get_series_entre_fechas(symbol, fch_inicio:date, fch_fin:date):
         stmt = """

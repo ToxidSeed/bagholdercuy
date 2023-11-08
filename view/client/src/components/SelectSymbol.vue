@@ -14,7 +14,19 @@
         :options="symbol_list"                            
         clearable      
         :readonly="readonly"              
-    />
+    >
+    <template v-slot:option="scope">
+        <q-item        
+        v-bind="scope.itemProps"
+        v-on="scope.itemEvents"
+        >
+            <q-item-section>
+                <span class="text-blue-10 text-bold">{{scope.opt.value}}</span><span>{{ scope.opt.label }}</span>
+            </q-item-section>
+        </q-item>
+    </template>
+    </q-select>
+    
 </template>
 <script>
 import {headers} from '@/common/common.js'

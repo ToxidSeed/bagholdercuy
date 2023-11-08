@@ -17,13 +17,15 @@ class VariacionDiariaLoader:
 
     def __eliminar(self):
         if self.fch_ini_serie is None:
-            self.__eliminar_todo()
+            self.__eliminar_todo(cod_symbol=self.symbol)
         else:
             self.__eliminar_desde_fecha()
 
-    def __eliminar_todo(self):
+    def __eliminar_todo(self, cod_symbol):
         stmt = db.delete(
             VariacionDiariaModel
+        ).where(
+            VariacionDiariaModel.symbol == cod_symbol
         )
 
         db.session.execute(stmt)

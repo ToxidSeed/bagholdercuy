@@ -20,6 +20,9 @@ from processor.seriesemanal import SerieSemanalLoader
 from reader.stockdata import StockDataReader
 from reader.seriemensual import SerieMensualReader
 from reader.seriediaria import SerieDiariaReader
+from reader.variaciondiaria import VariacionDiariaReader
+
+from parser.serie import SimulacionVariacionParser
 
 from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL,SERIES_PROF_CARGA_ULT3MESES,SERIES_PROF_CARGA_ULT6MESES
 from config.negocio import SERIES_PROF_CARGA_ULT1ANYO
@@ -90,10 +93,10 @@ class SerieManagerLoader(Base):
 
         if profundidad == SERIES_PROF_CARGA_MESACTUAL:
             mes = str(fecha_actual.month).zfill(2)
-            fecha = date.fromisoformat("{0}-{1}-{2}".format(fch_actual.year,mes,'01'))
+            fecha = date.fromisoformat("{0}-{1}-{2}".format(fecha_actual.year,mes,'01'))
 
         if profundidad == SERIES_PROF_CARGA_YTD:
-            fecha = date.fromisoformat("{0}-{1}-{2}".format(fch_actual.year,'01','01')) 
+            fecha = date.fromisoformat("{0}-{1}-{2}".format(fecha_actual.year,'01','01')) 
 
         if profundidad == SERIES_PROF_CARGA_ULT3MESES:
             fecha = fecha_actual + relativedelta(months=-3)
@@ -269,5 +272,51 @@ class SerieMensualLoader():
         
         result = db.session.execute(stmt)
             
-    
+class SimulacionVariacionManager(Base):
+    def __init__(self):
+        self.serie_diaria_reader = SerieDiariaReader()
+        self.variacion_diaria_reader = VariacionDiariaReader()
+
+    def simular(self, args={}):
+        args = SimulacionVariacionParser().parse_args_simular(args=args)
+        cod_symbol = args.get("cod_symbol")
+        fch_final = args.get("fch_final")
+        fechas_iniciales = args.get("fechas_iniciales")
+
+        serie_final = self.serie_diaria_reader.get_serie(symbol=cod_symbol, fch_serie=fch_final)
+
+        variaciones = []
+
+        for fch_inicial, value in fechas_iniciales.values():            
+            
+            serie_inicial = self.serie_diaria_reader.get_serie_anterior_a_fecha(cod_symbol=cod_symbol, fch_serie=fch_inicial)
+            valores_limites = self.variacion_diaria_reader.get_valores_limites_entre_fechas(cod_symbol=cod_symbol, fch_inicial=fch_inicial, fch_final=fch_final)
+
+            try:
+
+                imp_apertura = serie_inicial.imp_apertura if serie_inicial is not None else 0
+
+                record = {
+                    "cod_symbol":cod_symbol,
+                    "fch_final":fch_final.isoformat(),
+                    "num_dias_profundidad":f"-{value}",
+                    "fch_inicial":fch_inicial,
+                    "imp_apertura":imp_apertura,
+                    "imp_cierre":serie_final.imp_cierre,
+                    "imp_maximo":valores_limites.imp_maximo,
+                    "imp_minimo":valores_limites.imp_minimo,
+                    "imp_var_apertura_cierre": float(serie_final.imp_cierre) - float(serie_inicial.imp_apertura),
+                    "imp_var_minimo_maximo": float(valores_limites.imp_maximo) - float(valores_limites.imp_minimo),
+                    "imp_var_aper_maximo": float(valores_limites.imp_maximo) - float(serie_inicial.imp_apertura),
+                    "imp_var_cierre_maximo": float(valores_limites.imp_maximo) - float(serie_final.imp_cierre) ,
+                    "imp_var_aper_minimo": float(valores_limites.imp_minimo) - float(serie_inicial.imp_apertura),
+                    "imp_var_cierre_minimo": float(valores_limites.imp_minimo) - float(serie_final.imp_cierre)
+                } 
+
+                variaciones.append(record)
+            except Exception as e:
+                raise AppException(msg=f"Error al procesar la fecha {fch_inicial}, dias: {str(value)}, error={str(e)}")            
+
+        return Response().from_raw_data(variaciones)
+
 

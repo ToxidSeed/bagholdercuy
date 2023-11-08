@@ -15,6 +15,18 @@ class PosicionReader:
         record = result.scalars().first()
         return record
     
+    def get_posicion(self, id_cuenta, id_symbol, id_contrato_opcion=None):
+        query = db.select(
+            PosicionModel
+        ).where(
+            PosicionModel.id_cuenta == id_cuenta,
+            PosicionModel.id_symbol == id_symbol,
+            PosicionModel.id_contrato_opcion == id_contrato_opcion
+        )
+
+        result = db.session.execute(query)
+        return result.scalars().first()
+    
     def get_pos_abiertas_agrup_x_accion(id_cuenta):
         stmt = db.select(
             PosicionModel.id_posicion,

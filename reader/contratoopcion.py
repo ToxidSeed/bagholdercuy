@@ -1,10 +1,19 @@
 from app import db
 from model.OptionContract import OptionContractModel
 
-class OpcionReader:
+class ContratoOpcionReader:
+    def __init__(self, buffer=False):
+        self.__buffer = buffer
+        self.__memoria = {}
 
-    def get(cod_contrato_opcion):
+    def get(self, cod_contrato_opcion):
+        if self.__buffer is True:
+            record = self.__memoria.get(cod_contrato_opcion)
+        
+            if record is not None:
+                return record
 
+        #consultamos eb base de datos
         stmt = db.select(
             OptionContractModel
         ).where(
@@ -13,6 +22,9 @@ class OpcionReader:
 
         result = db.session.execute(stmt)
         record = result.scalars().first()
+
+        if record is not None and self.__buffer is True:
+            self.__memoria[record.cod_symbol] = record   
         return record
 
     

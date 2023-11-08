@@ -1,24 +1,28 @@
 from re import S
 from app import app, db
+from config.negocio import TIPO_OPERACION_TRANSFERENCIA
 
 from common.AppException import AppException
 from common.Formatter import Formatter
 from common.Response import Response
 from common.Error import Error
 
-from domain.semana import CodigoSemana
 
 #from model.StockTrade import StockTrade
+from domain.semana import CodigoSemana
 from model.StockSymbol import StockSymbol
 from model.orden import OrdenModel
 from model.transaccion import TransaccionModel
 from model.TipoModel import TipoModel
-
 from reader.transaccion import TransaccionReader
 from reader.calendariodiario import CalendarioDiarioReader
 from reader.operacion import OperacionReader
-
+from reader.contratoopcion import ContratoOpcionReader
+from reader.cuenta import CuentaReader
 from parser.operacion import OperacionParser
+from parser.operacion import CargadorTransferenciasParser
+from processor.operacion import OperacionProcessor, RegistroMultipleOperacionesManager
+from processor.posicion import PosicionProcessor as PosicionManager
 
 from datetime import datetime, date, time, timedelta
 from sqlalchemy import desc
@@ -26,6 +30,7 @@ from sqlalchemy.orm import join
 import sqlalchemy.sql.functions as func
 from sqlalchemy.sql import extract
 from controller.base import Base
+import csv
 
 
 class OperacionManager(Base):        
@@ -183,37 +188,82 @@ class EliminadorEntryPoint:
     def _collect(self, args={}):
         return args["del_opers"]    
         
-
-class BuscadorOperaciones:
+class CargadorTransferenciasController:
     def __init__(self):
-        pass
+        self.parser = CargadorTransferenciasParser()
+        self.cuenta_origen = None
+        self.registro_multiple_operaciones_manager = RegistroMultipleOperacionesManager()
+        self.posicion_manager = PosicionManager()
 
-    def obt_historial_oper(self, args={}):
+    def procesar(self, args={}):
         try:
-            query = db.session.query(
-                StockTrade.id,
-                StockTrade.num_operacion,
-                StockTrade.order_id,
-                StockTrade.num_orden,
-                StockTrade.asset_type,
-                StockTrade.symbol,
-                StockTrade.trade_type,
-                TipoModel.tipo_nombre.label("tipo_oper_nombre"),
-                StockTrade.cantidad,
-                StockTrade.saldo,
-                StockTrade.trade_date,
-                StockTrade.trade_month,
-                StockTrade.imp_accion,
-                StockTrade.imp_operacion,
-                StockTrade.imp_accion_origen,
-                StockTrade.realized_gl                
-            ).outerjoin(TipoModel, StockTrade.trade_type == TipoModel.tipo_id)
-            query = query.order_by(StockTrade.trade_date.desc(),StockTrade.symbol.asc(),StockTrade.num_operacion.desc())
-            data = query.all()
-            return Response(raw_data=data).get()
+            args = self.parser.parse_args_procesar(args=args)
+            id_cuenta = args.get("id_cuenta")
+            self.cuenta_origen = CuentaReader.get(id_cuenta=id_cuenta)
+            ruta_fichero_transferencia = args.get("ruta_fichero_transferencia")
+
+            #
+            self.__procesar_fichero_transferencias(ruta_fichero_transferencias=ruta_fichero_transferencia)
+            db.session.commit()
+            return Response(msg="Se ha procesado correctamente el fichero de transferencias")
         except Exception as e:
+            db.session.rollback()
             return Response().from_exception(e)
+        
+    def __procesar_fichero_transferencias(self, ruta_fichero_transferencias):
+        with open(ruta_fichero_transferencias, "r") as fichero:
+            csv_reader = csv.reader(fichero, delimiter=",")
+            self.__procesar_lineas_fichero(csv_reader=csv_reader)
+
+    def __procesar_lineas_fichero(self, csv_reader):
+        #saltamos la cabecera
+        next(csv_reader)
+
+        #procesamos el contenido
+        for rownum, linea in enumerate(csv_reader, start=1):
+            try:
+                self.__procesar_linea(linea_fichero=linea)    
+            except Exception as e:
+                raise AppException(msg=f"Error al procesar la linea {rownum}, exception: {str(e)}")
+        
+        #enviamos los cambios a la db
+        db.session.flush()
+        #guardamos los cambios en las posiciones
+        self.__guardar_cambios_posiciones(posiciones=self.registro_multiple_operaciones_manager.get_posiciones_afectadas())
+
+    def __procesar_linea(self, linea_fichero):
+        #guardando la operacion
+        operacion = self.parser.parse_linea_transf_a_operacion(linea_fichero, cuenta_origen=self.cuenta_origen)
+        operacion.id_tipo_operacion = TIPO_OPERACION_TRANSFERENCIA
+        
+        #registrar la salida de las posiciones
+        operacion = self.registro_multiple_operaciones_manager.registrar(operacion=operacion)                
+    
+    def __guardar_cambios_posiciones(self, posiciones=[]):
+        for posicion, primera_operacion, ultima_operacion, operacion_anterior_alteracion_posicion, flg_reproceso in posiciones:
+            if posicion is None:
+                self.posicion_manager.crear_posicion_de_operacion(operacion=ultima_operacion)
+                continue
+            
+            if flg_reproceso is False:
+                self.posicion_manager.cambiar_posicion(posicion=posicion, operacion=ultima_operacion)
+                continue
+
+            if flg_reproceso is True:
+                pass
+
+            
+
+
+            
+
+
+
+    
+
+    
 
 
 
 
+    

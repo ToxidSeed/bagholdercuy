@@ -7,12 +7,14 @@ from sqlalchemy.sql.functions import func
 
 class OperacionReader:
 
-    def get_max_num_orden(id_cuenta, fch_operacion):
+    def get_max_num_orden(id_cuenta, fch_operacion, id_symbol, id_contrato_opcion=None):
         query = db.select(
-            func.max(OperacionModel.num_orden).label('num_orden')
+            func.max(OperacionModel.num_orden_operacion).label('num_orden_operacion')
         ).where(
             OperacionModel.id_cuenta == id_cuenta,
-            OperacionModel.fch_operacion == fch_operacion
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion
         )
 
         result = db.session.execute(query)
@@ -21,11 +23,12 @@ class OperacionReader:
         if record is None:
             return 0
         
-        if record.num_orden is None:
+        if record.num_orden_operacion is None:
             return 0
         
-        return record.num_orden
+        return record.num_orden_operacion
 
+    @staticmethod
     def get(id_operacion):
         query = db.select(
             OperacionModel
@@ -36,6 +39,72 @@ class OperacionReader:
         result = db.session.execute(query)
         record = result.scalars().first()
         return record
+        
+    def get_operacion_key_2(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, num_operacion):
+        query = db.select(
+            OperacionModel
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion,
+            OperacionModel.num_orden_operacion == num_operacion
+        )
+
+        result = db.session.execute(query)
+        return result.scalars().first()
+    
+    def get_ultima_operacion_x_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion):
+        max_num_operacion = self.get_max_num_operacion(id_cuenta, id_symbol, id_contrato_opcion, fch_operacion)
+        operacion = self.get_operacion_key_2(id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, max_num_operacion)
+        return operacion
+    
+    def get_ultima_operacion_hasta_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, incluir_fecha=True):
+        query = db.select(
+            func.max(OperacionModel.fch_operacion).label("fch_operacion"),
+            func.max(OperacionModel.num_operacion).label("num_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion
+        )
+
+        if incluir_fecha is True:
+            query = query.where(
+                OperacionModel.fch_operacion <= fch_operacion
+            )
+        else:
+            query = query.where(
+                OperacionModel.fch_operacion < fch_operacion
+            )
+
+        result = db.session.execute(query)
+        record_aux = result.first()
+        if record_aux is None:
+            return None
+
+        operacion = self.get_operacion_key_2(id_cuenta, id_symbol, id_contrato_opcion, record_aux.fch_operacion, record_aux.num_operacion)
+        return operacion    
+    
+    def get_max_num_operacion(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion):
+        query = db.select(
+            func.max(OperacionModel.num_operacion).label("max_num_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion,
+        )
+
+        result = db.session.execute(query)                
+        record = result.scalars().first()
+        if record is None:
+            return None
+        
+        if record.max_num_operacion is None:
+            return None
+        
+        return record.max_num_operacion
 
     def get_ultima_fecha_operacion(id_cuenta, id_symbol, id_contrato_opcion):
         query = db.select(
@@ -115,3 +184,39 @@ class OperacionReader:
         records = result.all()
         return records
 
+    def get_operaciones_x_posicion_desde_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, incluir_fecha=True):
+        query = db.select(
+            OperacionModel
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion            
+        )
+
+        if incluir_fecha is True:
+            query = query.where(
+                OperacionModel.fch_operacion >= fch_operacion
+            )
+        else:
+            query = query.where(
+                OperacionModel.fch_operacion > fch_operacion
+            )
+        
+        result = db.session.execute(query)
+        return result.scalars().all()
+
+    def get_siguiente_fch_operacion(self, id_cuenta, fch_operacion):
+        query = db.select(
+            OperacionModel.id_cuenta,
+            func.min(OperacionModel.fch_operacion).label("fch_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion > fch_operacion
+        ).group_by(
+            OperacionModel.id_cuenta,
+            OperacionModel.fch_operacion
+        )
+
+        result = db.session.execute(query)
+        record = result.first()
+        return record

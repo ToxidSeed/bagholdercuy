@@ -8,7 +8,11 @@
                 <q-btn flat round dense icon="search" @click="win_filtros_variacion_diaria.open=true"></q-btn>                          
             </q-toolbar>
         </q-card>
-        <TableVariacionDiaria :indata="data"/>
+        <TableVariacionDiaria :indata="data"
+        :symbol_value="symbol_value"
+        :symbol_nombre="symbol_text"
+        :loading="loading"
+        />
         <WinFiltrosVariacionDiaria
         v-model="win_filtros_variacion_diaria.open"
         v-on:btn-aceptar-click="filtrar"
@@ -29,6 +33,17 @@ export default {
         WinFiltrosVariacionDiaria,
         MessageBox
     },
+    watch:{
+        $route:function(newval){            
+            if ( Object.keys(newval.query).length > 0){
+                this.symbol_value = newval.query.cod_symbol
+                this.get_variacion_diaria()
+            }
+        }
+    },
+    mounted:function(){
+        this.init()
+    },    
     data(){
         return {
             symbol_value:"",
@@ -37,11 +52,19 @@ export default {
             win_filtros_variacion_diaria:{
                 open:false
             },
-            msgbox:{}
+            msgbox:{},
+            loading:false
         }
     },
     methods:{
-        get_variacion_diaria:function(){            
+        init:function(){
+            if (Object.keys(this.$route.query).length > 0){
+                this.symbol_value = this.$route.query.cod_symbol
+                this.get_variacion_diaria()
+            }                        
+        },
+        get_variacion_diaria:function(){     
+            this.loading = true       
             this.$http.post(
                 '/reportes/VariacionDiariaBuilder/build',{
                     symbol:this.symbol_value
@@ -72,15 +95,17 @@ export default {
                     element.pct_variacion_maximo = element.pct_variacion_maximo.toFixed(2)
                     element.pct_variacion_minimo = element.pct_variacion_minimo.toFixed(2)                    
                     this.data.push(element)
-                })
-                console.log(this.data)
+                })                
+            }).finally( () => {
+                this.loading = false
             })
             
         },
-        filtrar:function(filtros){
+        filtrar:function(filtros){            
             this.symbol_value = filtros.symbol_value
-            this.symbol_text = filtros.symbol_text   
-            this.get_variacion_diaria()         
+            this.symbol_text = filtros.symbol_text 
+            console.log(this.symbol_text)              
+            this.$router.push({name:"variacion-diaria", query:{cod_symbol:filtros.symbol_value}})
         }
     }
 }

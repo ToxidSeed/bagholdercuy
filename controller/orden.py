@@ -297,8 +297,7 @@ class Eliminador(OrdenManager):
 
 
 class Buscador(OrdenManager):    
-
-    def get_historial_ordenes(self, args={}):
+    def get_ordenes(self, args={}):
         results = OrdenReader.get_ordenes(self.usuario.id)
         return Response().from_raw_data(results)
 

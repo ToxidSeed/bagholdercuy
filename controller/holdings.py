@@ -187,7 +187,7 @@ class iexcloud_bridge:
             "avg_buy_price" : avg_buy_price,
             "daily_change" : daily_change,
             "total_change":total_change,
-            "total_pl":total_pl,
+        "total_pl":total_pl,
             "last_price_date": close_date,
             "last_price":imp_close,
             "market_value":market_value
