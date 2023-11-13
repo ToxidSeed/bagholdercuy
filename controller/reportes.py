@@ -93,7 +93,7 @@ class VariacionDiariaBuilder(Base):
             VariacionDiariaModel.symbol == symbol
         ).order_by(
             VariacionDiariaModel.fch_serie.desc()
-        )
+        ).limit(365)
 
         result = db.session.execute(stmt)
         records = result.all()

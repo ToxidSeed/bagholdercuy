@@ -43,6 +43,10 @@ import PanelReorganizarFondos from '@/components/Funds/PanelReorganizarFondos.vu
 import PanelCurrencyExchangeRate from '@/components/CurrencyExchange/PanelCurrencyExchangeRate.vue';
 import PanelCurrencyExchangeRateLoader from '@/components/CurrencyExchange/PanelCurrencyExchangeRateLoader.vue'
 
+//
+import PanelSimulacionRentabilidad from "@/components/simulacion-rentabilidad/PanelSimulacionRentabilidad";
+import PanelWatchlist from "@/components/watchlist/PanelWatchlist.vue"
+
 import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
 import PanelEvolucionSemanal from '@/components/informes/PanelEvolucionSemanal.vue'
 
@@ -139,6 +143,8 @@ const routes =  [
 
             ]
           },{
+            path:'/watchlist', component:PanelWatchlist
+          },{
             path:'/operacion', component:MainOperacion
           },{
             path:'/currency', component:MainPanelCurrency
@@ -203,6 +209,10 @@ const routes =  [
             path:"/variaciondiaria",
             component:PanelVariacionDiaria,
             name:"variacion-diaria"
+          },{
+            path:"/simulacion-rentabilidad",
+            name:"simulacion-rentabilidad",
+            component: PanelSimulacionRentabilidad
           },{
             path:"/rentabilidadoperaciones", component:PanelRentabilidadOperaciones,
             name:"rentabilidad-operaciones",

@@ -14,7 +14,8 @@ from common.AppException import AppException
 from common.Response import Response
 from common.api.iexcloud import iexcloud
 import common.logger as logger
-
+from sqlalchemy.sql import func
+from sqlalchemy import or_
 from parser.symbol import SymbolFinderParser
 
 from processor.symbol import SymbolRemover
@@ -108,11 +109,10 @@ class SymbolFinder(Base):
 
     def buscar_por_texto(self, args={}):
         
-        texto = "%{0}%".format(args["texto"])
+        texto = "{0}%".format(args["texto"])
         data = SymbolModel.query.filter(
-            SymbolModel.symbol.ilike(texto)
-        ).order_by(
-            SymbolModel.fec_audit.desc(),
+            or_(SymbolModel.symbol.ilike(texto), SymbolModel.name.ilike(texto))            
+        ).order_by(            
             SymbolModel.symbol.asc()
         ).limit(100).all()
         return Response().from_raw_data(data)

@@ -23,12 +23,13 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-
+    <MessageBox/>
   </q-layout>  
    <!-- <PanelSimulationDataEntry/>-->   
 </template>
 
 <script>
+import MessageBox from '@/components/MessageBox.vue'
 import MenuPrincipal from './components/MenuPrincipal.vue'
 //import PanelSimulationDataEntry from './components/PanelSimulationDataEntry.vue'
 
@@ -36,7 +37,8 @@ export default {
   name: 'Main',
 
   components: {
-    MenuPrincipal
+    MenuPrincipal,
+    MessageBox
     //GrowthPotential
     //PanelSimulationDataEntry
   },

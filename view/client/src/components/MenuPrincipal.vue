@@ -11,11 +11,11 @@
             :to="{name:'currencyexchange',params:{inFirstPanelSize:0}}">
                 <q-item-section>Currency exchange rates</q-item-section>
             </q-item>            
-            <q-item 
+            <!--<q-item 
             active-class="my-menu-link"
             to="/">
                 <q-item-section>Simulation</q-item-section>
-            </q-item>
+            </q-item>-->
             <q-expansion-item
                 expand-separator            
                 label="Holdings"                
@@ -48,6 +48,25 @@
                         <q-item-section>Reorganizar</q-item-section>
                     </q-item>
                 </q-list>
+            </q-expansion-item>
+            <q-item 
+            active-class="my-menu-link"
+            to="/watchlist">
+                <q-item-section>Watchlist</q-item-section>
+            </q-item>
+            <q-expansion-item
+                expand-separator
+                label="Simulacion"
+                dense
+                default-opened
+            >
+                <q-item
+                active-class="my-menu-link"
+                to="/simulacion-rentabilidad"
+                dense
+                >
+                    <q-item-section>Rentabilidad</q-item-section>
+                </q-item>
             </q-expansion-item>
             <q-item 
             active-class="my-menu-link"

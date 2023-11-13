@@ -154,6 +154,21 @@ class SerieDiariaReader:
         
         return SerieDiariaReader.get_serie(symbol=cod_symbol, fch_serie=record_aux.fch_serie)
 
+    def get_lista_fechas_maximas_x_symbol(self, cod_symbol=None):
+        query = db.select(
+            SerieDiariaModel.symbol,
+            func.max(SerieDiariaModel.fch_serie).label("fch_serie")
+        ).group_by(
+            SerieDiariaModel.symbol
+        )
+
+        if cod_symbol is not None:
+            query = query.where(SerieDiariaModel.symbol == cod_symbol)                    
+
+        result = db.session.execute(query)
+        records = result.all()
+        return records
+
     def get_series_entre_fechas(symbol, fch_inicio:date, fch_fin:date):
         stmt = """
         select

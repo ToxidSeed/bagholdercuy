@@ -9,48 +9,51 @@
             dense
         >
         </q-table>
+        <MessageBox ref="msgbox"/>
     </div>
 </template>
 <script>
+import {postconfig} from '@/common/request.js'
+import MessageBox from '@/components/MessageBox.vue'
+
 export default {
     name:"TableResumenSerie",
+    components:{
+        MessageBox
+    },
     data: () => {
         return {
             columns:[{
-                label:"symbol",
-                align:"left",
-                name:"symbol",
-                field:"symbol"
+                label:"Symbol",
+                align:"left",   
+                name:"cod_symbol",
+                style:"width:100px",
+                field:"cod_symbol"
             },{
-                label:"Fch. Inicio",
+                label:"Fch. ultima serie",
                 align:"left",
-                name:"fch_desde",
-                field:"fch_desde"
+                name:"fch_serie",
+                style:"width:100px",
+                field:"fch_serie"
             },{
-                label:"Fch. Fin",
-                align:"left",
-                name:"fch_hasta",
-                field:"fch_hasta"
+                label:"Num. dias desde ultima serie",
+                align:"right",
+                name:"num_dias_desde_ultima_serie",
+                style:"width:100px",
+                field:"num_dias_desde_ultima_serie"
             },{
-                label:"Fch. ult. carga dia",
+                label:"Estado",
                 align:"left",
-                name:"fch_ult_carga_dia",
-                field:"fch_ult_carga_dia"
-            },{
-                label:"Fch. ult. carga mes",
-                align:"left",
-                name:"fch_ult_carga_mes",
-                field:"fch_ult_carga_mes"
-            },{
-                label:"Fch. ult. carga sem",
-                align:"left",
-                name:"fch_ult_carga_sem",
-                field:"fch_ult_carga_sem"
-            },{
-                label:"Fch. ult. carga anyo",
-                align:"left",
-                name:"fch_ult_carga_anyo",
-                field:"fch_ult_carga_anyo"
+                name:"estado",
+                style:"width:100px",
+                field:"estado",
+                classes: row => {
+                    if (row.estado == 'Desactualizado'){
+                        return 'text-red'
+                    }else{
+                        return 'text-green'
+                    }                    
+                }
             },{
                 label:"",
                 align:"",
@@ -61,6 +64,21 @@ export default {
             pagination:{
                 rowsPerPage:20
             }
+        }
+    },
+    mounted:function(){
+        this.get_lista_fechas_maximas_x_symbol()
+    },
+    methods:{
+        get_lista_fechas_maximas_x_symbol:function(){
+            this.$http.post(
+                "/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol",{},
+                postconfig()
+            ).then(httpresp => {
+                this.$refs.msgbox.http_resp_on_error(httpresp)
+                let appdata = httpresp.data
+                this.data = appdata.data
+            })
         }
     }
 }

@@ -8,11 +8,16 @@
                 <q-btn flat round dense icon="search" @click="win_filtros_variacion_diaria.open=true"></q-btn>                          
             </q-toolbar>
         </q-card>
-        <TableVariacionDiaria :indata="data"
-        :symbol_value="symbol_value"
-        :symbol_nombre="symbol_text"
-        :loading="loading"
-        />
+        <q-card flat>
+            <TableVariacionDiaria :indata="data"
+            :symbol_value="symbol_value"
+            :symbol_nombre="symbol_text"        
+            >        
+            </TableVariacionDiaria>
+            <q-inner-loading :showing="loading">
+                <q-spinner-gears size="50px" color="blue-10" />
+            </q-inner-loading>
+        </q-card>
         <WinFiltrosVariacionDiaria
         v-model="win_filtros_variacion_diaria.open"
         v-on:btn-aceptar-click="filtrar"

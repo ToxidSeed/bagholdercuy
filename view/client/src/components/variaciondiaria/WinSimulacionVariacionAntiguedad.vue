@@ -1,6 +1,6 @@
 <template>
     <q-dialog v-model="open">    
-        <q-card  style="min-width:1450px;">
+        <q-card  style="min-width:1550px;">
             <q-toolbar>
                 <q-toolbar-title class="text-blue-10">Criterios para el calculo de la varicion diaria</q-toolbar-title>
             </q-toolbar>
@@ -34,12 +34,64 @@
             </q-card>        
             <q-table
             :data="data"
+            title=""
             :columns="columns"        
             row-key="fch_inicial"
-            dense
+            dense            
             :pagination="pagination"       
             separator="vertical" 
+            wrap-cells
             >
+            <template v-slot:header>
+                <q-tr>
+                    <q-th colspan="6"></q-th>
+                    <q-th></q-th>
+                    <q-th colspan="3" style="border-bottom-width:1px">Variación apertura</q-th>
+                    <q-th></q-th>              
+                    <q-th colspan="2" style="border-bottom-width:1px">Variación cierre </q-th>
+                    <q-th></q-th>
+                    <q-th></q-th>
+                    <q-th></q-th>
+                </q-tr>
+                <q-tr>
+                    <q-th class="text-left" style="width:50px;"><span class="text-bold">Fch inicial</span> ( fecha final - dias profundidad )</q-th>                
+                    <q-th class="text-left" style="width:50px;">Dias de profundidad</q-th>
+                    <q-th class="text-right" style="width:100px;"><span class="text-bold">Imp. Apertura</span> (en fecha inicial)</q-th>
+                    <q-th class="text-right" style="width:100px;">Imp. Maximo</q-th>
+                    <q-th class="text-right" style="width:100px;">Imp. Minimo</q-th>
+                    <q-th class="text-right" style="width:100px;"><span class="text-bold">Imp. Cierre</span> (en fecha final)</q-th>
+                    <q-th style="width:5px;"></q-th>
+                    <q-th class="text-right" style="width:80px;">Imp. var maximo</q-th>
+                    <q-th class="text-right" style="width:80px;">Imp. var minimo</q-th>
+                    <q-th class="text-right" style="width:80px;">Imp. var cierre</q-th>                    
+                    <q-th style="width:5px;"></q-th>              
+                    <q-th class="text-right" style="width:80px;">Imp. var maximo</q-th>
+                    <q-th class="text-right" style="width:80px;">Imp. var minimo</q-th>                                 
+                    <q-th style="width:5px;"></q-th>              
+                    <q-th class="text-center" style="width:100px;"><div>Variacion</div><div> maximo - minimo </div></q-th>                
+                    <q-th></q-th>              
+                </q-tr>
+            </template>
+            <template v-slot:body="props"> 
+                <q-tr>
+                    <q-td>{{props.row.fch_inicial}}</q-td>
+                    <q-td>{{props.row.num_dias_profundidad}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_apertura}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_maximo}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_minimo}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_cierre}}</q-td>
+                    <q-td></q-td>
+                    <q-td class="text-right">{{props.row.imp_var_aper_maximo}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_var_aper_minimo}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_var_apertura_cierre}}</q-td>
+                    <q-td></q-td>
+                    <q-td class="text-right">{{props.row.imp_var_cierre_maximo}}</q-td>
+                    <q-td class="text-right">{{props.row.imp_var_cierre_minimo}}</q-td>
+                    <q-td></q-td>
+                    <q-td class="text-right" >{{props.row.imp_var_minimo_maximo}}</q-td>
+                    <q-td></q-td>
+                </q-tr>
+            </template>
             </q-table>
         </q-card>            
     </q-dialog>
@@ -98,7 +150,7 @@ export default {
                 name:"imp_apertura",
                 style:"width:100px;"      
             },{
-                label:"Imp. Cierre",
+                label:"Imp. Cierre (fecha final)",
                 align:"right",
                 field:"imp_cierre",
                 name:"imp_cierre",
@@ -116,41 +168,45 @@ export default {
                 name:"imp_minimo",
                 style:"width:100px;"      
             },{
-                label:"Imp. var apertura-cierre",
+                label:"Imp. var apertura - cierre",
                 align:"right",
                 field:"imp_var_apertura_cierre",
                 name:"imp_var_apertura_cierre",
                 style:"width:100px;"      
             },{
-                label:"Imp. var minimo-maximo",
+                label:"Imp. var minimo - maximo",
                 align:"right",
                 field:"imp_var_minimo_maximo",
                 name:"imp_var_minimo_maximo",
                 style:"width:100px;"      
             },{
-                label:"Imp. var apertura-maximo",
+                label:"Imp. var apertura - maximo",
                 align:"right",
                 field:"imp_var_aper_maximo",
                 name:"imp_var_aper_maximo",
                 style:"width:100px;"      
             },{
-                label:"Imp. var apertura-minimo",
+                label:"Imp. var apertura - minimo",
                 align:"right",
                 field:"imp_var_aper_minimo",
                 name:"imp_var_aper_minimo",
                 style:"width:100px;"      
             },{
-                label:"Imp. var cierre-maximo",
+                label:"Imp. var cierre - maximo",
                 align:"right",
                 field:"imp_var_cierre_maximo",
                 name:"imp_var_cierre_maximo",
                 style:"width:100px;"      
             },{
-                label:"Imp. var cierre-minimo",
+                label:"Imp. var cierre - minimo",
                 align:"right",
                 field:"imp_var_cierre_minimo",
                 name:"imp_var_cierre_minimo",
                 style:"width:100px;"      
+            },{
+                label:"",
+                field:"",
+                name:""
             }],
             pagination:{
                 rowsPerPage:24

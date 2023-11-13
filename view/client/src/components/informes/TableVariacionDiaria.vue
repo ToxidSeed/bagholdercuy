@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div>    
     <q-table
         :data="data"
         :columns="columns"        
@@ -7,7 +7,7 @@
         dense
         :pagination="pagination"       
         separator="vertical" 
-    >        
+    >                
         <template v-slot:top>
             <div v-if="symbol_value != ''">
                 <span class="text-blue-10 text-h6 q-pr-xs">{{ symbol_value }}</span><span class="text-body1">{{ symbol_nombre }}</span>
@@ -19,6 +19,7 @@
         <template v-slot:header>
             <q-tr>
                 <q-th colspan="7"></q-th>
+                <q-th></q-th>
                 <q-th colspan="3">Variación</q-th>
                 <q-th></q-th>              
                 <q-th colspan="3">Porcentaje</q-th>
@@ -32,6 +33,7 @@
                 <q-th class="text-right" style="width:50px;">Imp. Maximo</q-th>
                 <q-th class="text-right" style="width:50px;">Imp. Minimo</q-th>
                 <q-th class="text-right" style="width:50px;">Imp. Cierre</q-th>
+                <q-th style="width:5px;"></q-th>              
                 <q-th class="text-right" style="width:50px;">Var. Cierre</q-th>
                 <q-th class="text-right" style="width:50px;">Var. Maximo</q-th>
                 <q-th class="text-right" style="width:50px;">Var. Minimo</q-th>  
@@ -42,7 +44,7 @@
                 <q-th class="text-left"></q-th>
             </q-tr>
         </template>      
-        <template v-slot:body="props">                        
+        <template v-slot:body="props">                                   
             <q-tr :props="props" :class="props.row.num_dia_semana==1?'text-green text-bold':'text-black'">
                 <q-menu
                     touch-position
@@ -75,6 +77,7 @@
                 <q-td key="imp_cierre" class="text-right">
                     {{props.row.imp_cierre}}
                 </q-td>
+                <q-th></q-th>              
                 <q-td key="imp_variacion_cierre" v-bind:class="{'bg-green':props.row.imp_variacion_cierre >= 0,'bg-red':props.row.imp_variacion_cierre < 0,'text-right':true, 'text-white':true}">                    
                     {{props.row.imp_variacion_cierre}}
                 </q-td>
@@ -96,10 +99,7 @@
                 </q-td>                
                 <q-td>                    
                 </q-td>
-            </q-tr>
-            <q-inner-loading :showing="loading">
-                <q-spinner-gears size="50px" color="blue-10" />
-            </q-inner-loading>
+            </q-tr>            
         </template>        
     </q-table>    
     <WinSimulacionVariacionAntiguedad v-model="WinSimulacionVariacionAntiguedad.open"

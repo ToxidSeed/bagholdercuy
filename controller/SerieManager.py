@@ -28,7 +28,7 @@ from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESAC
 from config.negocio import SERIES_PROF_CARGA_ULT1ANYO
 
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from app import db
 from sqlalchemy import func
@@ -37,6 +37,38 @@ from sqlalchemy import and_
 
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
+LUNES = 1
+VIERNES = 5
+SABADO = 6
+DOMINGO = 7
+
+class SerieController(Base):
+    def get_lista_fechas_maximas_x_symbol(self, args={}):                
+        elements = []
+        records = SerieDiariaReader().get_lista_fechas_maximas_x_symbol()
+        for elem in records:
+            hoy = date.today()                        
+            ayer = hoy - timedelta(days=1)
+            fch_ult_dia_util = None
+
+            anyo, semana, dia = ayer.isocalendar()
+            if dia in [SABADO, DOMINGO]:
+                fch_ult_dia_util = date.fromisocalendar(anyo, semana, VIERNES)
+            else:
+                fch_ult_dia_util = ayer
+
+            #si la fecha de la ultima serie es menor a la fecha del ultimo dia util, la carga esta desactualizada
+            estado = "Desactualizado" if fch_ult_dia_util > elem.fch_serie else "Actualizado"
+
+            record = {
+                "cod_symbol": elem.symbol,
+                "fch_serie": elem.fch_serie,
+                "num_dias_desde_ultima_serie": (fch_ult_dia_util - elem.fch_serie).days,
+                "estado":estado
+            }
+            elements.append(record)
+        
+        return Response().from_raw_data(elements)
 
 class SerieManagerLoader(Base):    
     def __init__(self):    
