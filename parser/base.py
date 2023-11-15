@@ -41,13 +41,20 @@ class BaseParser:
         if param not in ["asc","desc"]:
             raise AppException(msg="orden_resultados solo puede ser asc o desc")
         
-    def get(self, nombre_param, requerido=False, datatype=None):
-                
-        if nombre_param not in self.args and requerido is True:
-            raise AppException(msg=f"No se ha enviado {nombre_param}")        
+    def get(self, nombre_param, requerido=False, datatype=None, vacio_es_nulo=False):
+
+        valor = self.args.get(nombre_param)
+        if requerido is True:            
+            if valor in [None,""]:
+                raise AppException(msg=f"No se ha enviado {nombre_param}")                    
+            
+        valor = None if vacio_es_nulo is True and valor == '' else valor
         
         if datatype is not None:
             if datatype == int:
-                return self.parse_int(self.args.get(nombre_param))
+                return self.parse_int(valor)
+            
+            if datatype == float:
+                return float(valor)
         
-        return self.args.get(nombre_param)  
+        return valor

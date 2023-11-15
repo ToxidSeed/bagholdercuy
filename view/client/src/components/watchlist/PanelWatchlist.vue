@@ -35,29 +35,36 @@
         </q-toolbar>
         <q-separator/>
         <div class="row q-col-gutter-xs">            
-            <ListaSymbolsAlertas class="col-4"/>
+            <TableMonitoreo class="col-4" v-on:btn-alerta-click="abrir_gestor_alertas"/>
             <TableListaFuturaCompra class="col-8"/>
         </div>
         <WinGestionAlerta v-model="WinGestionAlerta.open"/>
     </div>
 </template>
 <script>
-import ListaSymbolsAlertas from "@/components/watchlist/ListaSymbolsAlertas.vue"
 import TableListaFuturaCompra from "@/components/watchlist/TableListaFuturaCompra.vue"
+import TableMonitoreo from "./TableMonitoreo.vue"
 import WinGestionAlerta from "@/components/watchlist/WinGestionAlerta"
 
 export default {
     name:"PanelWatchlist",
     components:{
         TableListaFuturaCompra,
-        ListaSymbolsAlertas,
-        WinGestionAlerta
+        WinGestionAlerta,
+        TableMonitoreo
     },
     data(){
         return {
             WinGestionAlerta:{
-                open:false
+                open:false,
+                id_monitoreo: ""
             }
+        }
+    },
+    methods:{
+        abrir_gestor_alertas:function(params){        
+            console.log(params)                
+            this.$store.dispatch("configuracion_alerta/editar_configuracion_alerta",params,{root:true})                          
         }
     }
 }

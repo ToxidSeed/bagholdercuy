@@ -4,6 +4,8 @@ class ConfiguracionAlertaModel(db.Model):
     __tablename__ = 'tb_configuracion_alerta'
 
     id_config_alerta = db.Column(db.Integer,primary_key=True,nullable=False)
+    id_monitoreo = db.Column(db.Integer)
+    id_cuenta = db.Column(db.Integer)
     id_symbol = db.Column(db.Integer)
     flg_compras = db.Column(db.Integer)
     flg_ventas = db.Column(db.Integer)

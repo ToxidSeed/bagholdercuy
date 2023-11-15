@@ -8,7 +8,10 @@
             <q-card-section> 
                 <div>
                     <q-input color="blue-10" label="Identificador del Symbol" stack-label v-model="id_symbol"></q-input>
-                </div>                               
+                </div>       
+                <div>
+                    <q-input color="blue-10" label="Codigo del symbol" stack-label v-model="cod_symbol"></q-input>
+                </div>                        
             </q-card-section>
             <q-separator/>
             <q-card-actions align="right">
@@ -22,6 +25,9 @@
 
 export default {
     name:"WinFiltrarSymbols",    
+    components:{
+
+    },
     props:{        
         value:{
             required:true
@@ -38,14 +44,16 @@ export default {
     data(){
         return {
             open:this.value,
-            id_symbol:""
+            id_symbol:"",
+            cod_symbol:""
         }
     },
     methods:{        
         btn_aceptar_click:function(){            
             this.$emit(
                 'btn-aceptar-click',{
-                    id_symbol: this.id_symbol
+                    id_symbol: this.id_symbol,
+                    cod_symbol: this.cod_symbol
                 }
             )
 

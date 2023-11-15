@@ -35,19 +35,18 @@
                 </q-tr>
             </template>
         </q-table>
-        <MessageBox ref="msgbox"/>
+        
         <WinManagerFuturaOperacion v-model="WinManagerFuturaOperacion.open"/>
     </div>
 </template>
 <script>
-//import {postconfig} from '@/common/request.js'
-import MessageBox from '@/components/MessageBox.vue'
+
 import WinManagerFuturaOperacion from "@/components/watchlist/WinManagerFuturaOpercion.vue"
 
 export default {
     name:"TableListaFuturaCompra",
     components:{
-        MessageBox,
+        
         WinManagerFuturaOperacion
     },
     data(){
@@ -77,7 +76,7 @@ export default {
     },
     methods:{
         init:function(){
-            this.get_usuarios()
+            
         }
     }
 }

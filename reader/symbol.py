@@ -70,6 +70,7 @@ class SymbolReader:
 
     def get_list(args={}):
         id_symbol = args["id_symbol"]
+        cod_symbol = args.get("cod_symbol")
 
         stmt = db.select(
             StockSymbol
@@ -78,6 +79,11 @@ class SymbolReader:
         if id_symbol is not None:
             stmt = stmt.where(
                 StockSymbol.id == id_symbol
+            )
+
+        if cod_symbol is not None:
+            stmt = stmt.where(
+                StockSymbol.symbol == cod_symbol
             )
 
         stmt = stmt.order_by(

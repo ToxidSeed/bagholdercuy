@@ -73,11 +73,13 @@ export default {
         this.get_list({})
     },
     methods:{        
-        get_list:function(filtros){
+        get_list:function(filtros){            
             this.$http.post('SymbolManager/SymbolFinder/get_list',{
-                id_symbol: filtros.id_symbol
-            },get_postconfig()).then(httpresponsse => {
-                var appdata = httpresponsse.data
+                id_symbol: filtros.id_symbol,
+                cod_symbol: filtros.cod_symbol
+            },get_postconfig()).then(httpresp => {                
+                this.$store.commit("message", {"httpresp":httpresp,"mostrar_si_error":true})
+                var appdata = httpresp.data
                 this.data = appdata.data
             })
         }

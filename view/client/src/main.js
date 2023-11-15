@@ -4,7 +4,7 @@ import App from './App.vue'
 import axios from 'axios'
 import './quasar'
 import { BASE_PATH } from './common/constants'
-import store from './store.js'
+import store from './store/store.js'
 
 import router from '@/routes.js';
 Vue.config.productionTip = false

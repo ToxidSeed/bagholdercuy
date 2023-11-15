@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from '@/components/dialogs/MessageBox.vue'
 import MenuPrincipal from './components/MenuPrincipal.vue'
 //import PanelSimulationDataEntry from './components/PanelSimulationDataEntry.vue'
 

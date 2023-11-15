@@ -1,16 +1,18 @@
 <template>
-    <q-dialog v-model="open">                
+    <q-dialog v-model="abierto">                
         <q-card style="width:500px;">
             <q-toolbar>
                 <q-toolbar-title class="text-blue-10">Configuracion de alertas</q-toolbar-title>
             </q-toolbar>
             <q-separator/>
+            <!--
             <q-card-section>
                 <div class="q-gutter-sm">
                     <q-radio v-model="flg_opciones" :val="true" label="Opciones" color="blue-10"/>
                     <q-radio v-model="flg_opciones" :val="false" label="Stocks" color="blue-10"/>
                 </div>
             </q-card-section>
+            -->
             <q-separator/>
             <div v-if="flg_opciones==true">
                 <q-card-section>                                 
@@ -31,8 +33,10 @@
                                 <q-btn flat icon="close" color="red" round dense v-if="cod_symbol != ''"/>
                             </div>
                         </div>
+                        <!--
                         <q-checkbox v-model="flg_compras" label="Compras" color="blue-10"/>
                         <q-checkbox v-model="flg_ventas" label="Ventas" color="blue-10"/>
+                        -->
                         <div>                        
                             <div class="row">
                                 <div class="col-4 q-pr-md">
@@ -78,7 +82,7 @@
             <q-separator/>
             <q-card-actions align="right">
                 <q-btn label="Aceptar" color="blue-10" @click="btn_aceptar_click"></q-btn>
-                <q-btn label="Cancelar" color="red-14" @click="open=false"></q-btn>
+                <q-btn label="Cancelar" color="red-14" @click="abierto=false"></q-btn>
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -102,16 +106,38 @@ export default {
     },     
     props:{        
         value:{
-            required:true
+                required:true
+        }
+    },
+    computed:{
+        abierto:{
+            get(){
+                return this.$store.state.configuracion_alerta.win_gestor_alerta.abierto
+            },
+            set(){
+                this.$store.commit('configuracion_alerta/CERRAR_GESTOR_ALERTA',null, {root:true})
+            }
+        },
+        ctd_ciclos_param:{
+            get(){
+                return this.$store.state.configuracion_alerta.configuracion_alerta.ctd_ciclos
+            }
         }
     },
     watch:{
-        open:function(newval){
+        abierto:function(newval){            
+            if (newval == true){                
+                this.$nextTick(() => {
+                    this.ctd_ciclos = this.ctd_ciclos_param             
+                })             
+            }            
+        }
+        /*open:function(newval){
             this.$emit('input',newval)
         },
         value:function(newval){
             this.open = newval
-        }
+        }*/
     },
     data(){
         return {
@@ -136,7 +162,8 @@ export default {
     },
     methods:{        
         btn_aceptar_click:function(){                        
-            this.open = false
+            this.registrar()
+            //this.open = false
         },
         select_symbol:function(item){
             this.cod_symbol = item.value
@@ -149,6 +176,7 @@ export default {
                     flg_compras: this.flg_compras,
                     flg_ventas: this.flg_ventas,
                     cod_symbol: this.cod_symbol,
+                    id_cuenta: localStorage.getItem("id_cuenta"),
                     cod_tipo_variacion_titulo: this.cod_tipo_variacion_titulo,
                     ctd_variacion_titulo: this.ctd_variacion_titulo,
                     ctd_ciclos : this.ctd_ciclos,
@@ -163,6 +191,7 @@ export default {
                 },
                 postconfig()
             ).then(httpresp => {
+                this.$store.commit("message", {"httpresp":httpresp})
                 console.log(httpresp)
             })
         }
