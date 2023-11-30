@@ -1,8 +1,9 @@
 import requests
 from app import app, db
 from config.general import IEXCLOUD_ENDPOINT, IEXCLOUD_KEY
+from config.negocio import IEXCLOUD
 from common.StatusMessage import StatusMessage
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from common.Error import Error
 from common.Response import Response
 from common.api.Quote import Quote
@@ -12,8 +13,7 @@ class iexcloud:
     def __init__(self):
         self.status = StatusMessage()
         self.base_endpoint = "https://cloud.iexapis.com/stable"
-        self.key = app.config["IEXCLOUD_KEY"]                
-        pass
+        self.key = app.config["IEXCLOUD_KEY"]
 
     def get_last_intraday(self, args={}):
         symbol = args["symbol"]
@@ -178,5 +178,69 @@ class iexcloud:
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()
         return data
+
+class ProfundidadHelper:
+    def get_fechas_equivalentes(self):
+        equivalencias = {}
+        for profundidad in IEXCLOUD.PROFUNDIDADES:
+            fecha = self.profundidad_a_fecha(profundidad=profundidad)
+            equivalencias[profundidad] = fecha
+
+        return equivalencias
+
+    def profundidad_a_fecha(self, profundidad):
+        hoy = date.today()
+        profundidad_config = {
+            "5d": hoy - timedelta(5),
+            "1m": hoy - timedelta(30),
+            "3m": hoy - timedelta(90),
+            "6m": hoy - timedelta(180),
+            "ytd": date(hoy.year, hoy.month, 1),
+            "1y": hoy - timedelta(365),
+            "2y": hoy - timedelta(730),
+            "5y": hoy - timedelta(1825),
+            "max": None
+        }
+        return profundidad_config.get(profundidad)
+
+
+class RangoHelper:
+
+    def get_rango(self, fch_referencia):
+        fechas_limite = self.get_fechas_limite()
+        for rango_desde, fecha_desde, fecha_hasta in fechas_limite:
+            if fecha_hasta > fch_referencia >= fecha_desde:
+                return rango_desde, fecha_desde, fecha_hasta
+
+        return None
+
+    def get_fechas_limite(self):
+        fechas = []
+        for profundidad_desde, profundidad_hasta in IEXCLOUD.RANGOS:
+            fecha_desde = self.get_fecha_limite_desde(profundidad_desde)
+            fecha_hasta = self.get_fecha_limite_hasta(profundidad_hasta)
+            fechas.append((profundidad_desde, fecha_desde, fecha_hasta))
+
+        return fechas
+
+    def get_fecha_limite_hasta(self, profundidad_hasta):
+        profundidad_helper = ProfundidadHelper()
+
+        hoy = date.today()
+        if profundidad_hasta == "":
+            return hoy
+
+        fch_hasta = profundidad_helper.profundidad_a_fecha(profundidad=profundidad_hasta)
+        return fch_hasta
+
+    def get_fecha_limite_desde(selfself, profundidad_desde):
+        profundidad_helper = ProfundidadHelper()
+
+        if profundidad_desde == "max":
+            return None
+
+        fch_desde = profundidad_helper.profundidad_a_fecha(profundidad=profundidad_desde)
+        return fch_desde
+
 
 

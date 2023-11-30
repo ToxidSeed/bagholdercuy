@@ -1,5 +1,6 @@
 from flask import session
 
+
 class AuthManager:
     def __init__(self):
         pass

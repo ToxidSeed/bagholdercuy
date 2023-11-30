@@ -8,18 +8,33 @@
             separator="vertical"
             dense
         >
+            <template v-slot:body-cell-estado="props">
+                <q-td :props="props">
+                    {{ props.row.estado }}
+                    <q-menu
+                    touch-position
+                    context-menu
+                    >
+                        <q-list dense>
+                            <q-item clickable v-close-popup>
+                                <q-item-section><span><q-icon name="update" color="green" style="font-size: 1.4em;" class="q-pr-xs"></q-icon>Actualizar</span></q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-menu>                    
+                </q-td>
+            </template>
         </q-table>
-        <MessageBox ref="msgbox"/>
+
     </div>
 </template>
 <script>
 import {postconfig} from '@/common/request.js'
-import MessageBox from '@/components/MessageBox.vue'
+
 
 export default {
     name:"TableResumenSerie",
     components:{
-        MessageBox
+        
     },
     data: () => {
         return {
@@ -75,9 +90,18 @@ export default {
                 "/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol",{},
                 postconfig()
             ).then(httpresp => {
-                this.$refs.msgbox.http_resp_on_error(httpresp)
+                this.$store.commit("messagebox",{"httpresp":httpresp,"mostrar_si_error":true}) 
                 let appdata = httpresp.data
                 this.data = appdata.data
+            })
+        },
+        actualizar_series:function(row){
+            this.$http.post("/",{
+                id_symbol: row.id_symbol
+            },postconfig()
+            ).then(httpresp => {
+                this.$store.commit("messagebox",{"httpresp":httpresp}) 
+                this.get_lista_fechas_maximas_x_symbol()
             })
         }
     }

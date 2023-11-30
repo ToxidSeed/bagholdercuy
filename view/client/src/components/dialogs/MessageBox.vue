@@ -1,40 +1,49 @@
 <template>
     <q-dialog v-model="abierto" transition-show="flip-down" transition-hide="flip-up">
       <q-card style="min-width:400px;"> 
-            <div v-for="elemento in mensajes" :key="elemento.id">
-                <q-toolbar>                    
-                    <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">{{elemento.title}}</q-toolbar-title>                               
-                </q-toolbar>    
-                <q-separator/>
-                <q-card-section class="q-pt-md q-pb-xs">
-                    <span class="text-subtitle1">{{elemento.message}}</span>
-                </q-card-section>     
-                <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0">
-                    <div>
+            <div v-if="httpresponses.length > 0">
+                <div v-for="elemento in httpresponses" :key="elemento.id">
+                    <q-toolbar>                    
+                        <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">{{elemento.title}}</q-toolbar-title>                               
+                    </q-toolbar>    
+                    <q-separator/>
+                    <q-card-section class="q-pt-md q-pb-xs">
+                        <span class="text-subtitle1">{{elemento.message}}</span>
+                    </q-card-section>     
+                    <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0">
+                        <div>
+                            <ul class="q-mt-none text-red">
+                                <li v-for="error in elemento.errors" v-bind:key="error">
+                                    {{error}} 
+                                </li>
+                            </ul>
+                        </div>
+                    </q-card-section>  
+                    <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0 || elemento.stacktrace.length > 0">
+                        <div class="text-subtitle1 text-red text-weight-bold">URL petición</div><div>{{elemento.url}}</div>
+                    </q-card-section>            
+                    <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0 || elemento.stacktrace.length > 0">                
+                        <div class="text-subtitle1 text-red text-weight-bold">Parámetros de Petición</div>
                         <ul class="q-mt-none">
-                            <li v-for="error in elemento.errors" v-bind:key="error">
-                                {{error}}
+                            <li v-for="(value, key) in elemento.parametros" v-bind:key="key">
+                                {{key}}:{{value}}
                             </li>
                         </ul>
-                    </div>
-                </q-card-section>  
-                <q-card-section class="q-pt-none q-mt-none">
-                    <div class="text-subtitle1 text-red text-weight-bold">URL petición</div><div>{{elemento.url}}</div>
-                </q-card-section>            
-                <q-card-section class="q-pt-none q-mt-none">                
-                    <div class="text-subtitle1 text-red text-weight-bold">Parámetros de Petición</div>
-                    <ul class="q-mt-none">
-                        <li v-for="(value, key) in elemento.parametros" v-bind:key="key">
-                            {{key}}:{{value}}
-                        </li>
+                    </q-card-section>
+                    <q-card-section class="q-pt-none q-mt-none" v-if="elemento.stacktrace.length > 0">
+                        <div class="text-subtitle1 text-red text-weight-bold">Stacktrace</div>
+                        <div v-for="error in elemento.stacktrace" v-bind:key="error">
+                            {{error}}
+                        </div>
+                    </q-card-section>                 
+                </div>
+            </div>
+            <div v-if="msgs.length > 0">
+                <div v-for="mensaje in msgs" :key="mensaje">
+                    <ul>
+                        <li class="text-blue-10">{{ mensaje }}</li>
                     </ul>
-                </q-card-section>
-                <q-card-section class="q-pt-none q-mt-none">
-                    <div class="text-subtitle1 text-red text-weight-bold">Stacktrace</div>
-                    <div v-for="error in elemento.stacktrace" v-bind:key="error">
-                        {{error}}
-                    </div>
-                </q-card-section>                 
+                </div>
             </div>
         <q-card-actions align="right">
             <q-btn dense color="primary" v-close-popup @click="btn_ok_handler">OK</q-btn>
@@ -63,10 +72,10 @@ export default {
                     this.$store.commit('cerrar_messagebox', value)
                 }
             },  
-            mensajes:function(){
-                let elementos = this.$store.state.messagebox.data
+            httpresponses:function(){
+                let elementos = this.$store.state.messagebox.httpresponses                
                 let records = []
-                for (let httpresp of elementos){                    
+                for (let httpresp of elementos){                                        
 
                     records.push({
                         id:Date.now(),
@@ -80,6 +89,9 @@ export default {
                     
                 }
                 return records
+            },
+            msgs: function(){
+                return this.$store.state.messagebox.msgs
             }
         },            
         data () {
@@ -112,24 +124,36 @@ export default {
             //this.interface()
         },
         methods:{    
-            get_message:function(httpresp){
-                let appdata = httpresp.data
+            get_message:function(httpresp){                
+                let appdata = httpresp.data     
+                if (appdata == null){
+                    return "No se ha enviado una respuesta del servidor appdata=null"
+                }
                 return appdata.message
             },
             get_errors:function(httpresp){
                 let appdata = httpresp.data
+                if (appdata == null){
+                    return []
+                }
                 return appdata.errors
             },
             get_stacktrace:function(httpresp){
-                let appdata = httpresp.data
+                let appdata = httpresp.data                   
+                if (appdata == null || appdata.stacktrace == null){
+                    return []
+                }
+
                 return appdata.stacktrace
             },
             get_url:function(httpresp){                
                 return httpresp.config.url
             },
-            get_parametros:function(httpresp){                
-                let parametros =  JSON.parse(httpresp.config.data)
-                console.log(parametros)
+            get_parametros:function(httpresp){                                
+                if (httpresp.config.data == undefined){
+                    return {}
+                }
+                let parametros =  JSON.parse(httpresp.config.data)   
                 return parametros
             },
             btn_ok_handler:function(){

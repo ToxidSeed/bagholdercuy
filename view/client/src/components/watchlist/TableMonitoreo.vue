@@ -1,8 +1,7 @@
 <template>
     <div>
         <q-table
-            :data="data"
-            title="Monitoreo"
+            :data="store.table_monitoreo.state.monitoreo_activo_data"            
             title-class="text-blue-10"
             :columns="columns"
             row-key="name"            
@@ -12,15 +11,25 @@
             :pagination="pagination"
         >            
         
+            <template v-slot:top shrink>
+                <q-toolbar>
+                    <q-toolbar-title class="text-blue-10">Monitoreo</q-toolbar-title>
+                </q-toolbar>
+                <q-toolbar>
+                    <SelectSymbol label="Filtrar" style="width:250px;" v-on:select-symbol="sel_symbol"></SelectSymbol>
+                    <q-btn dense label="Mostrar todos" flat color="blue-10" class="text-capitalize" @click="btn_mostrar_todos_click" icon="filter_list_off"></q-btn>
+                    <q-btn icon="refresh" flat color="green" dense/>
+                </q-toolbar>                                
+            </template>
             <template v-slot:body="props">                
                 <q-tr>                    
-                    <q-td colspan="3" @click="get_alertas">
+                    <q-td colspan="3" @click="get_alertas(props.row)">
                         <div class="row">
                             <div class="text-blue-10 col-11" >
                                 {{ props.row.cod_symbol }}
                             </div>
                             <div>                                
-                                <q-btn icon="notifications" flat color="orange" dense round @click="btn_alerta_click(props.row.id_monitoreo)"/>
+                                <q-btn icon="notifications" flat :color="props.row.id_config_alerta == undefined ? 'grey':'orange'" dense round @click="btn_alerta_click(props.row)"/>
                             </div>
                             <div class="col-12">
                                 {{ props.row.nom_symbol }}
@@ -44,24 +53,20 @@
     </div>
 </template>
 <script>
-import {postconfig} from "@/common/request.js"
+import WinGestorAlertaStore from "./win-gestor-alerta-store"
+import tableAlertasSymbolStore from "./table-alertas-symbol-store"
+import winComentariosAlertaStore from "./win-comentarios-alerta-store"
+import SelectSymbol from "@/components/SelectSymbol.vue"
+import store from "./store"
 
 export default {
     name:"TableMonitoreo",
     components:{
+        SelectSymbol
     },
     data(){
         return {
-            data:[{
-                id_monitoreo:1,
-                id_symbol: 1,
-                cod_symbol: 'SOXL',
-                nom_symbol: 'DIREXION DAILY SEMIS',
-                imp_cierre_anterior: 22.5,
-                imp_actual:0,
-                imp_variacion:-22.5,
-                pct_variacion: 100
-            }],
+            data:[],
             columns:[{
                 name:'id_monitoreo',
                 label:'ID',
@@ -102,63 +107,77 @@ export default {
                 label:'Pct. variacion',
                 align:'left',
                 field:'pct_variacion'
+            },{
+                name:"id_config_alerta",
+                label:"Id configuracion alerta",
+                align:'left',
+                field:"id_config_alerta"
             }],
             pagination:{
                 rowsPerPage:15
             },
             WinManagerFuturaOperacion:{
                 open:false
-            }
+            },
+            WinGestorAlertaStore:WinGestorAlertaStore,
+            tableAlertasSymbolStore: tableAlertasSymbolStore,
+            winComentariosAlertaStore: winComentariosAlertaStore,
+            store: store
         }
     },
     mounted:function(){
         this.init()
     },
     methods:{
-        init:function(){
-            this.get_list()
-        },        
-        get_list:async function(){
-            let monitoreo_activo_data = await this.get_monitoreo_activo()
-            this.data = monitoreo_activo_data
-
-            await Promise.all(this.data.map(async (element) => {
-                let cotizacion = await this.get_cotizacion(element.cod_symbol)                
-                this.$set(element, "imp_actual", cotizacion.imp_cierre)
-                this.$set(element, "imp_cierre_anterior", cotizacion.imp_cierre_anterior)
-            }))
-        },
-        get_monitoreo_activo:async function(){            
-            let httpresp = await this.$http.post(
-                "/monitoreo/MonitoreoController/get_monitoreo_activo",{
-                    id_cuenta: localStorage.getItem("id_cuenta")
-                },postconfig()
-            )
-
-            this.$store.commit("message",{"httpresp":httpresp, "mostrar_si_error":true})
-            return httpresp.data.data
-        },
-        get_cotizacion:async function(cod_symbol){            
-            const httpresp = await this.$http.post(
-                "/cotizacion/CotizacionManager/get_cotizacion",{
-                    cod_symbol: cod_symbol
-                },
-                postconfig()
-            )
+        init:async function(){            
+            await store.table_monitoreo.get_monitoreo_activo()            
             
-            this.$store.commit("message",{"httpresp":httpresp,"mostrar_si_error":true})
-            return httpresp.data.data
+        },        
+        sel_symbol: async function(item){
+            await store.table_monitoreo.get_monitoreo_activo({
+                id_symbol: item.id_symbol
+            })            
         },
-        get_alertas:function(){
-            console.log("alertas")
+        btn_mostrar_todos_click:async function(){            
+            await store.table_monitoreo.get_monitoreo_activo()                        
         },
-        btn_alerta_click:function(id_monitoreo){
-            console.log(id_monitoreo)
+        btn_refresh_click: async function(){
+            await store.table_monitoreo.refresh()            
+        },
+        get_alertas:function(row){                        
+            //
+            winComentariosAlertaStore.cerrar()
 
-            this.$emit("btn-alerta-click",{
-                id_monitoreo:id_monitoreo
+            this.tableAlertasSymbolStore.set_symbol({
+                id_symbol: row.id_symbol,
+                cod_symbol: row.cod_symbol,
+                nom_symbol: row.nom_symbol
             })
+
+            
+
+            this.tableAlertasSymbolStore.fetch_data({                 
+                id_config_alerta: row.id_config_alerta
+            })
+        },  
+        btn_alerta_click:function(row){
+            //Sea cual sea el resultado cerrar            
+
+            if (row.id_config_alerta !== undefined && row.id_config_alerta !== "" && row.id_config_alerta != null){
+                this.WinGestorAlertaStore.editar(row.id_config_alerta)
+                return
+            }
+
+            if (row.id_monitoreo != undefined && row.id_monitoreo != ""){
+                this.WinGestorAlertaStore.incluir_alerta(row.id_monitoreo, row.id_symbol)
+            }            
         }
     }
 }
 </script>
+
+<style scoped>
+.q-toolbar {
+    min-height: auto;
+}
+</style>

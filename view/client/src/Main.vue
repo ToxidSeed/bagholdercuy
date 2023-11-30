@@ -58,8 +58,7 @@ export default {
   },
   mounted:function(){
     this.cod_cuenta = localStorage.getItem("cod_cuenta")
-    let nom_cuenta = localStorage.getItem("nom_cuenta")    
-    console.log(nom_cuenta)
+    //let nom_cuenta = localStorage.getItem("nom_cuenta")        
   }
 }
 </script>

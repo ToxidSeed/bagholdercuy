@@ -1,4 +1,5 @@
 from enum import Enum
+from collections import namedtuple
 
 #Tipos de transacción
 TIPO_TRANS_DEPOSITO = 'D'
@@ -55,3 +56,17 @@ class TIPO_VARIACION_EJERCICIO(int, Enum):
 class TIPO_VARIACION_TITULO(int, Enum):
     COD_IMPORTE = 1
     COD_PORCENTAJE = 2
+
+class IEXCLOUD(Enum):
+    PROFUNDIDADES = ["5d", "1m", "3m", "6m", "ytd", "1y", "2y", "5y", "max"]
+    RANGOS = [
+            ("5d", "" ),
+            ("1m", "5d"),
+            ("3m", "1m"),
+            ("6m", "3m"),
+            ("ytd", "6m"),
+            ("1y", "ytd"),
+            ("2y", "1y"),
+            ("5y", "2y"),
+            ("max", "5y")
+    ]

@@ -54,13 +54,13 @@ class SymbolReader:
         query = db.select(
             StockSymbol    
         ).where(
-            StockSymbol.symbol == id_symbol
+            StockSymbol.id == id_symbol
         )
 
         result = db.session.execute(query)
         record = result.scalars().first()
 
-        if record is None and self.not_found_error is True:            
+        if record is None and not_found_error is True:
             raise AppException(msg=f"No se ha encontrado symbol para el id: {id_symbol}")
         
         if record is not None and self.__buffer is True:

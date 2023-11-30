@@ -8,7 +8,7 @@
         separator="vertical"
         dense
 
-        >
+        >				        
             <template v-slot:top>
                 <q-toolbar  class="text-blue-10"><q-toolbar-title>Acciones</q-toolbar-title></q-toolbar>
             </template>

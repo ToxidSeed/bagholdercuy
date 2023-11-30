@@ -3,23 +3,7 @@
         <q-toolbar class="text-blue-10">
             <q-btn flat round dense icon="menu">
                 <q-menu>
-                    <q-list dense>
-                        <q-item clickable v-close-popup :to="{name:'rentabilidad-diario-opciones'}">
-                            <q-item-section class="text-subtitle1">
-                                <div>Rentabilidad <span class="text-blue-10 text-bold">Diaria</span> de opciones</div>
-                            </q-item-section>                            
-                        </q-item>
-                        <q-item clickable v-close-popup :to="{name:'rentabilidad-mensual-opciones'}">
-                            <q-item-section class="text-subtitle1">
-                                <div>Rentabilidad <span class="text-blue-10 text-bold">Semanal</span> de opciones</div>
-                            </q-item-section>                            
-                        </q-item>
-                        <q-item clickable v-close-popup :to="{name:'rentabilidad-semanal-opciones'}">
-                            <q-item-section class="text-subtitle1">
-                                <div>Rentabilidad <span class="text-blue-10 text-bold">Mensual</span> de opciones</div>
-                            </q-item-section>                            
-                        </q-item>                                                     
-                    </q-list>
+     
                 </q-menu>
             </q-btn>
             <q-toolbar-title>
@@ -28,43 +12,58 @@
             <q-btn flat round dense icon="more_vert" />                                        
         </q-toolbar>   
         <q-separator/>
-        <q-toolbar>
+        <q-card flat>
+            <q-toolbar>
             <!--<q-toolbar-title class="text-blue-10">Alertas</q-toolbar-title>            -->
-            <q-btn stack-label flat icon="add" label="Nueva alerta" class="text-capitalize" color="blue-10" @click="WinGestionAlerta.open=true">                
-            </q-btn>
-        </q-toolbar>
-        <q-separator/>
+                <q-btn stack-label flat icon="add" dense label="Nueva alerta" class="text-capitalize" color="blue-10" @click="WinGestorAlertaStore.nuevo()">                
+                </q-btn >
+                <div class="q-pb-xs q-pl-md"  >
+                    <SelectSymbol label="Incluir en monitoreo" v-on:select-symbol="sel_symbol"/>
+                </div>
+            </q-toolbar>
+        </q-card>        
+        <q-separator/>        
         <div class="row q-col-gutter-xs">            
-            <TableMonitoreo class="col-4" v-on:btn-alerta-click="abrir_gestor_alertas"/>
-            <TableListaFuturaCompra class="col-8"/>
+            <TableMonitoreo class="col-4"/>
+            <TableAlertasSymbol class="col-8"/>            
         </div>
-        <WinGestionAlerta v-model="WinGestionAlerta.open"/>
+        <WinGestionAlerta v-model="WinGestorAlertaStore.state.open"/>
     </div>
 </template>
 <script>
-import TableListaFuturaCompra from "@/components/watchlist/TableListaFuturaCompra.vue"
+import TableAlertasSymbol from "@/components/watchlist/TableAlertasSymbol.vue"
 import TableMonitoreo from "./TableMonitoreo.vue"
 import WinGestionAlerta from "@/components/watchlist/WinGestionAlerta"
+import WinGestorAlertaStore from "./win-gestor-alerta-store"
+import tableAlertasSymbolStore from "./table-alertas-symbol-store"
+import SelectSymbol from "@/components/SelectSymbol"
+import store from "./store"
 
 export default {
     name:"PanelWatchlist",
     components:{
-        TableListaFuturaCompra,
+        TableAlertasSymbol,
         WinGestionAlerta,
-        TableMonitoreo
+        TableMonitoreo,
+        SelectSymbol
     },
     data(){
         return {
-            WinGestionAlerta:{
-                open:false,
-                id_monitoreo: ""
-            }
+            WinGestorAlertaStore: WinGestorAlertaStore,
+            TableAlertasSymbolStore: tableAlertasSymbolStore,
+            store: store
         }
     },
+    mounted:function(){
+        //this.TableAlertasSymbolStore.get_data()
+    },
     methods:{
-        abrir_gestor_alertas:function(params){        
-            console.log(params)                
-            this.$store.dispatch("configuracion_alerta/editar_configuracion_alerta",params,{root:true})                          
+        sel_symbol: async function(item){            
+            await this.store.panel_watchlist.registrar({
+                id_symbol: item.id_symbol
+            })
+            // refrescamos el monitoreo
+            this.store.table_monitoreo.get_monitoreo_activo()
         }
     }
 }

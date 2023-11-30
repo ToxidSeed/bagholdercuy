@@ -91,6 +91,7 @@ export default {
                     var options = []
                     for (let element of appresponse.data){
                         options.push({
+                            "id_symbol": element["id"],
                             "value":element["symbol"],
                             "label":element["name"]
                         })

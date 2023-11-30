@@ -5,7 +5,7 @@
             <q-toolbar-title>
                 Holdings
             </q-toolbar-title>
-        </q-toolbar>
+        </q-toolbar>        
         <q-splitter
             v-model="first_panel_size"
             :limits="[0,100]"

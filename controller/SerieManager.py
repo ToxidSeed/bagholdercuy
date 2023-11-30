@@ -22,11 +22,11 @@ from reader.seriemensual import SerieMensualReader
 from reader.seriediaria import SerieDiariaReader
 from reader.variaciondiaria import VariacionDiariaReader
 
-from parser.serie import SimulacionVariacionParser
+from parser.serie import SimulacionVariacionParser, SerieManagerLoaderParser
 
 from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL,SERIES_PROF_CARGA_ULT3MESES,SERIES_PROF_CARGA_ULT6MESES
 from config.negocio import SERIES_PROF_CARGA_ULT1ANYO
-
+import common.api.iexcloud as iexcloud
 
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -41,6 +41,7 @@ LUNES = 1
 VIERNES = 5
 SABADO = 6
 DOMINGO = 7
+
 
 class SerieController(Base):
     def get_lista_fechas_maximas_x_symbol(self, args={}):                
@@ -57,7 +58,7 @@ class SerieController(Base):
             else:
                 fch_ult_dia_util = ayer
 
-            #si la fecha de la ultima serie es menor a la fecha del ultimo dia util, la carga esta desactualizada
+            # si la fecha de la ultima serie es menor a la fecha del ultimo dia util, la carga esta desactualizada
             estado = "Desactualizado" if fch_ult_dia_util > elem.fch_serie else "Actualizado"
 
             record = {
@@ -70,6 +71,7 @@ class SerieController(Base):
         
         return Response().from_raw_data(elements)
 
+
 class SerieManagerLoader(Base):    
     def __init__(self):    
         self.fch_ini_procesar = None
@@ -81,6 +83,52 @@ class SerieManagerLoader(Base):
         self.mes = None
         self.dia = None
 
+    def procesar_desde_ultima_fecha(self, args={}):
+        try:
+            serie_manager_loader_parser = SerieManagerLoaderParser()
+            serie_diaria_reader = SerieDiariaReader()
+            args = serie_manager_loader_parser.parse_args_procesar_desde_fecha(args=args)
+
+            cod_symbol = args.get("cod_symbol")
+            fch_ultima_serie = serie_diaria_reader.get_fecha_maxima_x_symbol(cod_symbol=cod_symbol)
+
+            rango_helper = iexcloud.RangoHelper()
+            rango = rango_helper.get_rango(fch_referencia=fch_ultima_serie)
+            if rango is None:
+                raise AppException(msg=f"No se ha encontrado un rango en que la fecha {fch_ultima_serie.isoformat()} pueda encajar")
+
+            profundidad, fch_desde, fch_hasta = rango
+
+            iexcloud_api = iexcloud.iexcloud()
+            series = iexcloud_api.get_historical_prices({
+                "symbol": cod_symbol,
+                "profundidad": profundidad
+            })
+
+            anyo_semana, num_semana, dia_semana = fch_ultima_serie.isocalendar()
+
+            # cargar las distintas series y variaciones
+            SerieDiariaWriter().cargar(cod_symbol, series, fch_ultima_serie)
+            VariacionDiariaLoader().procesar(cod_symbol, fch_ultima_serie)
+            db.session.flush()
+
+            SerieSemanalLoader().procesar(cod_symbol, anyo=anyo_semana, semana=num_semana)
+            db.session.flush()
+
+            VariacionSemanalWriter().procesar(cod_symbol, anyo=anyo_semana, semana=num_semana)
+            db.session.flush()
+
+            # procesamiento de las series mensuales
+            SerieMensualLoader().procesar(cod_symbol, anyo=fch_ultima_serie.year, mes=fch_ultima_serie.month)
+            VariacionMensualWriter().procesar(cod_symbol, anyo=fch_ultima_serie.year, mes=fch_ultima_serie.month)
+
+            db.session.commit()
+            return Response(msg="Se ha cargado correctamente")
+
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
     def procesar(self, args={}):
         try:                                    
             self.profundidad = args.get("profundidad")
@@ -89,7 +137,7 @@ class SerieManagerLoader(Base):
             self.series = self.get_historial_prices(self.symbol, profundidad=self.profundidad)
             self.get_fechas_proceso()         
 
-            #cargar las distintas series y variaciones
+            # cargar las distintas series y variaciones
             SerieDiariaWriter().cargar(self.symbol, self.series, self.fch_ini_procesar)
             VariacionDiariaLoader().procesar(self.symbol, self.fch_ini_procesar)
             db.session.flush()
@@ -100,11 +148,11 @@ class SerieManagerLoader(Base):
             VariacionSemanalWriter().procesar(self.symbol, anyo=self.anyo, semana=self.semana)
             db.session.flush()
 
-            #procesamiento de las series mensuales
+            # procesamiento de las series mensuales
             SerieMensualLoader().procesar(self.symbol, anyo=self.anyo, mes=self.mes)
             VariacionMensualWriter().procesar(self.symbol, anyo=self.anyo, mes=self.mes)
 
-            #SerieMensualLoader().procesar(symbol, profundidad)            
+            # SerieMensualLoader().procesar(symbol, profundidad)
             db.session.commit()
             return Response(msg="Se ha cargado correctamente")
         except Exception as e:
@@ -117,10 +165,11 @@ class SerieManagerLoader(Base):
             (self.anyo, self.semana, self.dia) = self.fch_ini_procesar.isocalendar()
             self.mes = self.fch_ini_procesar.month
 
+        return self.fch_ini_procesar
+
     def get_fecha_inicio_proceso(self, profundidad=""):
                 
         fecha_actual = date.today()
-
         fecha = None
 
         if profundidad == SERIES_PROF_CARGA_MESACTUAL:
@@ -139,8 +188,6 @@ class SerieManagerLoader(Base):
         if profundidad == SERIES_PROF_CARGA_ULT1ANYO:
             fecha = fecha_actual + relativedelta(years=-1)
 
-        
-
         return fecha
       
 
@@ -149,14 +196,14 @@ class SerieManagerLoader(Base):
             "symbol":symbol,
             "range":profundidad
         }        
-        return iexcloud().get_historical_prices(args)        
+        return iexcloud.iexcloud().get_historical_prices(args)
 
     def load_daily_series(self, symbol="", profundidad=""):   
-        #obtener la fecha de inicio en base a la profundidad
+        # obtener la fecha de inicio en base a la profundidad
         fch_ini_reprocesar = self.get_fechas_proceso(profundidad=profundidad)         
-        #eliminar las series diarias desde la fecha de inicio        
+        # eliminar las series diarias desde la fecha de inicio
         self.remove_daily_series(symbol, fch_ini_reprocesar=fch_ini_reprocesar)
-        #obtener los datos desde la api en base a la profundidad
+        # obtener los datos desde la api en base a la profundidad
         data = self.get_historial_prices(symbol, profundidad=profundidad)              
 
         for elem in data:                        

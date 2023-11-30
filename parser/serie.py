@@ -3,6 +3,14 @@ from common.AppException import AppException
 from datetime import date, timedelta
 import json
 
+class SerieManagerLoaderParser:
+    def procesar_desde_ultima_fecha(self, args={}):
+        parser = BaseParser(args=args)
+        cod_symbol = parser.get("cod_symbol", requerido=True)
+        args["cod_symbol"] = cod_symbol
+
+        return args
+
 class SimulacionVariacionParser:
 
     def parse_args_simular(self, args={}):

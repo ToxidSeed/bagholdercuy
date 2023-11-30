@@ -1,4 +1,5 @@
 from parser.base import BaseParser
+from collections import namedtuple
 
 class SymbolFinderParser:
 
@@ -12,4 +13,12 @@ class SymbolFinderParser:
         args["cod_symbol"] = cod_symbol
         
         return args
-        
+
+    def parse_args_get(self, args={}):
+        params = namedtuple("params", ["id_symbol"])
+
+        parser = BaseParser(args=args)
+        id_symbol = parser.get("id_symbol", datatype=int, vacio_es_nulo=True)
+        params = params(id_symbol=id_symbol)
+
+        return params

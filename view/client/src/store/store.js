@@ -11,40 +11,43 @@ export default new Vuex.Store({
     },
     state:{
         messagebox:{
-            open:false,
-            data:[]
+            open: false,            
+            httpresponses: [],
+            msgs: []
         }        
+    },
+    actions:{
+        incluir_httpresp_si_apperror: function(context, payload){
+            let appdata = payload.data
+            if (appdata.success == false){
+                context.commit("abrir_messagebox")
+                context.commit("httpresp", payload)
+            }
+        },
+        incluir_httpresp: function(context, payload){            
+            let httpresp = payload            
+            context.commit("abrir_messagebox")
+            context.commit("httpresp", httpresp)
+        },
+        incluir_msg: function(context, payload){
+            context.commit("abrir_messagebox")
+            context.commit("message", payload)
+        }
     },
     mutations:{
         message:function(state, payload){                                    
-            //
-            let mostrar_si_error = false            
-            let httpresp = null
-            //
-            if ("mostrar_si_error" in payload)
-                mostrar_si_error = payload.mostrar_si_error
-
-            if ("httpresp" in payload){
-                httpresp = payload.httpresp
-            }
-
-            //
-            if (mostrar_si_error == false){                
-                state.messagebox.data.push(payload.httpresp)
-                state.messagebox.open = true                            
-            }                        
-            //
-            if (mostrar_si_error == true){
-                let appdata = httpresp.data
-                if (appdata.success == false){
-                    state.messagebox.data.push(payload.httpresp)
-                    state.messagebox.open = true                            
-                }
-            }
+            state.messagebox.msgs.push(payload)
+        },
+        httpresp: function(state, payload){                        
+            state.messagebox.httpresponses.push(payload)
+        },
+        abrir_messagebox:function(state){
+            state.messagebox.open = true
         },
         cerrar_messagebox:function(state){            
             state.messagebox.open = false
-            state.messagebox.data = []
+            state.messagebox.httpresponses = []
+            state.messagebox.msgs = []
         }
     }    
 });

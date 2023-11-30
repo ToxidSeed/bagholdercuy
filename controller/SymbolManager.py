@@ -59,7 +59,7 @@ class SymbolManager:
         symbol_to_update.asset_type = args["asset_type"]
 
     def __is_new(self,args={}):
-        if args["symbol_id"] in ["","#","0",None,0]:
+        if args["symbol_id"] in ["", "#", "0", None, 0]:
             return True
         else:
             return False
@@ -100,8 +100,14 @@ class SymbolManager:
         )
         return symbol_obj
 
+
 class SymbolFinder(Base):    
 
+    def get(self, args={}):
+        symbol_finder_parser = SymbolFinderParser()
+        params = symbol_finder_parser.parse_args_get(args=args)
+        record = SymbolReader().get(id_symbol=params.id_symbol)
+        return Response().from_raw_data(record)
     def get_list(self, args={}):
         args = SymbolFinderParser.parse_args_get_list(args=args)
         records = SymbolReader.get_list(args=args)
