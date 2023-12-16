@@ -13,7 +13,15 @@ class Symbol{
         }catch(err){
             console.log(err)
         }
-    }    
+    }
+    
+    get_symbol_x_codigo = async function(cod_symbol){
+        let httpresp = axios.post("/SymbolManager/SymbolManager/get_symbol_x_codigo",{
+            cod_symbol: cod_symbol
+        }, postconfig())
+
+        return httpresp
+    }
 }
 
 export default new Symbol()

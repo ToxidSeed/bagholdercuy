@@ -49,18 +49,21 @@ TIPO_ACTIVO_ETF = 2
 TIPO_ACTIVO_OPT = 3
 TIPO_ACTIVO_OTROS = 4
 
+
 class TIPO_VARIACION_EJERCICIO(int, Enum):
     COD_IMPORTE_FIJO = 1
     COD_VARIACION_SUBYACENTE = 2
+
 
 class TIPO_VARIACION_TITULO(int, Enum):
     COD_IMPORTE = 1
     COD_PORCENTAJE = 2
 
+
 class IEXCLOUD(Enum):
     PROFUNDIDADES = ["5d", "1m", "3m", "6m", "ytd", "1y", "2y", "5y", "max"]
     RANGOS = [
-            ("5d", "" ),
+            ("5d", ""),
             ("1m", "5d"),
             ("3m", "1m"),
             ("6m", "3m"),
@@ -70,3 +73,4 @@ class IEXCLOUD(Enum):
             ("5y", "2y"),
             ("max", "5y")
     ]
+

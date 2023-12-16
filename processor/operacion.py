@@ -6,7 +6,7 @@ from model.posicion import PosicionModel
 from reader.operacion import OperacionReader
 from reader.posicion import PosicionReader
 
-from config.negocio import TIPO_OPERACION_TRANSFERENCIA, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
+from config.app_constants import TIPO_OPERACION_TRANSFERENCIA, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
 from datetime import date, datetime
 from operator import methodcaller
 

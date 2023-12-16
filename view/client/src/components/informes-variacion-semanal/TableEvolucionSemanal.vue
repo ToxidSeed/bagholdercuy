@@ -9,11 +9,11 @@
             <template v-slot:header>
                 <q-tr>
                     <q-th class="text-left">valor</q-th>
-                    <q-th class="text-left">{{headers.fch_lunes}}</q-th>
-                    <q-th class="text-left">{{headers.fch_martes}}</q-th>
-                    <q-th class="text-left">{{headers.fch_miercoles}}</q-th>
-                    <q-th class="text-left">{{headers.fch_jueves}}</q-th>
-                    <q-th class="text-left">{{headers.fch_viernes}}</q-th>
+                    <q-th class="text-center">{{headers.fch_lunes}}</q-th>
+                    <q-th class="text-center">{{headers.fch_martes}}</q-th>
+                    <q-th class="text-center">{{headers.fch_miercoles}}</q-th>
+                    <q-th class="text-center">{{headers.fch_jueves}}</q-th>
+                    <q-th class="text-center">{{headers.fch_viernes}}</q-th>
                 </q-tr>
             </template>
             <template v-slot:body="props">
@@ -72,25 +72,25 @@ export default {
         this.init()
     },
     watch:{
-        infiltros:function(newval){
-            this.filtros.symbol = newval.symbol
-            this.filtros.anyo = newval.anyo
-            this.filtros.semana = newval.semana
-            this.filtrar()
+        $route: function(to){
+            console.log(to)
+            if (Object.keys(to.query).length > 0){         
+                this.filtrar(to.query)
+            }
         }
     },
     methods:{
         init:function(){
-            this.filtros = this.infiltros
+            this.filtrar(this.$route.query)
         },
-        filtrar:function(){
+        filtrar:function(params){
             this.data = []
             this.headers = {}
 
             this.$http.post('/reportes/EvolucionSemanalSeries/build',{
-                symbol: this.filtros.symbol,
-                anyo: this.filtros.anyo,
-                semana: this.filtros.semana
+                symbol: params.cod_symbol,
+                anyo: params.anyo,
+                semana: params.semana
             },
             postconfig()
             ).then(httpresp => {                

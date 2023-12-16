@@ -12,7 +12,7 @@ from sqlalchemy.orm import join
 from sqlalchemy import and_
 from datetime import date
 
-from config.negocio import TIPO_ACTIVO_OPT
+from config.app_constants import TIPO_ACTIVO_OPT
 
 class TransaccionReader:
 

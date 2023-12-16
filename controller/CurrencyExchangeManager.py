@@ -8,7 +8,7 @@ from common.api.Alphavantage import Alphavantage
 from common.Response import Response
 from datetime import datetime, date
 from config.general import MARKET_API, DEFAULT_LIMIT
-from config.negocio import IND_ACTIVO
+from config.app_constants import IND_ACTIVO
 from controller.base import Base
 
 class CurrencyExchangeManager:

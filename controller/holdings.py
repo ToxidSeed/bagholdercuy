@@ -18,7 +18,7 @@ from reader.transaccion import TransaccionReader
 from pytz import HOUR, timezone
 from datetime import datetime, date
 from config.general import APP_DEC_PREC, MARKET_API_LIST
-from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from config.app_constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
 
 #from controller.StockDataProvider import StockDataProvider
 import common.Markets as Markets

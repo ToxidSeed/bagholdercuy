@@ -14,7 +14,7 @@ from reader.posicion import PosicionReader
 from reader.operacion import OperacionReader
 
 from common.AppException import AppException
-from config.negocio import TIPO_ACTIVO_OPT, TIPO_ACTIVO_OTROS, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
+from config.app_constants import TIPO_ACTIVO_OPT, TIPO_ACTIVO_OTROS, TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
 from settings import config
 from common.Formatter import Formatter
 

@@ -18,7 +18,7 @@ import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
-import PanelVariacionSemanal from '@/components/informes/PanelVariacionSemanal.vue';
+import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
 
 //Rentabilidad operaciones
@@ -47,8 +47,8 @@ import PanelCurrencyExchangeRateLoader from '@/components/CurrencyExchange/Panel
 import PanelSimulacionRentabilidad from "@/components/simulacion-rentabilidad/PanelSimulacionRentabilidad";
 import PanelWatchlist from "@/components/watchlist/PanelWatchlist.vue"
 
-import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
-import PanelEvolucionSemanal from '@/components/informes/PanelEvolucionSemanal.vue'
+import TableVariacionSemanal from '@/components/informes-variacion-semanal/TableVariacionSemanal.vue';
+import PanelEvolucionSemanal from '@/components/informes-variacion-semanal/PanelEvolucionSemanal.vue'
 
 //Configuracion
 import PanelCalendarioSemanalLoader from '@/components/Configuracion/PanelCalendarioSemanalLoader.vue'

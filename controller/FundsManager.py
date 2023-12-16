@@ -18,7 +18,7 @@ from model.conversionmoneda import ConversionMonedaModel
 
 from model.bussiness.transaccion import TransaccionHandler, DepositoHandler, ReprocesadorFondosHandler,RetiroHandler, ConversionMonedaHandler, ReorganizarHandler
 
-from config.negocio import TIPO_MOV_INGRESO,TIPO_TRANS_DEPOSITO, TIPO_TRANS_RETIRO, TIPO_TRANS_CONVERSION, REPROCESO_PROF_FONDOS_TODO,REPROCESO_PROF_FONDOS_FCH_CIERRE
+from config.app_constants import TIPO_MOV_INGRESO,TIPO_TRANS_DEPOSITO, TIPO_TRANS_RETIRO, TIPO_TRANS_CONVERSION, REPROCESO_PROF_FONDOS_TODO,REPROCESO_PROF_FONDOS_FCH_CIERRE
 from config.general import CLIENT_DATE_FORMAT
 
 

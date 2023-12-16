@@ -1,14 +1,14 @@
 import requests
 from app import app, db
-from config.general import IEXCLOUD_ENDPOINT, IEXCLOUD_KEY
-from config.negocio import IEXCLOUD
+from config.app_constants import IEXCLOUD
 from common.StatusMessage import StatusMessage
 from datetime import datetime, date, timedelta
 from common.Error import Error
 from common.Response import Response
 from common.api.Quote import Quote
 
-class iexcloud:    
+
+class iexcloud:
 
     def __init__(self):
         self.status = StatusMessage()
@@ -113,18 +113,9 @@ class iexcloud:
         rsp = requests.get(endpoint,params=params, headers=headers)
         return rsp.json()
 
-    def get_historical_prices(self, args={}):      
+    def get_historical_prices(self, args={}):
 
-        PROFUNDIDAD = {
-            "YTD":"ytd",
-            "MAX":"max",
-            "MESACTUAL":"1m",
-            "ULT3MESES":"3m",    
-            "ULT6MESES":"6m",    
-            "ULT1ANYO":"1y"
-        }
-
-        api_range = PROFUNDIDAD.get(args.get("range")).lower()
+        api_range = args.get("range").lower()
         symbol = args.get("symbol")
         
         endpoint = "{0}/stock/{1}/chart/{2}".format(self.base_endpoint, symbol, api_range)
@@ -132,7 +123,7 @@ class iexcloud:
             'Content-Type': 'application/json'
         }
         params = {
-            "token":self.key
+            "token": self.key
         }        
 
         rsp = requests.get(endpoint,params=params, headers=headers)
@@ -143,13 +134,13 @@ class iexcloud:
     def fx_historical(self, params={}):     
                    
 
-        endpoint = "{0}/fx/historical/".format(IEXCLOUD_ENDPOINT)
+        endpoint = "{0}/fx/historical/".format(app.config.get("IEXCLOUD_ENDPOINT"))
         headers = {
             'Content-Type': 'application/json'
         }
 
         
-        params["token"] = IEXCLOUD_KEY
+        params["token"] = app.config.get("IEXCLOUD_KEY")
         params["symbols"] = "USDPEN"
 
         rsp = requests.get(endpoint,params=params, headers=headers)
@@ -163,7 +154,7 @@ class iexcloud:
             'Content-Type': 'application/json'
         }
 
-        params["token"] = IEXCLOUD_KEY
+        params["token"] = app.config.get("IEXCLOUD_KEY")
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()
         return data
@@ -174,15 +165,16 @@ class iexcloud:
             'Content-Type': 'application/json'
         }
 
-        params["token"] = IEXCLOUD_KEY
+        params["token"] = app.config.get("IEXCLOUD_KEY")
         rsp = requests.get(endpoint,params=params, headers=headers)
         data = rsp.json()
         return data
 
+
 class ProfundidadHelper:
     def get_fechas_equivalentes(self):
         equivalencias = {}
-        for profundidad in IEXCLOUD.PROFUNDIDADES:
+        for profundidad in IEXCLOUD.PROFUNDIDADES.value:
             fecha = self.profundidad_a_fecha(profundidad=profundidad)
             equivalencias[profundidad] = fecha
 
@@ -216,7 +208,7 @@ class RangoHelper:
 
     def get_fechas_limite(self):
         fechas = []
-        for profundidad_desde, profundidad_hasta in IEXCLOUD.RANGOS:
+        for profundidad_desde, profundidad_hasta in IEXCLOUD.RANGOS.value:
             fecha_desde = self.get_fecha_limite_desde(profundidad_desde)
             fecha_hasta = self.get_fecha_limite_hasta(profundidad_hasta)
             fechas.append((profundidad_desde, fecha_desde, fecha_hasta))
@@ -233,7 +225,7 @@ class RangoHelper:
         fch_hasta = profundidad_helper.profundidad_a_fecha(profundidad=profundidad_hasta)
         return fch_hasta
 
-    def get_fecha_limite_desde(selfself, profundidad_desde):
+    def get_fecha_limite_desde(self, profundidad_desde):
         profundidad_helper = ProfundidadHelper()
 
         if profundidad_desde == "max":

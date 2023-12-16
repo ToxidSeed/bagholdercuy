@@ -108,8 +108,7 @@ export default {
         },
         filtrar:function(filtros){            
             this.symbol_value = filtros.symbol_value
-            this.symbol_text = filtros.symbol_text 
-            console.log(this.symbol_text)              
+            this.symbol_text = filtros.symbol_text                  
             this.$router.push({name:"variacion-diaria", query:{cod_symbol:filtros.symbol_value}})
         }
     }

@@ -13,6 +13,14 @@ class GestorObjeto{
         }
     }
 
+    set_campos = function(objeto_referencia){
+        for (let element in this.objeto){
+            if (element in objeto_referencia){
+                this.objeto[element] = objeto_referencia[element]
+            }
+        }
+    }
+
     set_data = function(objeto_referencia={}){
         for (let element in objeto_referencia){            
             this.objeto[element] = objeto_referencia[element]

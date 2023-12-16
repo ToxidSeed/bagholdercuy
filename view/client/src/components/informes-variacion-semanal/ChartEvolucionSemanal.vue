@@ -33,16 +33,23 @@ export default {
             dateAxis:null
         }
     },
-    watch:{
-        infiltros:function(newval){            
-            this.filtros = newval
-            this.filtrar()
+    watch:{        
+        $route: function(to){
+            console.log(to)
+            if (Object.keys(to.query).length > 0){
+                console.log("enter aqui")
+                this.filtrar(to.query)
+            }
         }
     },
     mounted:function(){        
-        this.construir()
+        this.init()
     },
     methods:{
+        init: function(){
+            this.construir()
+            this.filtrar(this.$route.query)
+        },
         construir:function(){
             this.chart = am4core.create("chartdiv", am4charts.XYChart)
             this.chart.padding(5, 15, 0, 15);
@@ -80,13 +87,22 @@ export default {
             series.dataFields.lowValueY = "imp_minimo";
             series.dataFields.highValueY = "imp_maximo";
 
+            /*
+            series.dropFromOpenState.properties.fill = am4core.color("#8F3985");
+            series.dropFromOpenState.properties.stroke = am4core.color("#8F3985");
+            */
+
+            series.riseFromOpenState.properties.fill = am4core.color("#07BEB8");
+            series.riseFromOpenState.properties.stroke = am4core.color("#07BEB8");
+
         },
-        filtrar:function(){
+        filtrar:function(params){
+            console.log("filtrar params")
             this.$http.post(
                 'reportes/VariacionSemanalEvolucion/build',{
-                    symbol:this.filtros.symbol,
-                    anyo:this.filtros.anyo,
-                    semana:this.filtros.semana                    
+                    symbol:params.cod_symbol,
+                    anyo:params.anyo,
+                    semana:params.semana                    
                 },
                 postconfig()
             ).then(httpresp => {

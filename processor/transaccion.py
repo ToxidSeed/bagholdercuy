@@ -5,8 +5,8 @@ from model.transaccion import TransaccionModel
 from reader.transaccion import TransaccionReader
 from reader.calendariodiario import CalendarioDiarioReader
 
-from config.negocio import TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
-from config.negocio import TIPO_ACTIVO_OPT
+from config.app_constants import TIPO_ORDEN_COMPRA, TIPO_ORDEN_VENTA
+from config.app_constants import TIPO_ACTIVO_OPT
 from settings import config
 
 from datetime import datetime, date

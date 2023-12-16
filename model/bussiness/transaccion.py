@@ -9,8 +9,8 @@ from common.AppException import AppException
 from common.auth import Auth
 
 from model.bussiness.mov_fondos import Ingreso, Salida
-from config.negocio import TIPO_TRANS_CONVERSION, TIPO_TRANS_DEPOSITO, TIPO_TRANS_RETIRO
-from config.negocio import REPROCESO_PROF_FONDOS_TODO, REPROCESO_PROF_FONDOS_FCH_CIERRE
+from config.app_constants import TIPO_TRANS_CONVERSION, TIPO_TRANS_DEPOSITO, TIPO_TRANS_RETIRO
+from config.app_constants import REPROCESO_PROF_FONDOS_TODO, REPROCESO_PROF_FONDOS_FCH_CIERRE
 from app import app, db
 
 from sqlalchemy import func, true, and_

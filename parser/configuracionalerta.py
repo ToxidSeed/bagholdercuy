@@ -2,7 +2,7 @@ from model.configuracionalerta import ConfiguracionAlertaModel
 from model.monitoreo import MonitoreoModel
 from parser.base import BaseParser
 from common.AppException import AppException
-from config.negocio import TIPO_VARIACION_EJERCICIO
+from config.app_constants import TIPO_VARIACION_EJERCICIO
 
 from reader.symbol import SymbolReader
 from reader.monitoreo import MonitoreoReader

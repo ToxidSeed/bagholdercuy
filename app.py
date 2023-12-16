@@ -5,16 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from common.Response import Response
 
-from settings import config
+
 
 import traceback
 import sys, os
 import json
-
-class AppManager:
-    def get_database_uri():
-        env = config["default"]["env"]         
-        return config["database"][env]
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -79,9 +74,9 @@ class ImageLoader(Resource):
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 
-app.config.from_object("config.general")
+app.config.from_object("config.default_settings")
+app.config.from_envvar("BAGHOLDERAPI_SETTINGS")
 # app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
-app.config["SQLALCHEMY_DATABASE_URI"] = AppManager.get_database_uri()
 app.config["SQLALCHEMY_ECHO"] = False
 
 CORS(app,expose_headers=["Content-Disposition", "file_name"])

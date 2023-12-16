@@ -2,7 +2,7 @@ from model.TransaccionFondosModel import TransaccionFondosModel
 from model.conversionmoneda import ConversionMonedaModel
 from model.MovimientoFondosModel import MovimientoFondosModel
 from model.MonedaModel import MonedaModel
-from config.negocio import TIPO_MOV_INGRESO,  TIPO_MOV_SALIDA
+from config.app_constants import TIPO_MOV_INGRESO,  TIPO_MOV_SALIDA
 from common.AppException import AppException
 from datetime import datetime
 from app import app, db

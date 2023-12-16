@@ -16,13 +16,13 @@ from common.api.iexcloud import iexcloud
 import common.logger as logger
 from sqlalchemy.sql import func
 from sqlalchemy import or_
-from parser.symbol import SymbolFinderParser
-
+from parser.symbol import SymbolFinderParser, SymbolParser
 from processor.symbol import SymbolRemover
-from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from config.app_constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from controller.base import Base
 
 
-class SymbolManager:
+class SymbolManager(Base):
     def __init__(self):
         self.symbol = None
 
@@ -38,6 +38,17 @@ class SymbolManager:
             return Response(msg="Se ha guardado correctamente el symbol").get()
         except Exception as e:
             db.session.rollback()
+            return Response().from_exception(e)
+
+    def get_symbol_x_codigo(self, args={}):
+        try:
+            reader = SymbolReader()
+            parser = SymbolParser()
+
+            params = parser.parse_args_get_symbol_x_codigo(args=args)
+            result = reader.get(params.get("cod_symbol"))
+            return Response().from_raw_data(result)
+        except Exception as e:
             return Response().from_exception(e)
 
 
@@ -108,6 +119,7 @@ class SymbolFinder(Base):
         params = symbol_finder_parser.parse_args_get(args=args)
         record = SymbolReader().get(id_symbol=params.id_symbol)
         return Response().from_raw_data(record)
+
     def get_list(self, args={}):
         args = SymbolFinderParser.parse_args_get_list(args=args)
         records = SymbolReader.get_list(args=args)

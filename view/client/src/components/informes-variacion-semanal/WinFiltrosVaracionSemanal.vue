@@ -24,6 +24,7 @@
 </template>
 <script>
 import SelectSymbol from "@/components/SelectSymbol.vue";
+import store from "./store"
 
 export default {
     name:"WinFiltrosVariacionSemanal",
@@ -39,7 +40,8 @@ export default {
         return {
             open:this.value,
             symbol_text:"",
-            symbol_value:""            
+            symbol_value:"",
+            store: store 
         }
     },
     watch:{
@@ -56,10 +58,24 @@ export default {
             this.symbol_text = selected.label
         },
         btn_aceptar_click:function(){
-            this.$emit('btn-aceptar-click',{
+            /*this.$emit('btn-aceptar-click',{
                 symbol_value:this.symbol_value,
                 symbol_text: this.symbol_text
-            })
+            })*/
+            /*store.win_filtros_variacion_semanal.filtrar({
+                cod_symbol: this.symbol_value
+            })*/
+            
+            let params = {
+                cod_symbol: this.symbol_value
+            }
+
+            let payload = {
+                nom_symbol: this.symbol_text
+            }
+
+            this.$router.push({name:'variacion-semanal-series', query:params})
+            store.table_variacion_semanal.set_properties(payload)
         },
         btn_cerrar_click:function(){
             this.$emit('btn-cerrar-click')

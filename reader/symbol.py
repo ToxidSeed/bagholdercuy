@@ -1,8 +1,8 @@
 from model.StockSymbol import StockSymbol
 from common.AppException import AppException
-from config.general import DEFAULT_LIMIT
 
-from app import db
+from app import db, app
+
 
 class SymbolReader:
     def __init__(self, buffer=False):
@@ -90,7 +90,7 @@ class SymbolReader:
             StockSymbol.symbol.asc()
         )
 
-        stmt = stmt.limit(DEFAULT_LIMIT)
+        stmt = stmt.limit(app.config.get("DEFAULT_LIMIT"))
 
         results = db.session.execute(stmt)
         return results.scalars().all()

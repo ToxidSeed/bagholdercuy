@@ -169,7 +169,6 @@ class SerieDiariaReader:
         records = result.all()
         return records
 
-
     def get_fecha_maxima_x_symbol(self, cod_symbol=None):
         query = db.select(
             SerieDiariaModel.symbol.label("cod_symbol"),
@@ -179,7 +178,7 @@ class SerieDiariaReader:
         )
 
         result = db.session.execute(query)
-        return result.scalars().first()
+        return result.first()
 
 
     def get_series_entre_fechas(symbol, fch_inicio:date, fch_fin:date):

@@ -24,8 +24,8 @@ from reader.variaciondiaria import VariacionDiariaReader
 
 from parser.serie import SimulacionVariacionParser, SerieManagerLoaderParser
 
-from config.negocio import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL,SERIES_PROF_CARGA_ULT3MESES,SERIES_PROF_CARGA_ULT6MESES
-from config.negocio import SERIES_PROF_CARGA_ULT1ANYO
+from config.app_constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_MAX, SERIES_PROF_CARGA_YTD, NUM_SEMANAS_REPROCESAR_MES,TIPO_FRECUENCIA_SERIE_SEMANAL,TIPO_FRECUENCIA_SERIE_MENSUAL,SERIES_PROF_CARGA_ULT3MESES,SERIES_PROF_CARGA_ULT6MESES
+from config.app_constants import SERIES_PROF_CARGA_ULT1ANYO
 import common.api.iexcloud as iexcloud
 
 from datetime import date, datetime, timedelta
@@ -83,27 +83,24 @@ class SerieManagerLoader(Base):
         self.mes = None
         self.dia = None
 
-    def procesar_desde_ultima_fecha(self, args={}):
+    def actualizar_serie(self, args={}):
         try:
             serie_manager_loader_parser = SerieManagerLoaderParser()
             serie_diaria_reader = SerieDiariaReader()
-            args = serie_manager_loader_parser.parse_args_procesar_desde_fecha(args=args)
+            args = serie_manager_loader_parser.parse_args_actualizar_serie(args=args)
 
+            #
             cod_symbol = args.get("cod_symbol")
-            fch_ultima_serie = serie_diaria_reader.get_fecha_maxima_x_symbol(cod_symbol=cod_symbol)
 
-            rango_helper = iexcloud.RangoHelper()
-            rango = rango_helper.get_rango(fch_referencia=fch_ultima_serie)
-            if rango is None:
-                raise AppException(msg=f"No se ha encontrado un rango en que la fecha {fch_ultima_serie.isoformat()} pueda encajar")
+            # obtener la fecha de la serie mas reciente por symbol
+            result = serie_diaria_reader.get_fecha_maxima_x_symbol(cod_symbol=cod_symbol)
+            fch_ultima_serie = result.max_fch_serie
 
-            profundidad, fch_desde, fch_hasta = rango
+            # obtener el rango y fechas de la ultima fecha de la serie
+            profundidad, fch_desde, fch_hasta = self._get_rango(fch_referencia=fch_ultima_serie)
 
-            iexcloud_api = iexcloud.iexcloud()
-            series = iexcloud_api.get_historical_prices({
-                "symbol": cod_symbol,
-                "profundidad": profundidad
-            })
+            # obtener las series
+            series = self.get_historial_prices(symbol=cod_symbol, profundidad=profundidad)
 
             anyo_semana, num_semana, dia_semana = fch_ultima_serie.isocalendar()
 
@@ -159,6 +156,15 @@ class SerieManagerLoader(Base):
             db.session.rollback()
             return Response().from_exception(e)
 
+    def _get_rango(self, fch_referencia):
+        rango_helper = iexcloud.RangoHelper()
+        rango = rango_helper.get_rango(fch_referencia=fch_referencia)
+        if rango is None:
+            raise AppException(
+                msg=f"No se ha encontrado un rango en que la fecha {fch_referencia.isoformat()} pueda encajar")
+
+        return rango
+
     def get_fechas_proceso(self):
         self.fch_ini_procesar = self.get_fecha_inicio_proceso(self.profundidad)
         if self.fch_ini_procesar is not None:
@@ -189,7 +195,6 @@ class SerieManagerLoader(Base):
             fecha = fecha_actual + relativedelta(years=-1)
 
         return fecha
-      
 
     def get_historial_prices(self, symbol="", profundidad=""):
         args = {

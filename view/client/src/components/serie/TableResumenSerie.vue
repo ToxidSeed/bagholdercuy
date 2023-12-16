@@ -2,7 +2,7 @@
     <div>
         <q-table
             :columns="columns"
-            :data="data"
+            :data="store.table_resumen_serie.state.data"
             :pagination="pagination"
             row-key="symbol_id"
             separator="vertical"
@@ -16,7 +16,7 @@
                     context-menu
                     >
                         <q-list dense>
-                            <q-item clickable v-close-popup>
+                            <q-item clickable v-close-popup @click="store.table_resumen_serie.actualizar_serie(props.row)">
                                 <q-item-section><span><q-icon name="update" color="green" style="font-size: 1.4em;" class="q-pr-xs"></q-icon>Actualizar</span></q-item-section>
                             </q-item>
                         </q-list>
@@ -29,6 +29,7 @@
 </template>
 <script>
 import {postconfig} from '@/common/request.js'
+import store from "./store"
 
 
 export default {
@@ -38,6 +39,7 @@ export default {
     },
     data: () => {
         return {
+            store: store,
             columns:[{
                 label:"Symbol",
                 align:"left",   
@@ -82,9 +84,11 @@ export default {
         }
     },
     mounted:function(){
-        this.get_lista_fechas_maximas_x_symbol()
+        //this.get_lista_fechas_maximas_x_symbol()
+        store.table_resumen_serie.get_resumen_serie()
     },
     methods:{
+        /*
         get_lista_fechas_maximas_x_symbol:function(){
             this.$http.post(
                 "/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol",{},
@@ -95,6 +99,7 @@ export default {
                 this.data = appdata.data
             })
         },
+        */
         actualizar_series:function(row){
             this.$http.post("/",{
                 id_symbol: row.id_symbol

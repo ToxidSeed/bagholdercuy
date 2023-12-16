@@ -1,4 +1,3 @@
-from config.general import MARKET_API, MARKET_API_LIST
 from model.usuario import UsuarioModel
 from model.bussiness.auth import TokenHandler
 from common.AppException import AppException

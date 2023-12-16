@@ -4,7 +4,7 @@ from model.tipocambio import TipoCambioModel
 from model.MonedaParModel import MonedaParModel
 from processor.tipocambio import TipoCambioWriter
 
-from config.negocio import PAR_OPERACION_DIV
+from config.app_constants import PAR_OPERACION_DIV
 from config.general import CLIENT_DATE_FORMAT
 from datetime import date, datetime
 from controller.base import Base

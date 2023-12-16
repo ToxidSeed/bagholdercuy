@@ -1,6 +1,6 @@
 <template>
     <q-table
-        :data="data"
+        :data="store.table_variacion_semanal.state.data"
         :columns="columns"        
         row-key="fch_serie"
         title="Variación Cierre"
@@ -9,10 +9,11 @@
         separator="vertical" 
     >
         <template v-slot:top>
-            <div v-if="filtros.symbol != ''">
-                <span class="text-blue-10 text-h6 q-pr-xs">{{ filtros.symbol }}</span><span class="text-body1">{{ filtros.symbol_nombre }}</span>
+            <div v-if="titulo_personalizado_visible">
+                <span class="text-blue-10 text-h6 q-pr-xs">{{ store.table_variacion_semanal.state.filtros.cod_symbol }}</span>
+                <span class="text-body1">{{ store.table_variacion_semanal.state.nom_symbol }}</span>
             </div>
-            <div v-if="filtros.symbol == ''">
+            <div v-if="titulo_personalizado_visible == false">
                 <span class="text-body1 text-orange-10">Seleccionar instrumento financiero</span>
             </div>            
         </template>
@@ -98,7 +99,8 @@
 //import date from 'date-and-time'
 //import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
 //import {headers} from '@/common/common.js'
-import {postconfig} from '@/common/request.js';
+//import {postconfig} from '@/common/request.js';
+import store from './store'
 
 export default {
     name:"TableVariacionSemanal",
@@ -120,17 +122,19 @@ export default {
             default:""
         }
     },
-    watch:{
-        indata:function(newdata){
-            console.log("indata")
-            console.log(newdata)
-            this.data = newdata
-        },
-        infiltros:function(newval){                        
-            this.filtros.symbol = newval.symbol_value            
-            this.filtros.symbol_nombre = newval.symbol_text
-            console.log(this.filtros)
-            this.filtrar()
+    computed:{
+        titulo_personalizado_visible:function(){            
+            if (store.table_variacion_semanal.state.filtros.cod_symbol !== ""){
+                return true
+            }else{
+                return false
+            }
+        }
+    },
+    watch:{        
+        $route:function(newroute){     
+            console.log("$route")       
+            store.table_variacion_semanal.get_datos_variacion(newroute.query)
         }
     },
     data: () => {
@@ -143,55 +147,39 @@ export default {
             filtros:{
                 symbol:"",
                 symbol_nombre:""
-            }
+            },
+            store: store
         }
     },
     mounted:function(){
-        //this.get_variacion_semanal()
-        console.log('mounted-table-variacion-semanal')
+        //this.get_variacion_semanal()        
         this.init()
         
     },
     methods:{
-        init:function(){
-            if (this.indata.length > 0){
-                this.data = this.indata
-                console.log(this.data)
-            }
-        },
-        filtrar:function(){
-            this.$http.post(
-                '/reportes/VariacionSemanalBuilder/build',{
-                    symbol: this.filtros.symbol
-                },
-                postconfig()
-            ).then(httpresp => {
-                let appresp = httpresp.data
-                this.data = []
-                
-                appresp.data.forEach(element => {
-                    element.imp_cierre_ant = element.imp_cierre_ant.toFixed(2)
-                    element.imp_maximo = element.imp_maximo.toFixed(2)
-                    element.imp_minimo = element.imp_minimo.toFixed(2)
-                    element.imp_cierre = element.imp_cierre.toFixed(2)
-                    element.pct_variacion_cierre = element.pct_variacion_cierre.toFixed(2)
-                    element.imp_variacion_cierre = element.imp_variacion_cierre.toFixed(2)
-                    element.pct_variacion_maximo = element.pct_variacion_maximo.toFixed(2)
-                    element.imp_variacion_maximo = element.imp_variacion_maximo.toFixed(2)
-                    element.pct_variacion_minimo = element.pct_variacion_minimo.toFixed(2)
-                    element.imp_variacion_minimo = element.imp_variacion_minimo.toFixed(2)
-                    this.data.push(element)                    
-                })
-            })
+        init:function(){                                    
+            let filtros = this.$route.query     
+            
+            store.table_variacion_semanal.reset()
+            store.table_variacion_semanal.set_filtros(
+                this.$route.query
+            )
+
+            store.table_variacion_semanal.get_datos_variacion(filtros)
         },
         abrir_evolucion_semanal:function(row){       
-            console.log(row)     
-            this.$router.push({name:'variacion-semanal-evolucion', params:{
+            //console.log(row)     
+            /*this.$router.push({name:'variacion-semanal-evolucion', params:{
                 infiltros:{
                     symbol:row.symbol,
                     anyo:row.anyo,
                     semana:row.semana
                 }
+            }})*/
+            this.$router.push({name:'variacion-semanal-evolucion', query:{
+                cod_symbol:row.symbol,
+                anyo: row.anyo,
+                semana: row.semana
             }})
         }
     }

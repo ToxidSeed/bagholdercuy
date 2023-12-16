@@ -1,6 +1,14 @@
 from parser.base import BaseParser
 from collections import namedtuple
 
+class SymbolParser:
+
+    def parse_args_get_symbol_x_codigo(self, args={}):
+        parser = BaseParser(args=args)
+        cod_symbol = parser.get("cod_symbol", requerido=True)
+        args["cod_symbol"] = cod_symbol
+        return args
+
 class SymbolFinderParser:
 
     @staticmethod

@@ -1,22 +1,21 @@
 <template>
-    <div>
-        <q-card flat>
-            <q-toolbar class="text-blue-10 q-pb-none q-mb-none">
-                <q-btn flat round dense icon="menu">
-                    <q-menu>
-                        <q-list dense>
-                            <q-item clickable :to="{name:'variacion-semanal-evolucion'}">
-                                <q-item-section>Evolución</q-item-section>
-                            </q-item>
-                        </q-list>
-                    </q-menu>
-                </q-btn>
-                <span class="text-h6 q-pr-md">
-                    Variacion Semanal        
-                </span>      
-                <q-btn flat round dense icon="search" @click="win_filtro_variacion_semanal.open=true"></q-btn>      
-            </q-toolbar>                        
-        </q-card>        
+    <div>        
+        <q-toolbar class="text-blue-10 q-pb-none q-mb-none">
+            <q-btn flat round dense icon="menu">
+                <q-menu>
+                    <q-list dense>
+                        <q-item clickable :to="{name:'variacion-semanal-evolucion'}">
+                            <q-item-section>Evolución</q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-menu>
+            </q-btn>
+            <span class="text-h6 q-pr-md">
+                Variacion Semanal        
+            </span>      
+            <q-btn flat round dense icon="search" @click="win_filtro_variacion_semanal.open=true"></q-btn>      
+        </q-toolbar>     
+        <q-separator/>                                      
         <div class="row">
             <!--
             <TableVariacionSemanal class="col-12" :indata="data"
@@ -37,7 +36,7 @@
 </template>
 <script>
 //import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
-import WinFiltrosVaracionSemanal from '@/components/informes/WinFiltrosVaracionSemanal.vue';
+import WinFiltrosVaracionSemanal from '@/components/informes-variacion-semanal/WinFiltrosVaracionSemanal.vue';
 
 import {postconfig} from '@/common/request.js';
 
