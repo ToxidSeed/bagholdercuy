@@ -135,3 +135,5 @@ test.py
 # code files
 .vscode/
 
+# tmp files
+tmp
