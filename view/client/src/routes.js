@@ -20,6 +20,14 @@ import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
 import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
+import PanelVariacionDiariaSeries from "@/components/informes-variacion-diaria/PanelVariacionDiariaSeries.vue";
+import PanelEvolucionDiariaSeries from "@/components/informes-variacion-diaria/PanelEvolucionDiariaSeries.vue"
+
+import PanelNasdaqCsvLoader from '@/components/serie/PanelNasdaqCsvLoader.vue'
+import PanelSerieLoader  from '@/components/serie/PanelSerieLoader.vue'
+
+//Simulacion de rentabilidad
+import PanelSimulacionRentabilidadOpciones from "@/components/simulacion-rentabilidad/opciones/PanelSimulacionRentabilidadOpciones.vue"
 
 //Rentabilidad operaciones
 import PanelRentabilidadOperaciones from '@/components/informes/PanelRentabilidadOperaciones.vue';
@@ -64,6 +72,14 @@ import MainCuenta from '@/components/cuenta/MainCuenta.vue'
 //Usuario
 import PanelUsuario from '@/components/usuario/PanelUsuario.vue'
 import MainUsuario from '@/components/usuario/MainUsuario.vue'
+
+//metricas
+import PanelMetricas from "@/components/metricas/PanelMetricas.vue"
+
+//stock splits
+import PanelMantStockSplit from "@/components/split/PanelMantStockSplit.vue"
+import MainStockSplit from './components/split/MainStockSplit.vue';
+import PanelStockSplitLoader from "@/components/split/PanelStockSplitLoader.vue"
 
 import Main from '@/Main.vue'
 
@@ -186,7 +202,11 @@ const routes =  [
                 component:PanelOpcionCargaFichero
               }
             ]
-          },{
+          },
+          {
+            path:"/metricas",component:PanelMetricas, props:true, name:"metricas"
+          },
+          {
             path:"/reorganizarorden",component:PanelReorganizar
           },{
             path:"/variacionmensual",component:PanelVariacionMensual
@@ -208,11 +228,33 @@ const routes =  [
           },{
             path:"/variaciondiaria",
             component:PanelVariacionDiaria,
-            name:"variacion-diaria"
+            name:"variacion-diaria",
+            props:true,
+            children:[
+              {
+                path:"",
+                mame:"variacion-diaria-series",
+                props:true,
+                component: PanelVariacionDiariaSeries
+              },{
+                path:"series-evolucion",
+                props:true,
+                name:"variacion-diaria-series-evolucion",
+                component: PanelEvolucionDiariaSeries
+              }
+            ]
           },{
             path:"/simulacion-rentabilidad",
             name:"simulacion-rentabilidad",
-            component: PanelSimulacionRentabilidad
+            component: PanelSimulacionRentabilidad,
+            children :[
+              {
+                path:"",
+                name:"simulacion-rentabilidad-opciones",
+                props:true,
+                component: PanelSimulacionRentabilidadOpciones
+              }
+            ]
           },{
             path:"/rentabilidadoperaciones", component:PanelRentabilidadOperaciones,
             name:"rentabilidad-operaciones",
@@ -244,7 +286,16 @@ const routes =  [
             ]
           },{
             path:"/series",
-            component:MainMantSerie
+            component:MainMantSerie,
+            children:[{
+              path:"nasdaq-csv-loader",
+              name:"nasdaq-csv-loader",
+              component: PanelNasdaqCsvLoader
+            },{
+              path:"iexcloud-loader",
+              name:"iexcloud-loader",
+              component: PanelSerieLoader              
+            }]
           },{
             path:"/broker",
             name:"broker",
@@ -317,6 +368,32 @@ const routes =  [
                 name:"usuario-config",
                 props:true,
                 component: PanelUsuario
+              }
+            ]
+          },  
+          {
+            path:"/stocksplit",
+            name:"stocksplit",
+            component: MainStockSplit,
+            props:true,
+            children:[
+              {
+                path:"loader",
+                name:"stocksplit-loader",
+                props:true,
+                component:PanelStockSplitLoader
+              },
+              {
+                path:"ver/:id_stock_split",
+                name:"stocksplit-ver",
+                props:true,
+                component: PanelMantStockSplit
+              },
+              {
+                path:"editar/:id_stock_split",
+                name:"stocksplit-editar",
+                props:true,
+                component: PanelMantStockSplit
               }
             ]
           }

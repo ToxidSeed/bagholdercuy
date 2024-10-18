@@ -2,7 +2,7 @@
     <div>
         <q-table
             :columns="columns"
-            :data="store.table_resumen_serie.state.data"
+            :data="store.state.t_resumen.data"
             :pagination="pagination"
             row-key="symbol_id"
             separator="vertical"
@@ -22,7 +22,7 @@
                                 <q-item clickable v-close-popup @click="store.table_resumen_serie.actualizar_serie(props.row)">
                                     <q-item-section><span><q-icon name="update" color="green" class="q-pr-xs"></q-icon>Actualizar</span></q-item-section>
                                 </q-item>
-                                <q-item clickable v-close-popup @click="preguntar_confirmar_reparar(props.row.cod_symbol)">
+                                <q-item clickable v-close-popup @click="store.abrir_w_reparar(props.row.cod_symbol)">
                                     <q-item-section><span><q-icon name="construction" color="green" class="q-pr-xs"></q-icon>Reparar</span></q-item-section>
                                 </q-item>
                             </q-list>
@@ -115,18 +115,20 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
-    </div>
+        <WinRepararSeries v-model="store.state.w_reparar.open"/>
+    </div>    
 </template>
 <script>
 
 import store from "./store"
+import WinRepararSeries from "./WinRepararSeries"
 import SerieApi from "@/api/serie.js"
 import {HttpResponseHandler} from "@/common/http-response-handler.js"
 
 export default {
     name:"TableResumenSerie",
     components:{
-        
+        WinRepararSeries
     },
     data: () => {
         return {
@@ -297,11 +299,11 @@ export default {
             if (estado == 'Desactualizado'){
                 return " text-amber-10"
             }
-        },
+        }/*,
         preguntar_confirmar_reparar: function(cod_symbol){
             this.confirm_reparar = true
             this.cod_symbol_reparar = cod_symbol
-        },
+        }*/,        
         reparar: function(cod_symbol){
             let data = {
                 "cod_symbol": cod_symbol
@@ -315,8 +317,9 @@ export default {
             })
         },
         recargar_datos: async function(){
-            let data = await new SerieApi().get_lista_fechas_maximas_x_symbol()
-            store.table_resumen_serie.state.data = data
+            //let data = await new SerieApi().get_lista_fechas_maximas_x_symbol()
+            //store.state.t_resumen_data = data
+            store.get_resumen_serie()
         }
     }
 }
