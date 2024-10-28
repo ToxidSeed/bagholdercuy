@@ -9,7 +9,6 @@
             </q-toolbar>
             <q-separator/>
             <q-card-section>
-
             </q-card-section>
         </q-card>
     </div>

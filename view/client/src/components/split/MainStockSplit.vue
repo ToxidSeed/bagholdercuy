@@ -30,7 +30,7 @@
     </div>
 </template>
 <script>
-import {st_table_list_stock_split, st_panel_list_stock_split, st_main_stock_split} from "./split-store";
+import split_store from "./split-store";
 
 import TableListStockSplit from './TableListStockSplit.vue';
 
@@ -45,9 +45,7 @@ export default {
     data () {
         return {
             lpanel_visible: false,
-            st_table_list_stock_split: st_table_list_stock_split,
-            st_panel_list_stock_split: st_panel_list_stock_split,
-            st_main_stock_split: st_main_stock_split
+            split_store:split_store
         }
     },
     watch:{
@@ -61,7 +59,7 @@ export default {
     methods: {
         init: function(){
             this.habilitar()
-            this.st_table_list_stock_split.get_data()
+            //this.st_table_list_stock_split.get_data()
         },
         habilitar: function(){
             if (this.$route.name == "stocksplit"){
