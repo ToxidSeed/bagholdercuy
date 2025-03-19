@@ -1,3 +1,5 @@
+from datetime import date
+
 #database
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://alone:alone@localhost/bagholdercuy"
 
@@ -33,3 +35,27 @@ TMP_DIR = ""
 DEFAULT_LIMIT = 200
 
 AUTH_SECRET_KEY = ""
+
+#Interactive brokers
+IBKR_COD_OPCION_MIN_LONGITUD = 21
+
+#MARKETDATA
+MARKETDATA_ENDPOINT = "https://api.marketdata.app/v1/"
+MARKETDATA_API_TOKEN = "RUtqREpYdG9oLXJoUzlxNkwxTEI5bUJYNllPUGh5TTdscVBxcHB5UE5xaz0"
+
+#FINANCIAL MODELING GREP
+FINANCIAL_MODELING_GREP_ENDPOINT = "https://financialmodelingprep.com/api/v3"
+FINANCIAL_MODELING_GREP_API_TOKEN = "UDScCjIcqzgOtFWWFl5rsowR2alLBKv8"
+
+#Rutas
+RUTA_TMP = "tmp"
+
+# Fechas
+MYSQL_MIN_DATE = date.fromisoformat("1000-01-01")
+MYSQL_MAX_DATE = date.fromisoformat("9999-12-31")
+
+# modos de insercion
+WRITE_MODE_AGREGAR = 1
+WRITE_MODE_REEMPLAZAR = 2
+WRITE_MODE_ERROR_SI_EXISTE = 3
+WRITE_MODE_IGNORAR = 4

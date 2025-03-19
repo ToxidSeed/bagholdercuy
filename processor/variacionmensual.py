@@ -2,6 +2,7 @@ from datetime import date
 from model.variacionmensual import VariacionMensualModel
 from reader.seriemensual import SerieMensualReader
 from app import db
+from domain.mes import CodigoMes
 
 from datetime import timedelta
 
@@ -89,6 +90,7 @@ class VariacionMensualWriter:
 
         nueva_var_mensual = VariacionMensualModel(
             symbol = serie_mensual.symbol,
+            cod_mes = CodigoMes.componer(serie_mensual.fch_ini_mes.year, serie_mensual.fch_ini_mes.month),
             fch_ini_mes = serie_mensual.fch_ini_mes,
             anyo = serie_mensual.fch_ini_mes.year,
             mes = serie_mensual.fch_ini_mes.month,

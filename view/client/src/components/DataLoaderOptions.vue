@@ -1,21 +1,12 @@
 <template>
     <div>
-    <q-card>         
-        <q-card-section class="q-pa-xs">                    
-            <q-banner inline-actions rounded class="bg-secondary text-white">
-                <div class="row">
-                    <q-icon color="white" name="file_upload" style="font-size: 2em;"/>
-                    <div class="text-subtitle1 q-mt-xs">Carga masiva de contratos</div>
-                    
-                </div>                 
-                <template v-slot:action>
-                    <q-btn flat color="white" rounded icon="close"/>                    
-                </template>
-            </q-banner>
-        </q-card-section>                
+    <q-card>                 
+        <q-card-section class="q-pa-xs">
+            <div class="text-h6 text-blue-10">Carga masiva de contratos</div>                      
+        </q-card-section>
         <q-card-section class="q-pa-xs">            
             <q-toolbar class="q-pl-xs">                                             
-                <q-btn  label="Procesar" color="green" @click="procesar"/>                
+                <q-btn  label="Procesar" color="green" @click="procesar" icon="play_arrow" outline/>                
             </q-toolbar>
             <div class="row q-pl-xs q-pr-xs">
                 <SelectSymbol  
@@ -26,7 +17,7 @@
                     <div class="q-pt-xs text-indigo text-h6">{{symbol}}</div>
                     <div class="q-pt-xs text-subtitle1">{{symbol_nombre}}</div>
                 </div>
-                <q-input v-model="fch_expiracion" label="Expiración" mask="##/##/####" hint="dd/mm/yyyy"/>
+                <q-input v-model="fch_expiracion" stack-label label="Expiración" mask="##/##/####" placeholder="dd/mm/yyyy" color="blue-10"/>
             </div>            
         </q-card-section>      
         <q-inner-loading :showing="loading">
@@ -40,7 +31,7 @@
 import MessageBox from '@/components/MessageBox.vue'
 import SelectSymbol from '@/components/SelectSymbol.vue'
 import {postconfig} from '@/common/request.js'
-import date from 'date-and-time'
+//import date from 'date-and-time'
 
 export default {
     name:"DataloaderOptions",
@@ -98,16 +89,18 @@ export default {
             
         },
         procesar:function(){
-            let fch_expiracion = ""
+            //let fch_expiracion = ""
 
+            /*
             if (this.fch_expiracion != ""){
                 fch_expiracion = date.transform(this.fch_expiracion,"DD/MM/YYYY","YYYY-MM-DD")
-            }            
+            }       
+            */     
 
             this.loading = true
             this.$http.post('/OpcionesContrato/SymbolLoader/load',{
-                symbol:this.symbol,
-                fch_expiracion:fch_expiracion,
+                cod_symbol:this.symbol,
+                fch_expiracion:this.fch_expiracion,
             },
             postconfig()
             ).then(httpresp => {

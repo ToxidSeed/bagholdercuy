@@ -18,3 +18,31 @@ class VariacionDiariaModel(db.Model):
     imp_variacion_maximo = db.Column(db.Numeric(15,4))
     pct_variacion_minimo = db.Column(db.Numeric(8,4))
     imp_variacion_minimo = db.Column(db.Numeric(15,4))
+    imp_variacion_maximo_minimo = db.Column(db.Numeric(15, 4))
+
+    @classmethod
+    def eliminar_x_symbol(cls, cod_symbol):
+        stmt = db.session.delete(
+            VariacionDiariaModel
+        ).where(
+            VariacionDiariaModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        return result
+
+    @classmethod
+    def eliminar_x_symbol_desde_fecha(cls, cod_symbol, fch_desde):
+        stmt = db.session.delete(
+            VariacionDiariaModel
+        ).where(
+            VariacionDiariaModel.symbol == cod_symbol,
+            VariacionDiariaModel.fch_serie >= fch_desde
+        )
+        
+        result = db.session.execute(stmt)
+        return result
+
+
+
+        

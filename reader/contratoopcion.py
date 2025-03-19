@@ -27,8 +27,110 @@ class ContratoOpcionReader:
             self.__memoria[record.cod_symbol] = record   
         return record
 
-    
-    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=0, limit=0):
+    def get_calls( cod_subyacente, fch_expiracion=None, imp_ejercicio=None):
+        stmt = db.select(
+            OptionContractModel
+        ).where(
+            OptionContractModel.underlying == cod_subyacente,
+            OptionContractModel.side == "call"
+        )
+
+        if fch_expiracion is not None:
+            stmt = stmt.where(
+                OptionContractModel.expiration_date == fch_expiracion
+            )
+
+        if imp_ejercicio is not None:
+            stmt = stmt.where(
+                OptionContractModel.strike == imp_ejercicio
+            )
+
+        stmt = stmt.order_by(
+            OptionContractModel.expiration_date.asc(),
+            OptionContractModel.strike.asc()
+        )
+
+        result = db.session.execute(stmt)
+        records = result.scalars().all()
+        return records
+
+    @staticmethod
+    def get_puts(cod_subyacente, fch_expiracion=None, imp_ejercicio=None):
+        stmt = db.select(
+            OptionContractModel
+        ).where(
+            OptionContractModel.underlying == cod_subyacente,
+            OptionContractModel.side == "put"
+        )
+
+        if fch_expiracion is not None:
+            stmt.where(
+                OptionContractModel.expiration_date == fch_expiracion
+            )
+
+        if imp_ejercicio is not None:
+            stmt.where(
+                OptionContractModel.strike == imp_ejercicio
+            )
+
+        stmt = stmt.order_by(
+            OptionContractModel.expiration_date.asc(),
+            OptionContractModel.strike.asc()
+        )
+
+        result = db.session.execute(stmt)
+        records = result.scalars().all()
+        return records
+
+    @staticmethod
+    def get_fechas_expiracion(cod_subyacente, cod_tipo_opcion=None, imp_ejercicio=None):
+        stmt = db.select(
+            OptionContractModel.expiration_date
+        ).where(
+            OptionContractModel.underlying == cod_subyacente
+        )
+
+        if cod_tipo_opcion in ["call", "put"]:
+            stmt = stmt.where(
+                OptionContractModel.side == cod_tipo_opcion
+            )
+
+        if imp_ejercicio is not None:
+            stmt = stmt.where(
+                OptionContractModel.strike == imp_ejercicio
+            )
+
+        stmt = stmt.distinct()
+
+        result = db.session.execute(stmt)
+        records = result.scalars().all()
+        return records
+
+    @staticmethod
+    def get_imp_ejercicios(cod_subyacente, cod_tipo_opcion=None, fch_expiracion=None):
+        stmt = db.select(
+            OptionContractModel.strike
+        ).where(
+            OptionContractModel.underlying == cod_subyacente,
+            OptionContractModel.side == "put"
+        )
+
+        if cod_tipo_opcion in ["call", "put"]:
+            stmt.where(
+                OptionContractModel.side == cod_tipo_opcion
+            )
+
+        if fch_expiracion is not None:
+            stmt.where(
+                OptionContractModel.expiration_date == fch_expiracion
+            )
+
+        result = db.session.execute(stmt)
+        records = result.scalars().all()
+        return records
+
+    @staticmethod
+    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=None, limit=0):
 
         stmt = db.select(
             OptionContractModel
@@ -54,7 +156,7 @@ class ContratoOpcionReader:
                 OptionContractModel.expiration_date == fch_expiracion
             )
         
-        if imp_ejercicio > 0:
+        if imp_ejercicio is not None:
             stmt = stmt.where(
                 OptionContractModel.strike == imp_ejercicio
             )
@@ -69,3 +171,17 @@ class ContratoOpcionReader:
         result = db.session.execute(stmt)
         records = result.scalars().all()
         return records
+
+    @staticmethod
+    def get_contrato(cod_symbol):
+        stmt = db.select(
+            OptionContractModel
+        ).where(
+            OptionContractModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        record = result.scalars().first()
+        return record
+
+

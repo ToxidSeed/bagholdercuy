@@ -2,7 +2,7 @@ from model.variacionsemanal import VariacionSemanalModel
 from model.seriesemanal import SerieSemanalModel
 from reader.seriesemanal import SerieSemanalReader
 
-class VariacionSemanalReprocesador:
+class ReprocesadorVariacionSemanalService:
     def __init__(self, cod_symbol, flg_reprocesar_todo):
         self.cod_symbol = cod_symbol
         self.flg_reprocesar_todo = flg_reprocesar_todo

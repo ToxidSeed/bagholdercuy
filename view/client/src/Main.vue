@@ -20,8 +20,8 @@
       <MenuPrincipal/>
     </q-drawer>
 
-    <q-page-container>
-      <router-view />
+    <q-page-container >
+      <router-view/>
     </q-page-container>
     <MessageBox/>
   </q-layout>  

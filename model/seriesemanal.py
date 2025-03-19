@@ -7,6 +7,7 @@ class SerieSemanalModel(db.Model):
     fch_semana = db.Column(db.Date, primary_key=True)
     anyo = db.Column(db.Integer)
     semana = db.Column(db.Integer)
+    cod_semana = db.Column(db.Integer)
     imp_apertura = db.Column(db.Numeric(15,4))
     imp_maximo = db.Column(db.Numeric(15,4))
     imp_minimo = db.Column(db.Numeric(15,4))
@@ -17,3 +18,13 @@ class SerieSemanalModel(db.Model):
     imp_cierre_ajus = db.Column(db.Numeric(15,4))    
     fch_registro = db.Column(db.Date)
     
+    @classmethod
+    def eliminar_x_symbol(cls, cod_symbol):  
+        stmt = db.session.delete(
+            SerieSemanalModel
+        ).where(
+            SerieSemanalModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        return result

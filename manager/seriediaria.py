@@ -4,6 +4,8 @@ from common.AppException import AppException
 from model.seriediaria import SerieDiariaModel
 from datetime import date
 from app import db
+from typing_extensions import deprecated
+
 
 class SerieManager:
     def __init__(self):
@@ -12,10 +14,11 @@ class SerieManager:
     def crear_serie(self, cod_symbol, serie_):
         pass
 
-class SimpleSerieManager:
+class SimpleSerieDiariaManager:
     def __init__(self):
         pass
 
+    @deprecated("No usar esta metodo SimpleSerieDiariaManager:crear_serie")
     def crear_serie(self, cod_symbol, serie):
         fch_serie, imp_cierre, ctd_volumen, imp_apertura, imp_maximo, imp_minimo = serie
         fch_semana = CodigoSemana(fch_serie).to_fecha_inicio_semana()

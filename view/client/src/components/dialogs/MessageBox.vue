@@ -32,19 +32,24 @@
                     </q-card-section>
                     <q-card-section class="q-pt-none q-mt-none" v-if="elemento.stacktrace.length > 0">
                         <div class="text-subtitle1 text-red text-weight-bold">Stacktrace</div>
-                        <div v-for="error in elemento.stacktrace" v-bind:key="error">
-                            {{error}}
+                        <div v-for="(error,index) in elemento.stacktrace" v-bind:key="error">
+                            <span class="text-blue">{{index}}: </span><div class="text-purple">{{error}}</div>
                         </div>
                     </q-card-section>                 
                 </div>
             </div>
             <div v-if="msgs.length > 0">
+                <q-toolbar>                    
+                    <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">Información</q-toolbar-title>                               
+                </q-toolbar>
+                <q-separator/>
                 <div v-for="mensaje in msgs" :key="mensaje">
                     <ul>
-                        <li class="text-blue-10">{{ mensaje }}</li>
+                        <li class="text-blue-10 text-body1">{{ mensaje }}</li>
                     </ul>
                 </div>
             </div>
+        <q-separator/>
         <q-card-actions align="right">
             <q-btn dense color="primary" v-close-popup @click="btn_ok_handler">OK</q-btn>
             <q-btn flat v-close-popup color="red">Cerrar</q-btn>
@@ -143,6 +148,7 @@ export default {
                 if (appdata == null || appdata.stacktrace == null){
                     return []
                 }
+                console.log(appdata.stacktrace)
 
                 return appdata.stacktrace
             },

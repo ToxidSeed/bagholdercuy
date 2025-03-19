@@ -18,7 +18,7 @@ class SymbolReader:
             return self.__get_x_cod_symbol(cod_symbol=cod_symbol, not_found_error=not_found_error)    
         
         if id_symbol is not None:
-            return self.__get_x_id(id_symbol=id_symbol, not_found_error=not_found_error)
+            return self.__get_x_id(id_symbol=id_symbol, noleadt_found_error=not_found_error)
 
         return None        
     

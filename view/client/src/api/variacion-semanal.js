@@ -15,26 +15,18 @@ class VariacionSemanal{
             postconfig()
         )
 
-        return httresp.data.data
-        
-        /*.then(httpresp => {
-            let appresp = httpresp.data
-            this.data = []
-            
-            appresp.data.forEach(element => {
-                element.imp_cierre_ant = element.imp_cierre_ant.toFixed(2)
-                element.imp_maximo = element.imp_maximo.toFixed(2)
-                element.imp_minimo = element.imp_minimo.toFixed(2)
-                element.imp_cierre = element.imp_cierre.toFixed(2)
-                element.pct_variacion_cierre = element.pct_variacion_cierre.toFixed(2)
-                element.imp_variacion_cierre = element.imp_variacion_cierre.toFixed(2)
-                element.pct_variacion_maximo = element.pct_variacion_maximo.toFixed(2)
-                element.imp_variacion_maximo = element.imp_variacion_maximo.toFixed(2)
-                element.pct_variacion_minimo = element.pct_variacion_minimo.toFixed(2)
-                element.imp_variacion_minimo = element.imp_variacion_minimo.toFixed(2)
-                this.data.push(element)                    
-            })
-        })*/
+        return httresp.data.data                
+    }
+
+    get_variacion_semana_actual = async function(params){
+        if (params == undefined){
+            throw new Error("No se ha enviado ningun parametro")
+        }
+
+        return axios.post(
+            '/variacionsemanal/VariacionSemanalController/get_variacion_semana_actual',params,
+            postconfig()
+        )
     }
 }
 

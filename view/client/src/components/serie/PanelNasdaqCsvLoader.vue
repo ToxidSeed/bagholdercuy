@@ -30,8 +30,9 @@
                     <template v-slot:prepend>
                     <q-icon name="attach_file" />
                     </template>
-                </q-file>                                
-            </q-card-section>
+                </q-file>    
+                <q-select v-model="modo_carga" :options="lista_modos_carga" label="Standard" stack-label/>                            
+            </q-card-section>            
             <q-inner-loading :showing="loading">
                 <q-spinner-gears size="50px" color="primary" />
             </q-inner-loading>
@@ -54,7 +55,9 @@ export default {
             fichero:null,
             cod_symbol:"",
             nom_symbol:"",
-            loading: false
+            loading: false,
+            modo_carga:"",
+            lista_modos_carga:["Agregar","Reemplazar"]
         }
     },
     methods:{        
@@ -70,13 +73,14 @@ export default {
 
             form_data.append("fichero", this.fichero)
             form_data.append("cod_symbol", this.cod_symbol)            
+            form_data.append("modo_carga", this.modo_carga)
 
             console.log(postconfig)
 
             this.$http.post(
                 '/SerieManager/NasdaqCsvLoader/load',form_data,postconfig                
             ).then(httpresp => {
-                HttpResponseHandler.showIfError(httpresp)
+                HttpResponseHandler.showMessageIfError(httpresp)
             }).finally(() => {
                 this.loading = false
             })

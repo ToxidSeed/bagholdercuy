@@ -1,42 +1,40 @@
 from cmath import exp
 from app import app, db
-from model.OptionContract import OptionContractModel
-from model.StockSymbol import StockSymbol
-
-from reader.opcion import OpcionReader
-
-from processor.opcion import OpcionProcessor, OpcionLoader
-
-from datetime import date, datetime
-import common.converter as converter
-from common.AppException import AppException
-
-from config.general import TMP_OPCIONES_CONTRATO_FILE, NUMERIC_DATE_FORMAT
-import json, os
 
 from controller.base import Base
-
+from model.OptionContract import OptionContractModel
+from model.StockSymbol import StockSymbol
+import common.converter as converter
+from common.AppException import AppException
 from common.Response import Response
 from common.api.iexcloud import iexcloud
-
+from common.api.marketdata import MarketData
+from reader.contratoopcion import ContratoOpcionReader
+from parser.opcionescontrato import OpcionesContratoParser, SymbolLoaderParser
+from domain.fecha import Fecha
+from processor.opcion import OpcionProcessor, OpcionLoader
+from datetime import date, datetime
+import json, os
 from sqlalchemy.sql.functions import func
-from settings import config
-
-
 
 class OpcionesContratoManager(Base):
     
     def get_options_chain(self, args={}):
-        symbol = args["symbol"]
-        expiration_date = args["expiration_date"]
-        calls = self.get_calls(args=args)
-        puts = self.get_puts(args=args)        
+        parser = OpcionesContratoParser()
+        params = parser.parse_args_get_options_chain(args=args)
+
+        cod_symbol = params["cod_symbol"]
+        fch_expiracion = params["fch_expiracion"]
+        imp_ejercicio = params.get("imp_ejercicio")
+
+        calls = ContratoOpcionReader.get_calls(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio)
+        puts = ContratoOpcionReader.get_puts(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio)
                 
         data = {
-            "calls":converter.process_list(calls),
-            "puts":converter.process_list(puts),
-            "exp_dates":converter.format(self.get_expiration_dates(args=args)),
-            "strikes":converter.format(self.get_strikes(symbol, expiration_date))
+            "calls": calls,
+            "puts": puts,
+            "exp_dates": ContratoOpcionReader.get_fechas_expiracion(cod_subyacente=cod_symbol, imp_ejercicio=imp_ejercicio),
+            "strikes": ContratoOpcionReader.get_imp_ejercicios(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion)
         }
                 
         return Response().from_raw_data(data)
@@ -44,12 +42,13 @@ class OpcionesContratoManager(Base):
     def get_calls(self, args={}):
         contract = args["contract"]
 
-        query = db.session.query(
-            OptionContractModel
-        ).filter(
-            OptionContractModel.side == 'call',
-        )
+        calls = ContratoOpcionReader.get_contratos(sentidos=["call"],
+                                                   cod_subyacente=args.get("cod_symbol"),
+                                                   fch_expiracion=args.get("expiration_date"),
+                                                   imp_ejercicio=args.get("strike")
+                                                   )
 
+        """
         if contract != "":
             contract = "%{}%".format(contract)
 
@@ -58,78 +57,23 @@ class OpcionesContratoManager(Base):
             )       
 
             return query.all()
+        """
 
-        symbol = args["symbol"]
-        exp_date = args["expiration_date"]
-        strike = args["strike"]
+        #query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
 
-        if symbol != "":
-            query = query.filter(
-                OptionContractModel.underlying == symbol    
-            )
-
-        if exp_date == "":
-            query = query.filter(
-                OptionContractModel.expiration_date >= date.today().isoformat()
-            )
-        else:
-            query = query.filter(
-                OptionContractModel.expiration_date == exp_date
-            )
-
-        if strike != "":
-            query = query.filter(
-                OptionContractModel.strike == strike
-            )
-
-        query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
-
-        return query.all()
-
+        return calls
     def get_puts(self, args={}):
-        contract = args["contract"]
+        #contract = args["contract"]
 
-        query = db.session.query(
-            OptionContractModel
-        ).filter(
-            OptionContractModel.side == 'put',
-        )
+        puts = ContratoOpcionReader.get_contratos(sentidos=["put"],
+                                                   cod_subyacente=args.get("cod_symbol"),
+                                                   fch_expiracion=args.get("expiration_date"),
+                                                   imp_ejercicio=float(args.get("strike"))
+                                                   )
 
-        if contract != "":
-            contract = "%{}%".format(contract)
+        #query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
 
-            query = query.filter(
-                OptionContractModel.symbol.ilike(contract)
-            )       
-
-            return query.all()
-
-        symbol = args["symbol"]
-        exp_date = args["expiration_date"]
-        strike = args["strike"]
-
-        if symbol != "":
-            query = query.filter(
-                OptionContractModel.underlying == symbol    
-            )
-
-        if exp_date == "":
-            query = query.filter(
-                OptionContractModel.expiration_date >= date.today().isoformat()
-            )
-        else:
-            query = query.filter(
-                OptionContractModel.expiration_date == exp_date
-            )
-
-        if strike != "":
-            query = query.filter(
-                OptionContractModel.strike == strike
-            )
-
-        query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
-
-        return query.all()
+        return puts
 
     def get_expiration_dates(self, args={}):
         symbol=args["symbol"] #symbol is required
@@ -193,40 +137,16 @@ class OpcionesContratoManager(Base):
         return Response().from_raw_data(result)
 
     def get_contratos(self, args={}):
-        id_contrato_opcion = args.get("id_contrato_opcion")
-        if id_contrato_opcion in [None,""]:
-            id_contrato_opcion = None
-        else:
-            id_contrato_opcion = int(id_contrato_opcion)
+        parser = OpcionesContratoParser()
+        params = parser.parse_args_get_contratos(args=args)
 
-        cod_subyacente = args.get("cod_symbol")
-        if cod_subyacente in [None,""]:
-            cod_subyacente = None
+        id_contrato_opcion = params.get("id_contrato_opcion")
+        cod_subyacente = params.get("cod_symbol")
+        sentidos = params.get("sentidos")
+        fch_expiracion = params.get("fch_expiracion")
+        imp_ejercicio = params.get("imp_ejercicio")
 
-        sentidos = args.get("sentidos")
-        fch_expiracion = args.get("fch_expiracion")
-        imp_ejercicio = args.get("imp_ejercicio")
-
-        if sentidos is not None:
-            if type(sentidos) is not list:
-                raise AppException("el argumento 'sentidos' no ha sido enviado correctamente")
-            
-            if len(sentidos) > 0 and "call" not in sentidos and "put" not in sentidos:
-                raise AppException("El argumento 'sentidos' contiene datos invalidos")
-        else:
-            sentidos = []
-
-        if fch_expiracion not in [None, ""]:
-            fch_expiracion = date.fromisoformat(fch_expiracion)
-        else:
-            fch_expiracion = None
-
-        if imp_ejercicio not in [None, ""]:
-            imp_ejercicio = float(imp_ejercicio)
-        else:
-            imp_ejercicio = 0
-            
-        results = OpcionReader.get_contratos(id_contrato_opcion=id_contrato_opcion, cod_subyacente=cod_subyacente, sentidos=sentidos, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio, limit=200)
+        results = ContratoOpcionReader.get_contratos(id_contrato_opcion=id_contrato_opcion, cod_subyacente=cod_subyacente, sentidos=sentidos, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio, limit=200)
 
         return Response().from_raw_data(results)
 
@@ -320,41 +240,37 @@ class SymbolLoader(Base):
         return contrato
 
     def load(self, args={}) :
-        symbol=args.get("symbol")
-        fch_expiracion = args.get("fch_expiracion")
+        parser = SymbolLoaderParser()
+        params = parser.parse_args_load(args=args)
 
-        if symbol is None or symbol == "":
-            raise AppException(msg="No se ha ingresado el symbol")
+        # contrato = ContratoOpcionReader.get_contrato(cod_symbol=params.get("cod_symbol"))
+        # if contrato
 
-        if fch_expiracion in [None, ""]:
-            raise AppException(msg="No se ha ingresado la fecha de expiracion")
+        # contratos = self.get_contratos(symbol, fch_expiracion)
 
-        symbolobj = self.get_symbol(symbol)
-        
-        fch_expiracion = date.fromisoformat(fch_expiracion).strftime("%Y%m%d")
+        contratos = MarketData().get_options_chain(cod_subyacente=params.get("cod_symbol"), fch_expiracion=params.get("fch_expiracion"))
 
-        contratos = self.get_contratos(symbol, fch_expiracion)        
         for elem in contratos:
-            contrato_symbol = elem.get("symbol")
-            contrato = self.get_contrato(contrato_symbol)   
+            contrato = ContratoOpcionReader.get_contrato(cod_symbol=params.get("cod_symbol"))
             if contrato is None:
                 #adding the details
                 oc = OptionContractModel(     
-                    moneda_id = symbolobj.moneda_id,               
-                    contract_size = elem["contractSize"],
-                    currency = elem["currency"],
-                    description = elem["description"],
-                    expiration_date = elem["expirationDate"],
-                    side = elem["side"],
-                    strike = elem["strike"],
-                    symbol = elem["symbol"],
-                    underlying = elem["underlying"],
-                    register_date = date.today(),
-                    fch_audit = datetime.now()
+                    #moneda_id = symbolobj.moneda_id,
+                    contract_size=100,
+                    #currency = elem["currency"],
+                    #description = elem["description"],
+                    expiration_date=datetime.utcfromtimestamp(elem["expiration"]),
+                    side=elem["side"],
+                    strike=elem["strike"],
+                    symbol=elem["optionSymbol"],
+                    underlying=elem["underlying"],
+                    register_date=date.today(),
+                    fch_audit=datetime.now()
                 )
                 db.session.add(oc)
+                db.session.flush()
         db.session.commit()
-        return Response(msg="Se han cargado correctamente los symbol de los contratos para {}".format(symbol)).get()
+        return Response(msg="Se han cargado correctamente los symbol de los contratos para {}".format(params.get("cod_symbol"))).get()
 
 class CsvLoader(Base):
     def __init__(self):

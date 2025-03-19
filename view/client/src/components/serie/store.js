@@ -10,7 +10,7 @@ export default {
         t_resumen:{
             data:[]
         },
-        w_reparar:{
+        w_reprocesar:{
             cod_symbol:"",
             open:false,
             fichero:null        
@@ -33,18 +33,18 @@ export default {
     get_resumen_serie: async function(){        
         this.state.t_resumen.data = await new Serie().get_lista_fechas_maximas_x_symbol()
     },
-    abrir_w_reparar: function(cod_symbol){
-        this.state.w_reparar.cod_symbol = cod_symbol
-        this.state.w_reparar.open = true
+    abrir_w_reprocesar: function(cod_symbol){
+        this.state.w_reprocesar.cod_symbol = cod_symbol
+        this.state.w_reprocesar.open = true
     },
-    reparar_serie: function(){
+    reprocesar_serie: function(){
         let form_data = new FormData();
         
-        form_data.append("fichero", this.state.w_reparar.fichero)
-        form_data.append("cod_symbol", this.state.w_reparar.cod_symbol)
-        form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
+        form_data.append("fichero", this.state.w_reprocesar.fichero)
+        form_data.append("cod_symbol", this.state.w_reprocesar.cod_symbol)
+        //form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
 
-        axios.post("/SerieManager/ReparadorSeriesController/reparar"
+        axios.post("/SerieManager/ReprocesoSerieController/reprocesar"
             ,form_data
             ,postconfig()
         ).then(httpresponse => {

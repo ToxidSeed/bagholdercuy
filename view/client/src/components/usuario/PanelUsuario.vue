@@ -1,6 +1,6 @@
 <template>
     <div>                
-        <q-card>
+        <q-card flat bordered>
             <q-toolbar>
                 <q-toolbar-title class="text-blue-10">
                     {{ config.title }}

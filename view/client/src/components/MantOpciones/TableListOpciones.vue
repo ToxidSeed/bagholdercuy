@@ -49,8 +49,8 @@
 </template>
 <script>
 import MessageBox from '@/components/MessageBox.vue'
-import date from 'date-and-time'
-import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
+//import date from 'date-and-time'
+//import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
 import {postconfig} from '@/common/request.js'
 
 export default {
@@ -126,7 +126,12 @@ export default {
                 sentidos:[],
                 fch_expiracion:"",
                 imp_ejercicio:0
-            }
+            },
+            id_contrato_opcion:"",
+            cod_symbol:"",
+            sentidos:[],
+            fch_expiracion:"",
+            imp_ejercicio:""
         }
     },
     watch:{
@@ -150,7 +155,7 @@ export default {
         },
         get_list_contratos:function(){      
 
-            //console.log("xxx")      
+            console.log("xxx")      
             this.$http.post(
                 '/OpcionesContrato/OpcionesContratoManager/get_contratos',
                 {
@@ -158,7 +163,7 @@ export default {
                     cod_symbol: this.cod_symbol,
                     sentidos: this.sentidos,
                     fch_expiracion: this.fch_expiracion,
-                    imp_ejercicio: this.imp_ejercicio
+                    imp_ejercicio: this.imp_ejercicio,                    
                 },
                 postconfig()
             ).then(
@@ -179,7 +184,8 @@ export default {
                         element.descripcion = element.description
                         element.lado = element.side
                         element.subyacente = element.underlying
-                        element.fch_expiracion = date.transform(element.expiration_date,ISO_DATE_FORMAT, CLIENT_DATE_FORMAT)
+                        //element.fch_expiracion = date.transform(element.expiration_date,ISO_DATE_FORMAT, CLIENT_DATE_FORMAT)
+                        element.fch_expiracion = element.expiration_date
                         this.data.push(
                             element
                         )

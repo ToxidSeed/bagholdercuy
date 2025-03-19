@@ -59,34 +59,42 @@ export default {
 
             var dateAxis = this.chart.xAxes.push(new am4charts.DateAxis());            
             //dateAxis.renderer.grid.template.location = 0;
+            
+            
             dateAxis.baseInterval = {
                 "timeUnit": "day",
                 "count": 1
             }
+            
+            this.chart.dateFormatter.inputDateFormat = "dd/MM/yyyy"
+
             dateAxis.renderer.ticks.template.length = 8;
             dateAxis.renderer.ticks.template.strokeOpacity = 0.1;
-            //dateAxis.renderer.grid.template.disabled = true;
-            //dateAxis.renderer.ticks.template.disabled = false;
+            dateAxis.renderer.grid.template.disabled = true;
+            dateAxis.renderer.ticks.template.disabled = false;
             dateAxis.renderer.ticks.template.strokeOpacity = 0.2;
             dateAxis.renderer.minLabelPosition = 0.01;
             dateAxis.renderer.maxLabelPosition = 0.99;
             dateAxis.keepSelection = true;
             dateAxis.minHeight = 30;
-            dateAxis.dateFormats.setKey("day","dd/MM/yyyy")
-            dateAxis.periodChangeDateFormats.setKey("day", "dd/MM/yyyy"); 
+            //dateAxis.dateFormats.setKey("day","yyyy-MM-dd")
+            //dateAxis.periodChangeDateFormats.setKey("day", "dd/MM/yyyy"); 
 
             
 
-            //  console.log(dateAxis)
+              console.log(dateAxis)
             var valueAxis = this.chart.yAxes.push(new am4charts.ValueAxis());
-            console.log(valueAxis)
+            valueAxis.tooltip.disabled = true;
+
             var series = this.chart.series.push(new am4charts.CandlestickSeries());
             series.dataFields.dateX = "fch_serie";
             series.dataFields.openValueY = "imp_apertura";
             series.dataFields.valueY = "imp_cierre";
             series.dataFields.lowValueY = "imp_minimo";
             series.dataFields.highValueY = "imp_maximo";
-
+            series.simplifiedProcessing = true;
+            series.tooltipText = "Open:${openValueY.value}\nLow:${lowValueY.value}\nHigh:${highValueY.value}\nClose:${valueY.value}";
+            this.chart.cursor = new am4charts.XYCursor();
             /*
             series.dropFromOpenState.properties.fill = am4core.color("#8F3985");
             series.dropFromOpenState.properties.stroke = am4core.color("#8F3985");

@@ -5,11 +5,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from common.Response import Response
 
-
-
 import traceback
 import sys, os
 import json
+import logging
+from datetime import date
+
+logger = logging.getLogger(__name__)
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -20,6 +22,9 @@ class EntryAPI(Resource):
 
     def post(self, module_name, class_name, method_name):        
         try:
+
+            logging.basicConfig(filename=f"logs/bagholder_post_{date.today().isoformat()}.log", level=logging.INFO)
+
             #solo para probar se poneuser_id                
             session["user_id"] = 1
 
@@ -44,6 +49,7 @@ class EntryAPI(Resource):
             return jsonify(response)
         except Exception as e:
             response = Response().from_exception(e)
+            logger.error(json.dumps(response))
             return jsonify(response)
 
 class Loader:

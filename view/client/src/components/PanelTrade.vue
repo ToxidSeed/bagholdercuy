@@ -101,7 +101,7 @@
 
 import MessageBox from './MessageBox.vue';
 import date from 'date-and-time'
-import PanelOptionsChain from './PanelOptionsChain.vue';
+import PanelOptionsChain from '@/components/common/PanelOptionsChain.vue';
 import {postconfig} from '@/common/request.js';
 import {CLIENT_DATE_FORMAT, TIPO_ACTIVO_OPT} from '@/common/constants.js'
 

@@ -4,7 +4,7 @@
             <q-btn flat round dense icon="menu">
                 <q-menu>
                     <q-list dense>
-                        <q-item clickable v-close-popup :to="{name:'rentabilidad-diario-opciones'}">
+                        <q-item clickable v-close-popup :to="{name:'simulacion-rentabilidad-opciones'}">
                             <q-item-section class="text-subtitle1">
                                 <div>Rentabilidad <span class="text-blue-10 text-bold">Diaria</span> de opciones</div>
                             </q-item-section>                            

@@ -5,7 +5,7 @@ from datetime import date
 from domain.semana import Semana
 
 
-class SerieSemanalReprocesador:
+class ReprocesadorSerieSemanalService:
     def __init__(self, cod_symbol, flg_reprocesar=False, flg_reprocesar_todo=False):
         self.cod_symbol = cod_symbol
         self.flg_reprocesar = flg_reprocesar

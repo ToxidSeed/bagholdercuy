@@ -32,7 +32,8 @@
 <script>
 import TableListaOrdenes from '@/components/Ordenes/TableListaOrdenes.vue'
 import PanelTrade from '@/components/PanelTrade.vue';
-import PanelOptionsChain from '@/components/PanelOptionsChain.vue'
+import PanelOptionsChain from '@/components/common/PanelOptionsChain.vue'
+
 
 export default {
     name:"MainOrden",

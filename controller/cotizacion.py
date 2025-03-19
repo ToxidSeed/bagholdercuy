@@ -3,6 +3,7 @@ from controller.base import Base
 from common.Response import Response
 from parser.cotizacion import CotizacionParser
 
+
 class CotizacionManager(Base):
     def __init__(self):
         self.api = iexcloud()
@@ -19,3 +20,7 @@ class CotizacionManager(Base):
         }
 
         return Response().from_raw_data(cotizacion)
+
+    def get_cotizacion_semana(self, args={}):
+        parser = CotizacionParser()
+        pass

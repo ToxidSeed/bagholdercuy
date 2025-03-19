@@ -17,6 +17,7 @@ class Cotizacion{
             console.log(err)
         }
     }    
+    
 }
 
 export default new Cotizacion()

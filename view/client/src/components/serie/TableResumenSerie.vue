@@ -22,8 +22,8 @@
                                 <q-item clickable v-close-popup @click="store.table_resumen_serie.actualizar_serie(props.row)">
                                     <q-item-section><span><q-icon name="update" color="green" class="q-pr-xs"></q-icon>Actualizar</span></q-item-section>
                                 </q-item>
-                                <q-item clickable v-close-popup @click="store.abrir_w_reparar(props.row.cod_symbol)">
-                                    <q-item-section><span><q-icon name="construction" color="green" class="q-pr-xs"></q-icon>Reparar</span></q-item-section>
+                                <q-item clickable v-close-popup @click="store.abrir_w_reprocesar(props.row.cod_symbol)">
+                                    <q-item-section><span><q-icon name="construction" color="green" class="q-pr-xs"></q-icon>Reprocesar</span></q-item-section>
                                 </q-item>
                             </q-list>
                         </q-menu>    
@@ -115,20 +115,20 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
-        <WinRepararSeries v-model="store.state.w_reparar.open"/>
+        <WinReprocesarSeries v-model="store.state.w_reprocesar.open"/>
     </div>    
 </template>
 <script>
 
 import store from "./store"
-import WinRepararSeries from "./WinRepararSeries"
+import WinReprocesarSeries from "./WinReprocesarSeries"
 import SerieApi from "@/api/serie.js"
 import {HttpResponseHandler} from "@/common/http-response-handler.js"
 
 export default {
     name:"TableResumenSerie",
     components:{
-        WinRepararSeries
+        WinReprocesarSeries
     },
     data: () => {
         return {

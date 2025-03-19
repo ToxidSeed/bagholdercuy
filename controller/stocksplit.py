@@ -23,3 +23,16 @@ class StockSplitController(Base):
         except Exception as e:
             db.session.rollback()
             return Response().from_exception(e)
+
+class FmpStockSplitController(StockSplitController):
+    def load_stock_splits(self, args={}):
+        try:
+            print(args)
+            cod_symbol = args.get("cod_symbol")
+            ss_service = StockSplitFMPService()
+            ss_service.procesar(cod_symbol=cod_symbol)
+            db.session.commit()
+            return Response(msg="Se ha registrado correctamente")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)

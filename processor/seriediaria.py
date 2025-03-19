@@ -1,6 +1,7 @@
 from model.seriediaria import SerieDiariaModel
 from app import db
 from datetime import date
+from common.AppException import AppException
 
 class SerieDiariaWriter:
     def __init__(self):
@@ -48,6 +49,10 @@ class SerieDiariaWriter:
         anyo, semana, dia = fch_serie.isocalendar()
         fch_semana = date.fromisocalendar(anyo, semana, 1)
         fch_mes = date(fch_serie.year, fch_serie.month, 1)
+
+        imp_apertura = serie.get("uOpen")
+        if imp_apertura in [None, 0]:
+            raise AppException(msg=f"imp apertura invalido None o 0, {str(serie)}")
 
         nueva_serie_diaria = SerieDiariaModel(
             symbol = serie.get('symbol'),

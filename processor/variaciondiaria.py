@@ -1,8 +1,10 @@
 from app import db
 from model.variaciondiaria import VariacionDiariaModel
-
-from reader.seriediaria import SerieDiariaReader
 from model.seriediaria import SerieDiariaModel
+from reader.seriediaria import SerieDiariaReader
+from common.AppException import AppException
+
+
 
 class VariacionDiariaLoader:
     def __init__(self):
@@ -52,19 +54,23 @@ class VariacionDiariaLoader:
         serie_diaria_previa = None
 
         for serie_diaria in series:
-            if serie_diaria_previa is None:
-                serie_diaria_previa = self.__get_serie_previa(serie_diaria)
+            try:
+                if serie_diaria_previa is None:
+                    serie_diaria_previa = self.__get_serie_previa(serie_diaria)
 
-            self.__crear_nueva_variacion_diaria(serie_diaria, serie_diaria_previa)
-            serie_diaria_previa = serie_diaria
+                self.__crear_nueva_variacion_diaria(serie_diaria, serie_diaria_previa)
+                serie_diaria_previa = serie_diaria
+            except Exception as e:
+                msg = f"error: {str(e)}, serie diaria: {repr(serie_diaria.__dict__)}, serie diaria previa: {repr(serie_diaria_previa.__dict__)}"
+                raise AppException(msg=msg)
 
-    def __get_serie_previa(self, serie_diaria:SerieDiariaModel):
+    def __get_serie_previa(self, serie_diaria: SerieDiariaModel):
         fch_serie_previa = SerieDiariaReader.get_fch_serie_previa(serie_diaria.symbol, serie_diaria.fch_serie)
         serie_previa = SerieDiariaReader.get_serie(serie_diaria.symbol, fch_serie_previa)
         return serie_previa
 
-    def __crear_nueva_variacion_diaria(self, serie_diaria:VariacionDiariaModel, serie_diaria_previa:VariacionDiariaModel=None):\
-        
+    def __crear_nueva_variacion_diaria(self, serie_diaria:VariacionDiariaModel, serie_diaria_previa:VariacionDiariaModel=None):
+
         imp_cierre = float(serie_diaria.imp_cierre)
 
         if serie_diaria_previa is None:
@@ -77,17 +83,19 @@ class VariacionDiariaLoader:
             pct_variacion_maximo = 100
             imp_variacion_minimo = 0
             pct_variacion_minimo = 0
-        else:        
-            imp_cierre_ant = float(serie_diaria_previa.imp_cierre)            
+            imp_variacion_maximo_minimo = 0
+        else:
+            imp_cierre_ant = float(serie_diaria_previa.imp_cierre)
             imp_variacion_cierre = imp_cierre - imp_cierre_ant
-            pct_variacion_cierre = (imp_cierre - imp_cierre_ant)/imp_cierre_ant*100        
+            pct_variacion_cierre = (imp_cierre - imp_cierre_ant)/imp_cierre_ant*100
             imp_variacion_apertura = float(serie_diaria.imp_apertura) - imp_cierre_ant
             pct_variacion_apertura = imp_variacion_apertura/imp_cierre_ant*100
             imp_variacion_maximo = float(serie_diaria.imp_maximo) - imp_cierre_ant
             pct_variacion_maximo = imp_variacion_maximo/imp_cierre_ant*100
-            imp_variacion_minimo = float(serie_diaria.imp_minimo) - imp_cierre_ant    
+            imp_variacion_minimo = float(serie_diaria.imp_minimo) - imp_cierre_ant
             pct_variacion_minimo = imp_variacion_minimo/imp_cierre_ant*100
-        
+            imp_variacion_maximo_minimo = float(serie_diaria.imp_maximo) -float(serie_diaria.imp_minimo)
+
         var_diaria_nuevo = VariacionDiariaModel(
             symbol = serie_diaria.symbol,
             fch_serie = serie_diaria.fch_serie,
@@ -103,7 +111,8 @@ class VariacionDiariaLoader:
             imp_variacion_maximo = imp_variacion_maximo,
             pct_variacion_maximo = pct_variacion_maximo,
             imp_variacion_minimo = imp_variacion_minimo,
-            pct_variacion_minimo = imp_variacion_minimo
+            pct_variacion_minimo = imp_variacion_minimo,
+            imp_variacion_maximo_minimo=imp_variacion_maximo_minimo
         )
 
         db.session.add(var_diaria_nuevo)

@@ -41,6 +41,7 @@ class Response:
             self.__process()
         return self.answer
 
+
     def from_error(self,error=None):
         self.answer["errors"] = error.errors
         self.answer["message"] = error.msg

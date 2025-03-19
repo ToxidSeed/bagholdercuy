@@ -73,6 +73,13 @@
             to="/stats">
                 <q-item-section>Stats</q-item-section>
             </q-item>
+            <q-item
+            active-class="my-menu-link"
+            to="/metricas"            
+            dense
+            >
+                <q-item-section>Metricas</q-item-section>
+            </q-item>
             <q-expansion-item
                 expand-separator  
                 default-opened          
@@ -83,17 +90,17 @@
                     <q-item 
                     active-class="my-menu-link"
                     to="/variacionmensual">
-                        <q-item-section>Variación Mensual</q-item-section>
+                        <q-item-section>Analitica Mensual</q-item-section>
                     </q-item>   
                     <q-item 
                     active-class="my-menu-link"
                     to="/variacionsemanal">
-                        <q-item-section>Variación Semanal</q-item-section>
+                        <q-item-section>Analitica Semanal</q-item-section>
                     </q-item>                    
                     <q-item 
                     active-class="my-menu-link"
                     to="/variaciondiaria">
-                        <q-item-section>Variación Diaria</q-item-section>
+                        <q-item-section>Analitica Diaria</q-item-section>
                     </q-item>
                     <q-item 
                     active-class="my-menu-link"
@@ -158,6 +165,11 @@
                     active-class="my-menu-link"
                     :to="{name:'usuario'}">
                         <q-item-section>Usuario</q-item-section>
+                    </q-item>
+                    <q-item 
+                    active-class="my-menu-link"
+                    :to="{name:'stocksplit'}">
+                        <q-item-section>Stock Split</q-item-section>
                     </q-item>
                 </q-list>
             </q-expansion-item>

@@ -8,3 +8,5 @@ class StockSplitModel(db.Model):
     fch_split = db.Column(db.Date,primary_key=True)
     numerador = db.Column(db.Integer)
     denominador = db.Column(db.Integer)
+    fch_split_anterior = db.Column(db.Date)
+    factor_split = db.Column(db.Numeric(15,10))

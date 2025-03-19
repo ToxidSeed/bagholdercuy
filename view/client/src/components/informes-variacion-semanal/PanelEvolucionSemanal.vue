@@ -16,15 +16,24 @@
             </q-card-section>            
         </q-card>
         <q-separator/>
-        <div class="row q-col-gutter-xs q-pt-xs">
-            <ChartEvolucionSemanal v-bind:infiltros="filtros" class="col-2"/>
-            <TableEvolucionSemanal v-bind:infiltros="filtros" class="col-5"/>            
+        <div class="row q-col-gutter-xs q-pt-xs">            
+            <ChartEvolucionSemanal v-bind:infiltros="store.win_filtros_variacion_semanal.state.filtros" class="col-3"/>
+            <div class="col-5 q-col-gutter-xs">
+                <!--
+                <TableEvolucionSemanal v-bind:infiltros="filtros" />            
+                -->
+                <PanelMetricasSemana/>
+            </div>
         </div>        
     </div>
 </template>
 <script>
+
 import ChartEvolucionSemanal from '@/components/informes-variacion-semanal/ChartEvolucionSemanal.vue';
+/*
 import TableEvolucionSemanal from '@/components/informes-variacion-semanal/TableEvolucionSemanal.vue';
+*/
+import PanelMetricasSemana from "./PanelMetricasSemana.vue"
 import store from "./store"
 
 /*
@@ -33,13 +42,16 @@ SOXL: 31 CALL - 0.30 / PUT 32 - 0.88 0DTE
 NVDA: 490 PUT 150/492.5 call 1.15
 LRCX: 775 put 168 0dte
 SPY 18 dec call 472 - 0.28 01-3200700 - oncosalud
+NVDA: 490 CALL - 855 / 487.5 PUT - 6.90
+480 put 120
 */
 
 export default {
     name:"PanelEvolucionSemanal",
     components:{
         ChartEvolucionSemanal,
-        TableEvolucionSemanal
+  //      TableEvolucionSemanal,
+        PanelMetricasSemana
     },
     props:{
         infiltros:{

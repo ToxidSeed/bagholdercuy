@@ -4,28 +4,20 @@ from datetime import date
 @dataclass
 class SerieDiariaIntegridadInfo:
     cod_symbol: str = field(default="")
-    split: bool = field(default=False)
-    split_correcto: bool = field(default=None)
-    fch_split_reprocesar: date = field(default=None)
-    num_dias_separacion_correcto: bool = field(default=None)
-    fch_separacion_referencia: date = field(default=None)
-    correcto: bool = field(default=False)
-    reprocesar: bool = field(default=False)       
-    reprocesar_todo: bool = field(default=False)
-
+    flg_split: bool = field(default=False)
+    flg_split_correcto: bool = field(default=None)
+    flg_num_dias_sep_correcto: bool = field(default=None)
+    flg_correcto: bool = field(default=False)    
     
     def __post_init__(self):
         evals = []
-        if self.split:
+        if self.flg_split:
             evals.append(self.split_correcto)            
         
-        evals.append(self.num_dias_separacion_correcto)
+        # evals.append(self.num_dias_separacion_correcto)
 
-        self.correcto = all(evals)
+        self.flg_correcto = all(evals)
         
-        if not self.correcto:
-            self.reprocesar = True
-            self.reprocesar_todo = True
     
 
 @dataclass

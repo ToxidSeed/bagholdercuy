@@ -6,6 +6,7 @@
             row-key="name"
             dense
             :pagination="pagination"
+            flat bordered
         >
             <template v-slot:header="props">
                 <q-tr :props="props">

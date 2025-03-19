@@ -1,8 +1,23 @@
 from model.seriemensual import SerieMensualModel
 from app import db
+from sqlalchemy.sql import func
 
 class SerieMensualReader:
-    
+
+    @staticmethod
+    def get_estadisticas(cod_symbol):
+        stmt = db.select(
+            func.max(SerieMensualModel.fch_ini_mes).label("max_fch_mes"),
+            func.min(SerieMensualModel.fch_ini_mes).label("min_fch_mes"),
+            func.count(1).label("cantidad")
+        ).where(
+            SerieMensualModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        records = result.first()
+        return records
+
     def get_series_desde_fecha(symbol, fch_mes=None):
 
         stmt = db.select(

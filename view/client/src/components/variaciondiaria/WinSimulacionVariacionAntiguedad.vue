@@ -98,6 +98,7 @@
 </template>
 <script>
 import {postconfig} from '@/common/request.js'
+import {HttpResponseHandler} from "@/common/http-response-handler"
 export default {
     name:"WinSimulacionVariacionAntiguedad",
     props:{        
@@ -260,6 +261,8 @@ export default {
                     lista_dias_profundidad: JSON.stringify(filtros.lista_dias_profundidad)
                 },postconfig()
             ).then(httpresp => {
+                HttpResponseHandler.showMessageIfError(httpresp)
+
                 let appdata = httpresp.data
                 for (let element of appdata.data){
                     element.imp_apertura = element.imp_apertura.toFixed(2)                    

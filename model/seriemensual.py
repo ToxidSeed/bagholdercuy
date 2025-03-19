@@ -17,3 +17,13 @@ class SerieMensualModel(db.Model):
     imp_cierre_ajus = db.Column(db.Numeric(15,4))    
     fch_registro = db.Column(db.Date)
     
+    @classmethod
+    def eliminar_x_symbol(cls, cod_symbol):
+        stmt = db.session.delete(
+            SerieMensualModel
+        ).where(
+            SerieMensualModel.cod_symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        return result

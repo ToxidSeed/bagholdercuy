@@ -1,29 +1,44 @@
 from model.variaciondiaria import VariacionDiariaModel
 from model.seriediaria import SerieDiariaModel
 from reader.seriediaria import SerieDiariaReader
-from app import db
+from reader.variaciondiaria import VariacionDiariaReader
+from app import app, db
 
-class VariacionDiariaProcesador:
-    def __init__(self, cod_symbol, flg_reprocesar=False, flg_reprocesar_todo=False):
-        self.cod_symbol = cod_symbol
-        self.flg_reprocesar = flg_reprocesar
-        self.flg_reprocesar_todo = flg_reprocesar_todo
+WRITE_MODE_AGREGAR = app.config["WRITE_MODE_AGREGAR"]
+WRITE_MODE_REEMPLAZAR = app.config["WRITE_MODE_REEMPLAZAR"]
 
-    def procesar(self):
-        if self.flg_reprocesar:
-            VariacionDiariaModel.eliminar_x_symbol(cod_symbol=self.cod_symbol)
-        
-        # obtener las series diarias
-        series = SerieDiariaReader.get_series_desde_fecha(symbol=self.cod_symbol)
-        
-        serie_ant = None
+class VariacionDiariaService:
+    def __init__(self):
+        pass
+
+    # generará las variaciones desde el valor fch_desde    
+    def generar_variaciones(self, cod_symbol, fch_primera_serie):
+        fch_max_variacion = VariacionDiariaReader.get_max_fch_variacion(cod_symbol=cod_symbol)
+
+        # Si fch_max_variacion es None se procesa todo
+        if fch_max_variacion is None:
+            series = self.get_series_desde_fecha(cod_symbol=cod_symbol, fch_serie=fch_primera_serie)
+            self.crear_variaciones_diarias(series=series)
+
+        else:
+            # Eliminamos todos los registros de variacion incluyendo la primera serie diaria que se ha procesado
+            VariacionDiariaModel.eliminar_x_symbol_desde_fecha(cod_symbol=cod_symbol, fch_desde=fch_primera_serie)
+
+            # Obtenemos la serie anterior a la primera serie
+            serie_diaria_previa = SerieDiariaReader.get_serie_anterior_a_fecha(cod_symbol, fch_primera_serie)
+            self.crear_variaciones_diarias(series=series, serie_ant=serie_diaria_previa)
+
+    def get_series_desde_fecha(self, cod_symbol, fch_serie):
+        series = SerieDiariaReader.get_series_desde_fecha(symbol=cod_symbol, fch_serie=fch_serie)
+        if len(series) == 0:
+            raise Exception(f"No se han encontrado series diarias para symbol={cod_symbol}, fch_serie={fch_serie_inicial.isoformat()}")
+        return series
+
+    def crear_variaciones_diarias(self, series, serie_ant=None):        
         for serie_diaria in series:            
             self.crear_variacion_diaria(serie_diaria, serie_ant)
-            serie_ant = serie_diaria
+            serie_ant = serie_diaria        
 
-        #return 
-        return len(series)
-    
     def crear_variacion_diaria(self, serie_diaria: SerieDiariaModel, serie_diaria_ant: SerieDiariaModel=None):
 
         imp_cierre_ant = 0
@@ -54,7 +69,7 @@ class VariacionDiariaProcesador:
 
 
         new_serie = VariacionDiariaModel(
-            symbol=serie_diaria.symbol,
+            symbol=serie_diaria.cod_symbol,
             fch_serie=serie_diaria.fch_serie,
             imp_cierre_ant=imp_cierre_ant,
             imp_apertura=serie_diaria.imp_apertura,
