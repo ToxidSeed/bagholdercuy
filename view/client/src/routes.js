@@ -23,7 +23,6 @@ import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue
 import PanelVariacionDiariaSeries from "@/components/informes-variacion-diaria/PanelVariacionDiariaSeries.vue";
 import PanelEvolucionDiariaSeries from "@/components/informes-variacion-diaria/PanelEvolucionDiariaSeries.vue"
 
-import PanelNasdaqCsvLoader from '@/components/serie/PanelNasdaqCsvLoader.vue'
 import PanelSerieLoader  from '@/components/serie/PanelSerieLoader.vue'
 
 //Simulacion de rentabilidad
@@ -288,10 +287,6 @@ const routes =  [
             path:"/series",
             component:MainMantSerie,
             children:[{
-              path:"nasdaq-csv-loader",
-              name:"nasdaq-csv-loader",
-              component: PanelNasdaqCsvLoader
-            },{
               path:"iexcloud-loader",
               name:"iexcloud-loader",
               component: PanelSerieLoader              

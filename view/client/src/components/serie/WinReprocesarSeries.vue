@@ -54,6 +54,7 @@ export default {
     data(){
         return {
             open: this.value,
+            loading:false,
             store: store
         }
     },

@@ -38,7 +38,8 @@ export default new Vuex.Store({
         message:function(state, payload){                                    
             state.messagebox.msgs.push(payload)
         },
-        httpresp: function(state, payload){                        
+        httpresp: function(state, payload){           
+            console.log(payload)             
             state.messagebox.httpresponses.push(payload)
         },
         abrir_messagebox:function(state){

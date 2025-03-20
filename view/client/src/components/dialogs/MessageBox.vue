@@ -4,11 +4,11 @@
             <div v-if="httpresponses.length > 0">
                 <div v-for="elemento in httpresponses" :key="elemento.id">
                     <q-toolbar>                    
-                        <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">{{elemento.title}}</q-toolbar-title>                               
+                        <q-toolbar-title class="q-pt-xs text-body2 text-deep-orange-10">{{elemento.title}}</q-toolbar-title>                               
                     </q-toolbar>    
                     <q-separator/>
                     <q-card-section class="q-pt-md q-pb-xs">
-                        <span class="text-subtitle1">{{elemento.message}}</span>
+                        <span class="text-body2">{{elemento.message}}</span>
                     </q-card-section>     
                     <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0">
                         <div>
@@ -20,10 +20,10 @@
                         </div>
                     </q-card-section>  
                     <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0 || elemento.stacktrace.length > 0">
-                        <div class="text-subtitle1 text-red text-weight-bold">URL petición</div><div>{{elemento.url}}</div>
+                        <div class="text-body2 text-red text-weight-bold">URL petición</div><div>{{elemento.url}}</div>
                     </q-card-section>            
                     <q-card-section class="q-pt-none q-mt-none" v-if="elemento.errors.length > 0 || elemento.stacktrace.length > 0">                
-                        <div class="text-subtitle1 text-red text-weight-bold">Parámetros de Petición</div>
+                        <div class="text-body2 text-red text-weight-bold">Parámetros de Petición</div>
                         <ul class="q-mt-none">
                             <li v-for="(value, key) in elemento.parametros" v-bind:key="key">
                                 {{key}}:{{value}}
@@ -31,7 +31,7 @@
                         </ul>
                     </q-card-section>
                     <q-card-section class="q-pt-none q-mt-none" v-if="elemento.stacktrace.length > 0">
-                        <div class="text-subtitle1 text-red text-weight-bold">Stacktrace</div>
+                        <div class="text-body2subtitle1 text-red text-weight-bold">Stacktrace</div>
                         <div v-for="(error,index) in elemento.stacktrace" v-bind:key="error">
                             <span class="text-blue">{{index}}: </span><div class="text-purple">{{error}}</div>
                         </div>
@@ -40,19 +40,19 @@
             </div>
             <div v-if="msgs.length > 0">
                 <q-toolbar>                    
-                    <q-toolbar-title class="q-pt-xs text-subtitle1 text-deep-orange-10">Información</q-toolbar-title>                               
+                    <q-toolbar-title class="q-pt-xs text-body2 text-deep-orange-10">Información</q-toolbar-title>                               
                 </q-toolbar>
                 <q-separator/>
                 <div v-for="mensaje in msgs" :key="mensaje">
                     <ul>
-                        <li class="text-blue-10 text-body1">{{ mensaje }}</li>
+                        <li class="text-blue-10 text-body2">{{ mensaje }}</li>
                     </ul>
                 </div>
             </div>
         <q-separator/>
         <q-card-actions align="right">
-            <q-btn dense color="primary" v-close-popup @click="btn_ok_handler">OK</q-btn>
-            <q-btn flat v-close-popup color="red">Cerrar</q-btn>
+            <q-btn dense color="blue-10" v-close-popup @click="btn_ok_handler">OK</q-btn>
+            <q-btn flat v-close-popup color="red-10">Cerrar</q-btn>
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -78,6 +78,7 @@ export default {
                 }
             },  
             httpresponses:function(){
+                console.log("ola k ase")                
                 let elementos = this.$store.state.messagebox.httpresponses                
                 let records = []
                 for (let httpresp of elementos){                                        
@@ -155,11 +156,23 @@ export default {
             get_url:function(httpresp){                
                 return httpresp.config.url
             },
-            get_parametros:function(httpresp){                                
+            get_parametros:function(httpresp){   
+                console.log(typeof httpresp.config.data)      
+                let parametros = {}                       
                 if (httpresp.config.data == undefined){
                     return {}
+                }else if (httpresp.config.data instanceof FormData){
+                    for (const pair of httpresp.config.data.entries()) {
+                        let nom_parameter = pair[0]
+                        let val_parameter = pair[1]
+                        if (nom_parameter instanceof File){
+                            parametros[nom_parameter] = val_parameter                            
+                        }
+                    }
+                } else {
+                    parametros =  JSON.parse(httpresp.config.data)   
                 }
-                let parametros =  JSON.parse(httpresp.config.data)   
+                
                 return parametros
             },
             btn_ok_handler:function(){

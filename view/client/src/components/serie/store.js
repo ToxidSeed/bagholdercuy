@@ -14,6 +14,9 @@ export default {
             cod_symbol:"",
             open:false,
             fichero:null        
+        },
+        w_nasdaq_loader:{
+            open:false
         }
     },
     actualizar_serie: async function(row){
@@ -50,5 +53,9 @@ export default {
         ).then(httpresponse => {
             console.log(httpresponse)
         })
+    },
+    abrir_w_nasdaq_loader: function(){
+        console.log(this.state.w_nasdaq_loader.open)
+        this.state.w_nasdaq_loader.open = true        
     }
 }
