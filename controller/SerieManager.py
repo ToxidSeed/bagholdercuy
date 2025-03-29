@@ -37,9 +37,12 @@ from service.seriediaria import SerieDiariaService
 from service.variaciondiaria import VariacionDiariaService
 # from service.variaciondiaria import VariacionDiariaProcesador
 # from service.seriesemanal import SerieSemanalReprocesador
-from service.variacionsemanal import ReprocesadorVariacionSemanalService
-from service.seriemensual import SerieMensualProcesador
-from service.variacionmensual import VariacionMensualProcesador
+from service.seriesemanal import SerieSemanalService
+# from service.variacionsemanal import ReprocesadorVariacionSemanalService
+from service.variacionsemanal import VariacionSemanalService
+from service.seriemensual import SerieMensualService
+from service.variacionmensual import VariacionMensualService
+
 import structure.inputfiles as inputfiles
 
 from domain.semana import CodigoSemana, Semana
@@ -260,316 +263,6 @@ class SerieController(Base):
             return Response().from_exception(e)
 
 
-class SerieManagerLoader(Base):    
-    def __init__(self):    
-        self.fch_ini_procesar = None
-        self.series = []
-        self.profundidad = None
-        self.symbol = None
-        self.anyo = None
-        self.semana = None
-        self.mes = None
-        self.dia = None
-
-
-
-    def actualizar_serie(self, args={}):
-        try:
-            serie_manager_loader_parser = SerieManagerLoaderParser()
-            serie_diaria_reader = SerieDiariaReader()
-            args = serie_manager_loader_parser.parse_args_actualizar_serie(args=args)
-
-            #
-            cod_symbol = args.get("cod_symbol")
-
-            # obtener la fecha de la serie mas reciente por symbol
-            result = serie_diaria_reader.get_fecha_maxima_x_symbol(cod_symbol=cod_symbol)
-            fch_ultima_serie = result.max_fch_serie
-
-            # obtener el rango y fechas de la ultima fecha de la serie
-            profundidad, fch_desde, fch_hasta = self._get_rango(fch_referencia=fch_ultima_serie)
-
-            # obtener las series
-            series = self.get_historial_prices(symbol=cod_symbol, profundidad=profundidad)
-
-            anyo_semana, num_semana, dia_semana = fch_ultima_serie.isocalendar()
-
-            # cargar las distintas series y variaciones
-            SerieDiariaWriter().cargar(cod_symbol, series, fch_ultima_serie)
-            VariacionDiariaLoader().procesar(cod_symbol, fch_ultima_serie)
-            db.session.flush()
-
-            SerieSemanalLoader().procesar(cod_symbol, anyo=anyo_semana, semana=num_semana)
-            db.session.flush()
-
-            VariacionSemanalWriter().procesar(cod_symbol, anyo=anyo_semana, semana=num_semana)
-            db.session.flush()
-
-            # procesamiento de las series mensuales
-            SerieMensualLoader().procesar(cod_symbol, anyo=fch_ultima_serie.year, mes=fch_ultima_serie.month)
-            VariacionMensualWriter().procesar(cod_symbol, anyo=fch_ultima_serie.year, mes=fch_ultima_serie.month)
-
-            db.session.commit()
-            return Response(msg="Se ha cargado correctamente")
-
-        except Exception as e:
-            db.session.rollback()
-            return Response().from_exception(e)
-
-    def procesar(self, args={}):
-        try:                                    
-            self.profundidad = args.get("profundidad")
-            self.symbol = args.get("symbol")
-
-            self.series = self.get_historial_prices(self.symbol, profundidad=self.profundidad)
-            self.get_fechas_proceso()         
-
-            # cargar las distintas series y variaciones
-            SerieDiariaWriter().cargar(self.symbol, self.series, self.fch_ini_procesar)
-            VariacionDiariaLoader().procesar(self.symbol, self.fch_ini_procesar)
-            db.session.flush()
-
-            SerieSemanalLoader().procesar(self.symbol, anyo=self.anyo, semana=self.semana)
-            db.session.flush()
-            
-            VariacionSemanalWriter().procesar(self.symbol, anyo=self.anyo, semana=self.semana)
-            db.session.flush()
-
-            # procesamiento de las series mensuales
-            SerieMensualLoader().procesar(self.symbol, anyo=self.anyo, mes=self.mes)
-            VariacionMensualWriter().procesar(self.symbol, anyo=self.anyo, mes=self.mes)
-
-
-            # SerieMensualLoader().procesar(symbol, profundidad)
-            db.session.commit()
-            return Response(msg="Se ha cargado correctamente")
-        except Exception as e:
-            db.session.rollback()
-            return Response().from_exception(e)
-
-    def _get_rango(self, fch_referencia):
-        rango_helper = RangoHelper()
-        rango = rango_helper.get_rango(fch_referencia=fch_referencia)
-        if rango is None:
-            raise AppException(
-                msg=f"No se ha encontrado un rango en que la fecha {fch_referencia.isoformat()} pueda encajar")
-
-        return rango
-
-    def get_fechas_proceso(self):
-        self.fch_ini_procesar = self.get_fecha_inicio_proceso(self.profundidad)
-        if self.fch_ini_procesar is not None:
-            (self.anyo, self.semana, self.dia) = self.fch_ini_procesar.isocalendar()
-            self.mes = self.fch_ini_procesar.month
-
-        return self.fch_ini_procesar
-
-    def get_fecha_inicio_proceso(self, profundidad=""):
-                
-        fecha_actual = date.today()
-        fecha = None
-
-        if profundidad == SERIES_PROF_CARGA_MESACTUAL:
-            mes = str(fecha_actual.month).zfill(2)
-            fecha = date.fromisoformat("{0}-{1}-{2}".format(fecha_actual.year,mes,'01'))
-
-        if profundidad == SERIES_PROF_CARGA_YTD:
-            fecha = date.fromisoformat("{0}-{1}-{2}".format(fecha_actual.year,'01','01')) 
-
-        if profundidad == SERIES_PROF_CARGA_ULT3MESES:
-            fecha = fecha_actual + relativedelta(months=-3)
-
-        if profundidad == SERIES_PROF_CARGA_ULT6MESES:
-            fecha = fecha_actual + relativedelta(months=-6)
-
-        if profundidad == SERIES_PROF_CARGA_ULT1ANYO:
-            fecha = fecha_actual + relativedelta(years=-1)
-
-        return fecha
-
-    def get_historial_prices(self, symbol="", profundidad=""):
-        args = {
-            "symbol":symbol,
-            "range":profundidad
-        }        
-        return iexcloud().get_historical_prices(args)
-
-    def load_daily_series(self, symbol="", profundidad=""):   
-        # obtener la fecha de inicio en base a la profundidad
-        fch_ini_reprocesar = self.get_fechas_proceso(profundidad=profundidad)         
-        # eliminar las series diarias desde la fecha de inicio
-        self.remove_daily_series(symbol, fch_ini_reprocesar=fch_ini_reprocesar)
-        # obtener los datos desde la api en base a la profundidad
-        data = self.get_historial_prices(symbol, profundidad=profundidad)              
-
-        for elem in data:                        
-            price_date = date.fromisoformat(elem.get("date"))            
-
-            if fch_ini_reprocesar is None:
-                self.insertar_serie_diaria(elem=elem)
-                continue        
-
-            if price_date >= fch_ini_reprocesar:
-                self.insertar_serie_diaria(elem=elem)
-                continue            
-
-    def insertar_serie_diaria(self, elem=None):
-        uopen = elem.get("uOpen")
-        adj_open = elem.get("open")
-        symbol = elem.get("symbol")
-        split_factor = round(uopen / adj_open,0)
-        price_date = date.fromisoformat(elem.get("date"))
-        (year, week, weekday) = price_date.isocalendar()
-        fch_registro = date.today()  
-
-        new_serie = StockData(
-            symbol = symbol,
-            price_date = price_date,
-            anyo = year,
-            mes = price_date.month,
-            semana = week,
-            frequency = TIPO_FRECUENCIA_SERIE_DIARIA,
-            open = uopen,
-            high = elem.get("uHigh"),
-            low = elem.get("uLow"),
-            close = elem.get("uClose"),
-            volume = elem.get("uVolume"),
-            adj_open = adj_open,
-            adj_high = elem.get("high"),
-            adj_low = elem.get("low"),
-            adj_close = elem.get("close"),
-            adj_volume = elem.get("volume"),
-            split_factor = split_factor,
-            fch_registro = fch_registro
-        )
-
-        db.session.add(new_serie)    
-
-
-    def remove_daily_series(self, symbol="", fch_ini_reprocesar=None):        
-        if fch_ini_reprocesar is None:
-            StockData.query.filter(
-                StockData.symbol == symbol,
-                StockData.frequency == TIPO_FRECUENCIA_SERIE_DIARIA,
-            ).delete()
-        else:
-            StockData.query.filter(
-                StockData.symbol == symbol,
-                StockData.frequency == TIPO_FRECUENCIA_SERIE_DIARIA,
-                StockData.price_date >= fch_ini_reprocesar
-            ).delete()
-
-    
-
-    def get_open_data(symbol, open_date):
-        result = StockData.query.filter(
-            StockData.frequency == "daily",
-            StockData.symbol == symbol,
-            StockData.price_date == open_date
-        ).first()
-
-        return result
-
-    def get_close_data(symbol, close_date):
-        result = StockData.query.filter(
-            StockData.frequency == "daily",
-            StockData.symbol == symbol,
-            StockData.price_date == close_date
-        ).first() 
-
-        return result
-
-class ReprocesoSerieController(Base):
-    def __init__(self):
-        self.cod_symbol = None
-    
-    def reprocesar(self, args=None):
-        try:
-
-            file_storage = args.get("files").get("fichero")
-            form = args.get("form")
-            cod_symbol = form.get("cod_symbol")
-
-            # Obtener los datos del fichero
-            records = NASDAQSerieDiariaCsvHelper().get_data(cod_symbol, file_storage)
-
-            # iniciamos el reproceso
-            self.iniciar_reproceso(cod_symbol, series=records)   
-
-            db.session.commit()
-            return Response(msg=f"Se han reprocesado correctamente los datos para {cod_symbol}")
-        except Exception as e:
-            db.session.rollback()
-            return Response().from_exception(e)
-
-    def iniciar_reproceso(self, cod_symbol, series:list):
-        self.__reprocesar_series_diarias(cod_symbol=cod_symbol, series=series)
-        self.__reprocesar_variaciones_diarias(cod_symbol)        
-        #self.__reparar_series_semanales(serie_semanal_integridad)
-        #self.__reparar_variaciones_semanales(var_semanal_integridad)
-        #self.__reparar_series_mensuales(serie_mensual_integridad)
-        #self.__reparar_variaciones_mensuales(var_mensual_integridad)
-
-    def __reprocesar_series_diarias(self, cod_symbol, series):            
-        pass
-        #ReprocesoSeriesAjustadasService().reprocesar(cod_symbol=cod_symbol, series=series)
-                
-
-    
-    def __reprocesar_variaciones_diarias(self, cod_symbol):
-        """
-        ReprocesadorVariacionSemanalService(
-            cod_symbol=cod_symbol,
-            flg_reprocesar_todo=True
-        ).reprocesar()
-        """
-
-    def __reprocesar_series_semanales(self, serie_semanal_integridad: SerieSemanalIntegridad):
-        if serie_semanal_integridad.correcto:
-            logger.info("Series semanales integridad: No necesario")
-            return        
-
-        SerieSemanalReprocesador(
-            cod_symbol=self.cod_symbol,
-            flg_reprocesar=True,
-            flg_reprocesar_todo=True
-        ).procesar()
-
-    def __reparar_variaciones_semanales(self, var_semanal_integridad: VariacionSemanalIntegridad):
-        if var_semanal_integridad.correcto:
-            logger.info("Variacion semanal integridad: No necesario")
-            return
-
-        VariacionSemanalReprocesador(
-            cod_symbol=self.cod_symbol,
-            flg_reprocesar_todo=True
-        ).reprocesar()
-
-    def __reparar_series_mensuales(self, serie_mensual_integridad, SerieMensualIntegridad):
-        if serie_mensual_integridad.correcto:
-            logger.info("Serie Mensual Integridad: No necesario")
-            return
-
-        smp = SerieMensualProcesador(
-            cod_symbol=self.cod_symbol,
-            flg_reprocesar=True,
-            flg_reprocesar_todo=True
-        )
-        smp.procesar()
-
-    def __reparar_variaciones_mensuales(self, var_mensual_integridad, VariacionMensualIntegridad):
-        if var_mensual_integridad.correcto:
-            logger.info("Variacion Mensual Integridad: No necesario")
-            return
-
-        vmp = VariacionMensualProcesador(
-            cod_symbol=self.cod_symbol,
-            flg_reprocesar=True,
-            flg_reprocesar_todo=True
-        )
-        vmp.procesar()
-    
-
 class NasdaqCsvLoader(Base):
     def __init__(self):
         self.fichero_ruta = None
@@ -591,22 +284,33 @@ class NasdaqCsvLoader(Base):
 
     def generar_series_diarias(self, cod_symbol, series, flg_importes_ajustados, mode):
         serie_diaria_service = SerieDiariaService()
-        serie_diaria_service.insertar_multiples_series(cod_symbol, series, flg_importes_ajustados, mode)
+        fch_inicio_insercion = serie_diaria_service.insertar_multiples_series(cod_symbol, series, flg_importes_ajustados, mode)
+        db.session.flush()
+        return fch_inicio_insercion
 
-    def generar_variaciones_diarias(self):
-        pass
+    def generar_variaciones_diarias(self, cod_symbol, fch_inicio_procesamiento):
+        variacion_diaria_service = VariacionDiariaService()
+        variacion_diaria_service.generar_variaciones(cod_symbol, fch_inicio_procesamiento)
+        db.session.flush()
 
-    def generar_series_semanales(self):
-        pass
+    def generar_series_semanales(self, cod_symbol, fch_inicio_procesamiento):
+        serie_semanal_service = SerieSemanalService()
+        serie_semanal_service.generar_series(cod_symbol, fch_inicio_procesamiento)
+        db.session.flush()
+        
+    def generar_variaciones_semanales(self, cod_symbol, fch_inicio_procesamiento):
+        variacion_semanal_service = VariacionSemanalService()
+        variacion_semanal_service.generar_series(cod_symbol, fch_inicio_procesamiento)
+        db.session.flush()        
 
-    def generar_variaciones_semanales(self):
-        pass
+    def generar_series_mensuales(self, cod_symbol, fch_inicio_procesamiento):
+        serie_mensual_service = SerieMensualService()
+        serie_mensual_service.generar_series(cod_symbol, fch_inicio_procesamiento)
+        db.session.flush()
 
-    def generar_series_mensuales(self):
-        pass
-
-    def generar_variaciones_mensuales(self):
-        pass
+    def generar_variaciones_mensuales(self, cod_symbol, fch_inicio_procesamiento):
+        var_mensual_service = VariacionMensualService()
+        var_mensual_service.generar_series(cod_symbol, fch_inicio_procesamiento)
 
     
 
@@ -622,12 +326,14 @@ class NasdaqCsvLoader(Base):
             raise AppException("{modo_carga} no es un modo válido")
 
         # generando los distintos tipos de series
-        self.generar_series_diarias(cod_symbol, series=series, flg_importes_ajustados=True, mode=modo_carga)
-        self.generar_variaciones_diarias()
-        self.generar_series_semanales()
-        self.generar_variaciones_semanales()
-        self.generar_series_mensuales()
-        self.generar_variaciones_mensuales()    
+        fch_inicio_procesamiento = self.generar_series_diarias(cod_symbol, series=series, flg_importes_ajustados=True, mode=modo_carga)        
+
+        # generar las variaciones
+        self.generar_variaciones_diarias(cod_symbol, fch_inicio_procesamiento)        
+        self.generar_series_semanales(cod_symbol, fch_inicio_procesamiento)        
+        self.generar_variaciones_semanales(cod_symbol, fch_inicio_procesamiento)
+        self.generar_series_mensuales(cod_symbol, fch_inicio_procesamiento)
+        self.generar_variaciones_mensuales(cod_symbol, fch_inicio_procesamiento)    
 
     def get_datos_primera_serie(self, primera_serie):
         fch_serie, *otros = primera_serie
@@ -722,71 +428,3 @@ class SimulacionVariacionManager(Base):
 
         return Response().from_raw_data(variaciones)
 
-
-class SerieMensualLoader:
-
-    def __init__(self):
-        self.symbol = None
-        self.anyo = None
-        self.mes = None
-        self.fch_ini_mes = None
-
-    def procesar(self, symbol, anyo=None, mes=None):
-
-        self.symbol = symbol
-        self.anyo = anyo
-        self.mes = mes
-
-        if anyo is not None and mes is not None:
-            self.fch_ini_mes = date(anyo, mes, 1)
-
-        self.eliminar_series_mensuales()
-
-        # Obtenemos las series mensuales
-        pre_series_mensuales = SerieDiariaReader.get_preseries_mensual(self.symbol, self.fch_ini_mes)
-
-        fch_registro = date.today()
-
-        for rownum, preserie in enumerate(pre_series_mensuales, start=1):
-            self.procesar_mes(preserie, fch_registro)
-
-    def procesar_mes(self, preserie=None, fch_registro=None):
-
-        fch_mes = preserie.fch_mes
-        anyo = fch_mes.year
-        mes = fch_mes.month
-        price_date = date(anyo, mes, 1)
-
-        serie_apertura = SerieDiariaReader.get_serie(preserie.symbol, preserie.fch_apertura)
-        serie_cierre = SerieDiariaReader.get_serie(preserie.symbol, preserie.fch_cierre)
-
-        serie_nueva = SerieMensualModel(
-            symbol=preserie.symbol,
-            fch_ini_mes=fch_mes,
-            anyo=anyo,
-            mes=mes,
-            imp_apertura=serie_apertura.imp_apertura,
-            imp_maximo=preserie.imp_maximo,
-            imp_minimo=preserie.imp_minimo,
-            imp_cierre=serie_cierre.imp_cierre,
-            imp_apertura_ajus=serie_apertura.imp_apertura_ajus,
-            imp_maximo_ajus=preserie.imp_maximo_ajus,
-            imp_minimo_ajus=preserie.imp_minimo_ajus,
-            imp_cierre_ajus=serie_cierre.imp_cierre_ajus,
-            fch_registro=fch_registro
-        )
-
-        db.session.add(serie_nueva)
-
-    def eliminar_series_mensuales(self):
-
-        stmt = db.delete(SerieMensualModel).where(
-            SerieMensualModel.symbol == self.symbol
-        )
-
-        if self.fch_ini_mes is not None:
-            stmt = stmt.where(
-                SerieMensualModel.fch_ini_mes >= self.fch_ini_mes
-            )
-
-        result = db.session.execute(stmt)

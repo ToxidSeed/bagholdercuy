@@ -80,6 +80,8 @@ class SerieDiariaService:
                 continue
 
             self.insertar_serie(cod_symbol, serie, flg_importes_ajustados)
+
+        return fch_inicio_insercion
         
 
     def get_fch_inicio_insercion(self, cod_symbol, fch_primera_serie, mode):

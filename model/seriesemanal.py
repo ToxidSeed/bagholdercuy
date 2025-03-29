@@ -28,3 +28,14 @@ class SerieSemanalModel(db.Model):
 
         result = db.session.execute(stmt)
         return result
+
+    @classmethod
+    def eliminar_por_symbol_desde_fecha(cls, cod_symbol, fch_semana):
+        rows_affected = db.session.query(
+            SerieSemanalModel
+        ).where(
+            SerieSemanalModel.symbol == cod_symbol,
+            SerieSemanalModel.fch_semana >= fch_semana
+        ).delete()
+
+        return rows_affected

@@ -3,9 +3,12 @@ from model.seriediaria import SerieDiariaModel
 from reader.seriediaria import SerieDiariaReader
 from reader.variaciondiaria import VariacionDiariaReader
 from app import app, db
+import logging
 
 WRITE_MODE_AGREGAR = app.config["WRITE_MODE_AGREGAR"]
 WRITE_MODE_REEMPLAZAR = app.config["WRITE_MODE_REEMPLAZAR"]
+
+logger = logging.getLogger(__name__)
 
 class VariacionDiariaService:
     def __init__(self):
@@ -13,6 +16,8 @@ class VariacionDiariaService:
 
     # generará las variaciones desde el valor fch_desde    
     def generar_variaciones(self, cod_symbol, fch_primera_serie):
+        logger.info(f"fch_primera_serie: {fch_primera_serie}")
+        
         fch_max_variacion = VariacionDiariaReader.get_max_fch_variacion(cod_symbol=cod_symbol)
 
         # Si fch_max_variacion es None se procesa todo
@@ -24,14 +29,19 @@ class VariacionDiariaService:
             # Eliminamos todos los registros de variacion incluyendo la primera serie diaria que se ha procesado
             VariacionDiariaModel.eliminar_x_symbol_desde_fecha(cod_symbol=cod_symbol, fch_desde=fch_primera_serie)
 
+            # obtenemos las series que se quieren insertar
+            series = self.get_series_desde_fecha(cod_symbol=cod_symbol, fch_serie=fch_primera_serie)
+
             # Obtenemos la serie anterior a la primera serie
             serie_diaria_previa = SerieDiariaReader.get_serie_anterior_a_fecha(cod_symbol, fch_primera_serie)
+
+            # creamos la variacion
             self.crear_variaciones_diarias(series=series, serie_ant=serie_diaria_previa)
 
     def get_series_desde_fecha(self, cod_symbol, fch_serie):
         series = SerieDiariaReader.get_series_desde_fecha(symbol=cod_symbol, fch_serie=fch_serie)
         if len(series) == 0:
-            raise Exception(f"No se han encontrado series diarias para symbol={cod_symbol}, fch_serie={fch_serie_inicial.isoformat()}")
+            raise Exception(f"No se han encontrado series diarias para symbol={cod_symbol}, fch_serie={fch_serie.isoformat()}")
         return series
 
     def crear_variaciones_diarias(self, series, serie_ant=None):        
@@ -54,7 +64,9 @@ class VariacionDiariaService:
 
         if serie_diaria_ant:
             if serie_diaria_ant.fch_serie >= serie_diaria.fch_serie:
-                raise Exception("La fecha de la serie anterior es mayor a la fecha de la serie que se está procesando")
+                msg = f"""La fecha de la serie anterior es mayor a la fecha de la serie que se está procesando
+                serie_ant.fch_serie={str(serie_diaria_ant.fch_serie)}, serie.fch_serie={str(serie_diaria.fch_serie)}"""
+                raise Exception(msg)
 
             imp_cierre_ant = float(serie_diaria_ant.imp_cierre)
             imp_variacion_cierre = float(serie_diaria.imp_cierre) - imp_cierre_ant

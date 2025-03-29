@@ -24,10 +24,25 @@ class VariacionSemanalModel(db.Model):
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):
         stmt = db.session.delete(
-            cls
+            VariacionSemanalModel
         ).where(
-            cls.symbol == cod_symbol
+            VariacionSemanalModel.symbol == cod_symbol
         )
 
         result = db.session.execute(stmt)
         return result
+
+    @classmethod
+    def eliminar_desde_fecha(cls, cod_symbol, fch_semana_desde):
+        stmt = db.session.query(
+            VariacionSemanalModel
+        ).where(
+            VariacionSemanalModel.symbol == cod_symbol,
+            VariacionSemanalModel.fecha >= fch_semana_desde
+        )
+    
+        rows_affected = stmt.delete()
+        return rows_affected
+
+
+

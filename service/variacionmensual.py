@@ -1,28 +1,63 @@
 from model.variacionmensual import VariacionMensualModel
 from model.seriemensual import SerieMensualModel
 from reader.seriemensual import SerieMensualReader
+from reader.variacionmensual import VariacionMensualReader
 from domain.mes import Mes
 
-class VariacionMensualProcesador:
-    def __init__(cod_symbol, flg_reprocesar=True, flg_reprocesar_todo=True):
-        self.cod_symbol=cod_symbol
-        self.flg_reprocesar=flg_reprocesar
-        self.flg_reprocesar_todo=flg_reprocesar_todo
+import logging
 
-    def procesar():
-        if self.flg_reprocesar:
-            VariacionMensualModel.eliminar_x_symbol(cod_symbol=self.cod_symbol)
-    
-        # obtenemos las series
-        series = SerieMensualReader.get_series_desde_fecha(symbol=self.cod_symbol)
+logger = logging.getLogger(__name__)
+from app import db
 
-        # por cada pre-serie crear
-        serie_ant = None
+class VariacionMensualService:
+    def generar_series(self, cod_symbol, fch_ini_procesamiento):
+        mes_procesamiento = Mes.from_fecha(fch_ini_procesamiento)
+        fch_mes_procesamiento = mes_procesamiento.to_fecha_mes()
+        
+        fch_mes_max = VariacionMensualReader.get_fch_mes_max(cod_symbol)
+
+        self.del_series(cod_symbol, fch_mes_max, fch_mes_procesamiento)
+
+        # Obtener las series mensuales
+        series = self.get_series_mensuales(cod_symbol, fch_mes_procesamiento)
+
+        self.procesar_series_mensuales(cod_symbol, series)
+
+    def del_series(self, cod_symbol, fch_mes_max, fch_mes_procesamiento):
+        if not fch_mes_max:
+            return 0
+        
+        if fch_mes_max >= fch_mes_procesamiento:
+            rows_affected = VariacionMensualModel.del_desde_fecha(cod_symbol, fch_mes_procesamiento)
+            return rows_affected
+        else:
+            return 0
+
+    def get_series_mensuales(self, cod_symbol, fch_mes_ini_procesamiento):
+        series = SerieMensualReader.get_series_desde_fecha(cod_symbol, fch_mes_ini_procesamiento)          
+        if len(series) == 0:
+            raise Exception(f"No se han encontrado series para symbol: {cod_symbol} y fecha: {fch_mes_ini_procesamiento.isoformat()}")
+            
+        return series
+
+    def get_primera_serie(self, series):
+        if series:
+            return series[0]
+
+    def get_serie_mensual_anterior(self, cod_symbol, fch_serie):
+        serie_anterior = SerieMensualReader.get_serie_anterior(cod_symbol, fch_serie)
+        return serie_anterior
+
+
+    def procesar_series_mensuales(self, cod_symbol, series):
+        primera_serie = self.get_primera_serie(series)
+        serie_anterior = self.get_serie_mensual_anterior(cod_symbol, primera_serie.fch_mes)
+
         for serie_mensual in series:
-            self.__crear_variacion_mensual(serie_mensual, serie_ant)
-            serie_ant = serie_mensual
-    
-    def __crear_variacion_mensual(self, serie_mensual: SerieMensualModel, serie_mensual_anterior:SerieMensualModel):
+            self.ins_variacion_serie(cod_symbol, serie_mensual, serie_anterior)
+            serie_anterior = serie_mensual
+
+    def ins_variacion_serie(self, cod_symbol, serie_mensual, serie_mensual_anterior):
         imp_cierre_ant = 0
         imp_variacion_cierre = 0
         pct_variacion_cierre = 0
@@ -41,11 +76,11 @@ class VariacionMensualProcesador:
             pct_variacion_minimo = (float(serie_mensual.imp_minimo) - imp_cierre_ant)/imp_cierre_ant
 
         
-        mes_serie = from_fecha(serie_mensual.fch_ini_mes)
+        mes_serie = Mes.from_fecha(serie_mensual.fch_mes)
 
         new_serie = VariacionMensualModel(
-            symbol=self.cod_symbol,
-            fch_ini_mes=serie_mensual.fch_ini_mes,
+            cod_symbol=cod_symbol,
+            fch_mes=serie_mensual.fch_mes,
             cod_mes=mes_serie.codigo(),
             anyo=serie_mensual.anyo,
             mes=serie_mensual.mes,
@@ -64,7 +99,3 @@ class VariacionMensualProcesador:
         
         db.session.add(new_serie)
         return new_serie
-
-
-
-

@@ -45,3 +45,16 @@ class VariacionSemanalReader:
 
         result = db.session.execute(query)
         return result.scalars().first()
+
+    @staticmethod
+    def get_max_fch_variacion(cod_symbol):
+        query = db.select(
+            func.max(VariacionSemanalModel.fecha).label("fch_semana_var")
+        ).where(
+            VariacionSemanalModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(query)
+        record = result.first()
+        if record:
+            return record.fch_semana_var

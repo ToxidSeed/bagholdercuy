@@ -4,8 +4,8 @@ from app import db
 class VariacionMensualModel(db.Model):
     __tablename__ = "tb_variacion_mensual"
 
-    symbol = db.Column(db.String, primary_key=True)
-    fch_ini_mes = db.Column(db.Date, primary_key=True)
+    cod_symbol = db.Column(db.String, primary_key=True)
+    fch_mes = db.Column(db.Date, primary_key=True)
     cod_mes = db.Column(db.Integer)
     anyo = db.Column(db.Integer)
     mes = db.Column(db.Integer)
@@ -30,5 +30,19 @@ class VariacionMensualModel(db.Model):
         ).where(
             VariacionMensualModel.symbol == cod_symbol
         )
+
+    def del_desde_fecha(cld, cod_symbol, fch_mes_desde):
+        stmt = db.session.query(
+            VariacionMensualModel
+        ).where(
+            VariacionMensualModel.cod_symbol == cod_symbol,
+            VariacionMensualModel.fch_mes >= fch_mes_desde
+        )
+
+        rows_affected = stmt.delete()
+        return rows_affected
+
+
+
         
 

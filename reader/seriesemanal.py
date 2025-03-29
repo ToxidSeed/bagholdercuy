@@ -18,6 +18,7 @@ class SerieSemanalReader:
         records = result.first()
         return records
 
+    @staticmethod
     def get_series_desde_fecha(symbol, fch_semana=None):
         
         stmt = db.select(
@@ -35,6 +36,21 @@ class SerieSemanalReader:
         records = result.scalars().all()
         return records
 
+    @staticmethod
+    def get_max_fch_semana(cod_symbol):
+        stmt = db.select(
+            func.max(SerieSemanalModel.fch_semana).label("fch_semana")
+        ).where(
+            SerieSemanalModel.symbol == cod_symbol
+        )
+
+        result = db.session.execute(stmt)
+        record = result.first()
+        if record:
+            return record.fch_semana
+
+
+    @staticmethod
     def get_serie(symbol, fch_semana):
 
         stmt = db.select(
@@ -47,3 +63,19 @@ class SerieSemanalReader:
         result = db.session.execute(stmt)
         record = result.scalars().first()
         return record
+
+    @staticmethod
+    def get_serie_anterior(symbol, fch_serie_semanal):
+        stmt = db.select(
+            SerieSemanalModel
+        ).where(
+            SerieSemanalModel.symbol == symbol,
+            SerieSemanalModel.fch_semana < fch_serie_semanal
+        ).order_by(
+            SerieSemanalModel.fch_semana.desc()
+        )
+
+        result = db.session.execute(stmt)
+        record = result.scalars().first()
+        return record
+

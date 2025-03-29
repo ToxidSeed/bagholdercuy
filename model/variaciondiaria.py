@@ -22,26 +22,24 @@ class VariacionDiariaModel(db.Model):
 
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):
-        stmt = db.session.delete(
+        rows_affected = db.session.query(
             VariacionDiariaModel
         ).where(
             VariacionDiariaModel.symbol == cod_symbol
-        )
-
-        result = db.session.execute(stmt)
-        return result
+        ).delete()
+        
+        return rows_affected
 
     @classmethod
     def eliminar_x_symbol_desde_fecha(cls, cod_symbol, fch_desde):
-        stmt = db.session.delete(
+        rows_affected = db.session.query(
             VariacionDiariaModel
         ).where(
             VariacionDiariaModel.symbol == cod_symbol,
             VariacionDiariaModel.fch_serie >= fch_desde
-        )
-        
-        result = db.session.execute(stmt)
-        return result
+        ).delete()
+                
+        return rows_affected
 
 
 

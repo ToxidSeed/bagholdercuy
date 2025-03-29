@@ -21,10 +21,7 @@ class SerieIntegridadService:
     def evaluar(self, cod_symbol):
         sdi = SerieDiariaIntegridad()
         resp_eval_serie_diaria = sdi.evaluar(cod_symbol=cod_symbol)
-        
-
     
-
 class SerieDiariaIntegridad:      
     def __init__(self):
         self.splits = None

@@ -1,27 +1,68 @@
 from model.variacionsemanal import VariacionSemanalModel
 from model.seriesemanal import SerieSemanalModel
 from reader.seriesemanal import SerieSemanalReader
+from reader.variacionsemanal import VariacionSemanalReader
 
-class ReprocesadorVariacionSemanalService:
-    def __init__(self, cod_symbol, flg_reprocesar_todo):
-        self.cod_symbol = cod_symbol
-        self.flg_reprocesar_todo = flg_reprocesar_todo
+from domain.semana import Semana
+import logging
 
-    def reprocesar(self):
+logger = logging.getLogger(__name__)
+from app import db
 
-        # eliminar symbol
-        VariacionSemanalModel.eliminar_x_symbol(cod_symbol=self.cod_symbol)
+class VariacionSemanalService:
+    def generar_series(self, cod_symbol, fch_inicio_procesamiento):
 
-        # obtener las series
-        series = SerieSemanalReader.get_series_desde_fecha(symbol=self.cod_symbol)
+        semana_procesamiento = Semana.from_fecha(fch_inicio_procesamiento)
+        fch_semana_procesamiento = semana_procesamiento.fch_semana()
 
-        # por cada pre_serie crear 
-        serie_ant = None
-        for serie_semanal in series:
-            self.__crear_variacion_semanal(serie_semanal=serie_semanal, serie_semanal_anterior=serie_ant)
-            serie_ant = serie_semanal
-            
-    def __crear_variacion_semanal(self, serie_semanal:SerieSemanalModel, serie_semanal_anterior:SerieSemanalModel=None):
+        max_fch_semana_var = VariacionSemanalReader.get_max_fch_variacion(cod_symbol)
+
+        # eliminar de acuerdo a condiciones
+        self.del_variaciones(cod_symbol, max_fch_semana_var, fch_semana_procesamiento)                 
+
+        # Obtener las series para procesar
+        series = self.get_series_semanales(cod_symbol, fch_semana_procesamiento)
+
+        # Procesamos las series obtenidas
+        self.procesar_series_semanales(cod_symbol, series)
+
+    def del_variaciones(self, cod_symbol, max_fch_semana_var, fch_semana_procesamiento):
+        rows_affected = 0
+        if not max_fch_semana_var:
+            rows_affected = VariacionSemanalModel.eliminar_x_symbol(cod_symbol)
+
+        elif max_fch_semana_var >= fch_semana_procesamiento:
+            rows_affected = VariacionSemanalModel.eliminar_desde_fecha(cod_symbol, fch_semana_procesamiento)
+        
+        else:
+            logger.info(f"Nada que eliminar para max_fch_semana_var:{max_fch_semana_var} y fch_semana_procesamiento:{fch_semana_procesamiento}")
+        
+        return rows_affected
+
+    def get_series_semanales(self, cod_symbol, fch_semana_inicio_procesamiento):
+        records = SerieSemanalReader.get_series_desde_fecha(cod_symbol, fch_semana_inicio_procesamiento)
+        if len(records) == 0:
+            raise Exception(f"No hay series que procesar para cod_symbol: {cod_symbol}, fch_semana_inicio_procesamiento:{fch_semana_inicio_procesamiento.isoformat()}")
+
+        return records
+
+    def get_primera_serie(self, series):
+        if series:
+            return series[0]
+
+    def get_serie_semanal_anterior(self, cod_symbol, fch_serie):        
+        serie_anterior = SerieSemanalReader.get_serie_anterior(cod_symbol, fch_serie)
+        return serie_anterior
+
+    def procesar_series_semanales(self, cod_symbol, series):
+        primera_serie = self.get_primera_serie(series)
+        serie_anterior = self.get_serie_semanal_anterior(cod_symbol, primera_serie.fch_semana)
+
+        for serie in series:
+            self.ins_varicion(cod_symbol, serie, serie_anterior)
+            serie_anterior = serie
+
+    def ins_varicion(self, cod_symbol, serie_semanal, serie_semanal_anterior):
         imp_cierre_ant = 0
         imp_variacion_cierre = 0
         pct_variacion_cierre = 0
@@ -40,7 +81,7 @@ class ReprocesadorVariacionSemanalService:
             pct_variacion_minimo = ((float(serie_semanal.imp_minimo) - imp_cierre_ant)/imp_cierre_ant)*100
 
         new_serie = VariacionSemanalModel(
-            symbol=self.cod_symbol,
+            symbol=cod_symbol,
             fecha=serie_semanal.fch_semana,
             cod_semana=serie_semanal.cod_semana,
             anyo=serie_semanal.anyo,
@@ -60,6 +101,3 @@ class ReprocesadorVariacionSemanalService:
 
         db.session.add(new_serie)
         return new_serie
-
-
-    

@@ -125,8 +125,8 @@ class SerieDiariaReader:
             func.max(SerieDiariaModel.fch_serie).label("fch_cierre"),
             func.min(SerieDiariaModel.imp_minimo).label("imp_minimo"),
             func.max(SerieDiariaModel.imp_maximo).label("imp_maximo"),
-            func.min(SerieDiariaModel.imp_minimo_ajus).label("imp_minimo_ajus"),
-            func.min(SerieDiariaModel.imp_maximo_ajus).label("imp_maximo_ajus")
+            func.min(SerieDiariaModel.imp_minimo_sin_ajus).label("imp_minimo_sin_ajus"),
+            func.min(SerieDiariaModel.imp_maximo_sin_ajus).label("imp_maximo_sin_ajus")
         ).where(
             SerieDiariaModel.cod_symbol == symbol,            
         ).group_by(
@@ -157,17 +157,13 @@ class SerieDiariaReader:
         result = db.session.execute(stmt)
         return result.first()
 
-    def get_serie_anterior_a_fecha(cod_symbol, fch_serie, incluir_fecha=True):
+    def get_serie_anterior_a_fecha(cod_symbol, fch_serie):
         query = db.select(
             func.max(SerieDiariaModel.fch_serie).label("fch_serie")
         ).where(
-            SerieDiariaModel.cod_symbol == cod_symbol            
+            SerieDiariaModel.cod_symbol == cod_symbol,
+            SerieDiariaModel.fch_serie < fch_serie
         )
-
-        if incluir_fecha is True:
-            query = query.where(SerieDiariaModel.fch_serie <= fch_serie)
-        else:
-            query = query.where(SerieDiariaModel.fch_serie < fch_serie)
 
         result = db.session.execute(query)
         record_aux = result.first()
