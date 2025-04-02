@@ -11,6 +11,8 @@ class VariacionSemanalReader:
         stmt = db.select(
             func.max(VariacionSemanalModel.cod_semana).label("max_cod_semana"),
             func.min(VariacionSemanalModel.cod_semana).label("min_cod_semana"),
+            func.max(VariacionSemanalModel.fecha).label("fch_semana_max"),
+            func.min(VariacionSemanalModel.fecha).label("fch_semana_min"),
             func.count(1).label("cantidad")
         ).where(
             VariacionSemanalModel.symbol == cod_symbol

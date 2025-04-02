@@ -31,7 +31,8 @@ class VariacionMensualModel(db.Model):
             VariacionMensualModel.symbol == cod_symbol
         )
 
-    def del_desde_fecha(cld, cod_symbol, fch_mes_desde):
+    @classmethod
+    def del_desde_fecha(cls, cod_symbol, fch_mes_desde):
         stmt = db.session.query(
             VariacionMensualModel
         ).where(

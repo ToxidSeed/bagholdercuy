@@ -9,11 +9,11 @@ class VariacionMensualReader:
     @staticmethod
     def get_estadisticas(cod_symbol):
         stmt = db.select(
-            func.max(VariacionMensualModel.fch_ini_mes).label("max_fch_mes"),
-            func.min(VariacionMensualModel.fch_ini_mes).label("min_fch_mes"),
+            func.max(VariacionMensualModel.fch_mes).label("max_fch_mes"),
+            func.min(VariacionMensualModel.fch_mes).label("min_fch_mes"),
             func.count(1).label("cantidad")
         ).where(
-            VariacionMensualModel.symbol == cod_symbol
+            VariacionMensualModel.cod_symbol == cod_symbol
         )
 
         result = db.session.execute(stmt)

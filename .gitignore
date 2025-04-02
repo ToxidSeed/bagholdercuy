@@ -130,6 +130,7 @@ dmypy.json
 
 #specialfiles
 config/general.py
+config/default_settings.py
 test.py
 
 # code files
@@ -137,3 +138,4 @@ test.py
 
 # tmp files
 tmp
+

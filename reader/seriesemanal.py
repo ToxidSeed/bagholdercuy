@@ -9,6 +9,8 @@ class SerieSemanalReader:
         stmt = db.select(
             func.max(SerieSemanalModel.cod_semana).label("max_cod_semana"),
             func.min(SerieSemanalModel.cod_semana).label("min_cod_semana"),
+            func.max(SerieSemanalModel.fch_semana).label("fch_semana_max"),
+            func.min(SerieSemanalModel.fch_semana).label("fch_semana_min"),
             func.count(1).label("cantidad")
         ).where(
             SerieSemanalModel.symbol == cod_symbol

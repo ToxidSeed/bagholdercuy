@@ -48,7 +48,7 @@ class SerieDiariaReader:
         )
 
         result = db.session.execute(stmt)
-        record = result.scalars().first()
+        record = result.first()
         return record
 
     def get_fch_serie_previa(symbol, fch_serie):

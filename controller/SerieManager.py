@@ -42,6 +42,7 @@ from service.seriesemanal import SerieSemanalService
 from service.variacionsemanal import VariacionSemanalService
 from service.seriemensual import SerieMensualService
 from service.variacionmensual import VariacionMensualService
+from service.resumenserie import ResumenSerieService
 
 import structure.inputfiles as inputfiles
 
@@ -312,6 +313,9 @@ class NasdaqCsvLoader(Base):
         var_mensual_service = VariacionMensualService()
         var_mensual_service.generar_series(cod_symbol, fch_inicio_procesamiento)
 
+    def guardar_resumen_series(self, cod_symbol):
+        rss = ResumenSerieService()
+        rss.guardar(cod_symbol)
     
 
     def __crear_series(self, series, cod_symbol, modo_carga):   
@@ -333,7 +337,9 @@ class NasdaqCsvLoader(Base):
         self.generar_series_semanales(cod_symbol, fch_inicio_procesamiento)        
         self.generar_variaciones_semanales(cod_symbol, fch_inicio_procesamiento)
         self.generar_series_mensuales(cod_symbol, fch_inicio_procesamiento)
-        self.generar_variaciones_mensuales(cod_symbol, fch_inicio_procesamiento)    
+        self.generar_variaciones_mensuales(cod_symbol, fch_inicio_procesamiento)
+        self.guardar_resumen_series(cod_symbol)
+        
 
     def get_datos_primera_serie(self, primera_serie):
         fch_serie, *otros = primera_serie
@@ -363,10 +369,10 @@ class NasdaqCsvLoader(Base):
             next(csvreader)
             for row in csvreader:
                 fch_serie = datetime.strptime(row[col_fch_serie], "%m/%d/%Y").date()
-                imp_cierre = float(row[col_cierre])
-                imp_apertura = float(row[col_apertura])
-                imp_maximo = float(row[col_maximo])
-                imp_minimo = float(row[col_minimo])
+                imp_cierre = float(row[col_cierre].replace("$",""))
+                imp_apertura = float(row[col_apertura].replace("$",""))
+                imp_maximo = float(row[col_maximo].replace("$",""))
+                imp_minimo = float(row[col_minimo].replace("$",""))
                 volumen = int(row[col_volumen])
                 serie = inputfiles.CsvNasdaq(
                     fch_serie,
