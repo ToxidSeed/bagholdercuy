@@ -26,6 +26,16 @@ class ResumenSerieModel(db.Model):
     fch_actualizacion = db.Column(db.DateTime)
 
     @classmethod
+    def get_all(cls, params = {}):
+        stmt = db.session.query(
+            ResumenSerieModel
+        )
+
+        results = db.session.execute(stmt)
+        record = results.scalars().all()
+        return record
+
+    @classmethod
     def get_record(cls, cod_symbol):
         stmt = db.session.query(
             ResumenSerieModel

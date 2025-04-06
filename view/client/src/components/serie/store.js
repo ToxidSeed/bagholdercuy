@@ -3,6 +3,7 @@ import { HttpError } from "../../common/custom-error"
 import {postconfig} from "@/common/request.js"
 import store from "@/store/store"
 import axios from "axios"
+import resumenSerieApi from "../../api/resumenSerieApi"
 
 export default {
     //table_resumen_serie: table_resumen_serie
@@ -33,8 +34,13 @@ export default {
         }                
         this.get_resumen_serie()
     },
-    get_resumen_serie: async function(){        
-        this.state.t_resumen.data = await new Serie().get_lista_fechas_maximas_x_symbol()
+    get_resumen_serie: function(){        
+        //this.state.t_resumen.data = await new Serie().get_lista_fechas_maximas_x_symbol()
+        let resp = resumenSerieApi.get_resumen_serie()
+        resp.then(httpresp => {
+            console.log(httpresp)
+            this.state.t_resumen.data = httpresp.data.data
+        })
     },
     abrir_w_reprocesar: function(cod_symbol){
         this.state.w_reprocesar.cod_symbol = cod_symbol

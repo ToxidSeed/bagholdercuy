@@ -114,3 +114,6 @@ class Mes:
     def codigo(self):
         return int("{0}{1}".format(str(self.anyo), str(self.mes).zfill(2)))
 
+    def __eq__(self, otro_mes):
+        return self.anyo == otro_mes.anyo and self.mes == otro_mes.mes
+

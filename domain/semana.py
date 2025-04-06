@@ -1,7 +1,6 @@
 from common.AppException import AppException
 from datetime import datetime, date, timedelta, MINYEAR, MAXYEAR
 
-
 class CodigoSemana:
     def __init__(self, value):
         self.value = self.parse(value)
@@ -118,3 +117,6 @@ class Semana:
 
     def fch_semana(self):
         return date.fromisocalendar(self.anyo, self.semana, 1)
+
+    def __eq__(self, otra_semana):
+        return self.anyo == otra_semana.anyo and self.semana == otra_semana.semana

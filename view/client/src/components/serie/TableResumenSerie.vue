@@ -30,34 +30,17 @@
                     </q-btn>
                 </q-td>
             </template>
-            <template v-slot:body-cell-estado="props">
+            <template v-slot:body-cell-est_general="props">
                 <q-td :props="props">
-                    <q-chip size="12px" :color="determinar_color_chip_estado_general(props.row.estado)" :class="determinar_color_estado_general(props.row.estado)">{{ props.row.estado }}</q-chip>
+                    <q-chip size="12px" :color="determinar_color_chip_estado_general(props.row.est_general)" :class="determinar_color_estado_general(props.row.est_general)">{{ props.row.est_general }}</q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_serie_diaria="props">
                 <q-td :props="props">
                     <q-chip size="12px" 
-                    :color="determinar_color_chip(props.row.serie_diaria_integridad.dsc_estado)" 
-                    :class="determinar_color(props.row.serie_diaria_integridad.dsc_estado)">{{ props.row.serie_diaria_integridad.dsc_estado}}
-                    </q-chip>
-                    <q-popup-proxy context-menu>
-                        <div class="q-pl-xs q-pt-xs text-subtitle1 text-blue-10">Detalles</div>
-                        <q-banner style="width:250px">                            
-                            <div class="row">
-                                <div class="col-9">Splits</div>
-                                <div :class="determinar_color(props.row.serie_diaria_integridad.dsc_estado_split)">
-                                    {{props.row.serie_diaria_integridad.dsc_estado_split}}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-9">N. Dias de separacion</div>
-                                <div :class="determinar_color(props.row.serie_diaria_integridad.dsc_est_num_dias_separacion)">
-                                    {{props.row.serie_diaria_integridad.dsc_est_num_dias_separacion}}
-                                </div>
-                            </div>
-                        </q-banner>                        
-                    </q-popup-proxy>
+                    :color="determinar_color_chip(props.row.est_serie_diaria)" 
+                    :class="determinar_color(props.row.est_serie_diaria)">{{ props.row.est_serie_diaria}}
+                    </q-chip>                   
                 </q-td>
             </template>
             <template v-slot:body-cell-est_var_diaria="props">
@@ -150,33 +133,33 @@ export default {
             },{
                 label:"Fch. primera serie",
                 align:"left",
-                name:"min_fch_serie",
+                name:"fch_primera_serie_diaria",
                 style:"width:90px",
-                field:"min_fch_serie"
+                field:"fch_primera_serie_diaria"
             },{
                 label:"Fch. ultima serie",
                 align:"left",
-                name:"max_fch_serie",
+                name:"fch_ultima_serie_diaria",
                 style:"width:90px",
-                field:"max_fch_serie"
+                field:"fch_ultima_serie_diaria"
             },{
                 label:"N. Series",
                 align:"left",
-                name:"num_series",
+                name:"num_series_diarias",
                 style:"width:90px",
-                field:"num_series"
+                field:"num_series_diarias"
             },{
                 label:"N. dias desde ultima serie",                
-                name:"num_dias_desde_ultima_serie",                
+                name:"num_dias_desde_ult_serie",                
                 style:"width:50px",                
                 headerStyle: 'min-width: 100px;text-align:center;',                
-                field:"num_dias_desde_ultima_serie"
+                field:"num_dias_desde_ult_serie"
             },{
                 label:"Estado",
                 align:"center",
-                name:"estado",
+                name:"est_general",
                 style:"width:100px",
-                field:"estado"
+                field:"est_general"
             },{
                 label:"Estado Series diarias",
                 align:"left",

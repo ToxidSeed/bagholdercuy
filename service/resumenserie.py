@@ -27,7 +27,7 @@ class ResumenSerieService:
         nu_record = ResumenSerieModel(
             cod_symbol=cod_symbol,
             fch_primera_serie_diaria=stats_serie_diaria.min_fch_serie,
-            fch_ultima_serie_diaria=stats_serie_diaria.min_fch_serie,
+            fch_ultima_serie_diaria=stats_serie_diaria.max_fch_serie,
             num_series_diarias=stats_serie_diaria.cantidad,
 
             fch_primera_var_diaria=stats_var_diaria.min_fch_variacion,
@@ -65,7 +65,7 @@ class ResumenSerieService:
         stats_var_mensual = VariacionMensualReader.get_estadisticas(cod_symbol)
 
         resumen_serie.fch_primera_serie_diaria=stats_serie_diaria.min_fch_serie
-        resumen_serie.fch_ultima_serie_diaria=stats_serie_diaria.min_fch_serie
+        resumen_serie.fch_ultima_serie_diaria=stats_serie_diaria.max_fch_serie
         resumen_serie.num_series_diarias=stats_serie_diaria.cantidad
 
         resumen_serie.fch_primera_var_diaria=stats_var_diaria.min_fch_variacion
