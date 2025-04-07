@@ -85,6 +85,9 @@ class SerieDiariaService:
         
 
     def get_fch_inicio_insercion(self, cod_symbol, fch_primera_serie, mode):
+        if mode == WRITE_MODE_REEMPLAZAR:
+            return fch_primera_serie
+
         fch_inicio_proceso = None
         sdr = SerieDiariaReader()
         result = sdr.get_fecha_maxima_x_symbol(cod_symbol)

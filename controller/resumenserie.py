@@ -72,7 +72,10 @@ class ResumenSerie(Base):
         return CONST_EST_CORRECTO      
 
     def eval_serie_diaria(self, record:ResumenSerieModel):
-        return CONST_EST_CORRECTO
+        if record.fch_primera_serie_diaria == record.fch_ultima_serie_diaria and record.num_series_diarias > 1:
+            return CONST_EST_DEFECTUOSO
+        else:
+            return CONST_EST_CORRECTO
 
     def eval_var_diaria(self, record:ResumenSerieModel):
 
