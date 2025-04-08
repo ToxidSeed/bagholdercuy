@@ -98,7 +98,7 @@ export default {
         get_funds:function(){
             this.balance = []
 
-            this.$http.post('FundsManager/FundsManager/get_funds',{
+            this.$http.post('fundsmanager/FundsManager/get_funds',{
                 symbol:""
             },postconfig()).then(httpresp => {
                 this.$refs.msgbox.http_resp_on_error(httpresp)

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <q-card>
+        <q-card flat>
             <q-card-section class="q-pb-none q-pt-none" >
                 <div class="row">
                     <div class="text-h6 text-blue-10">Deposito</div>

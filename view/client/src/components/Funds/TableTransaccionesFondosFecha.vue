@@ -7,6 +7,8 @@
             :pagination="pagination"
             separator="vertical"
             dense
+            flat   
+            square                                  
         >            
             <template v-slot:top >
                 <q-btn color="blue-10" icon="menu" flat dense >
@@ -152,7 +154,7 @@ export default {
             
             //console.log(postconfig)
 
-            this.$http.post('/FundsManager/FundsManager/get_transacciones_x_fecha',{
+            this.$http.post('/fundsmanager/FundsManager/get_transacciones_x_fecha',{
                 fch_transaccion: this.filter.fch_transaccion
             },postconfig()).then(httpresp => {                
                 this.$refs.msgbox.http_resp_on_error(httpresp)
@@ -170,7 +172,7 @@ export default {
         },
         get_ultima_fecha_con_datos:function(){
             this.data = []
-            this.$http.post('/FundsManager/FundsManager/get_ult_fecha_con_datos',{
+            this.$http.post('/fundsmanager/FundsManager/get_ult_fecha_con_datos',{
             },postconfig()).then(httpresp => {
                 this.$refs.msgbox.http_resp_on_error(httpresp)
                 let appresp = httpresp.data
