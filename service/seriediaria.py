@@ -163,10 +163,10 @@ class SerieDiariaService:
         
         ImportesSinAjustar = namedtuple("ImportesSinAjustar", ["imp_aper_sin_ajus", "imp_max_sin_ajus", "imp_min_sin_ajus", "imp_cierre_sin_ajus"])            
 
-        imp_aper_sin_ajus = serie_ajustada.imp_apertura / imp_factor_split
-        imp_max_sin_ajus = serie_ajustada.imp_maximo / imp_factor_split
-        imp_min_sin_ajus = serie_ajustada.imp_minimo / imp_factor_split        
-        imp_cierre_sin_ajus = serie_ajustada.imp_cierre / imp_factor_split                
+        imp_aper_sin_ajus = serie_ajustada.imp_apertura / float(imp_factor_split)
+        imp_max_sin_ajus = serie_ajustada.imp_maximo / float(imp_factor_split)
+        imp_min_sin_ajus = serie_ajustada.imp_minimo / float(imp_factor_split)    
+        imp_cierre_sin_ajus = serie_ajustada.imp_cierre / float(imp_factor_split)
         importes_sin_ajustar =  ImportesSinAjustar(imp_aper_sin_ajus, imp_max_sin_ajus, imp_min_sin_ajus, imp_cierre_sin_ajus)        
         
         return importes_sin_ajustar

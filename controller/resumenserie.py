@@ -11,6 +11,7 @@ from common.Formatter import Formatter
 
 CONST_EST_CORRECTO = "Correcto"
 CONST_EST_DEFECTUOSO = "Defectuoso"
+CONST_EST_ACTUALIZADO = "Actualizado"
 
 Integridad = namedtuple("Integridad", ["est_general", "est_serie_diaria", "est_var_diaria", "est_serie_semanal", "est_var_semanal", 
 "est_serie_mensual", "est_var_mensual", "num_dias_desde_ult_serie"])
@@ -66,8 +67,10 @@ class ResumenSerie(Base):
         if CONST_EST_DEFECTUOSO in evals:
             return CONST_EST_DEFECTUOSO        
 
-        if calendario.get_ultimo_dia_util() > fch_ultima_serie_diaria.fch_ultima_serie_diaria:
+        if calendario.get_ultimo_dia_util() > resumen_serie.fch_ultima_serie_diaria:
             return CONST_EST_DEFECTUOSO
+        else:
+            return CONST_EST_ACTUALIZADO
 
         return CONST_EST_CORRECTO      
 
