@@ -4,6 +4,9 @@ from reader.monitoreo import MonitoreoReader
 from common.Response import Response
 from manager.monitoreo import MonitoreoManager
 from app import db
+from api.marketdata import MarketDataAPI
+
+
 
 class MonitoreoController(Base):
 
@@ -13,6 +16,7 @@ class MonitoreoController(Base):
 
         requeridos, opcionales = monitoreo_parser.parse_args_get_lista_seguimiento(args=args)
         records = monitoreo_reader.get_monitoreo_activo(id_cuenta=requeridos.get("id_cuenta"), opcionales=opcionales)
+                
         return Response().from_raw_data(records)
 
     def registrar(self, args={}):

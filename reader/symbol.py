@@ -18,7 +18,7 @@ class SymbolReader:
             return self.__get_x_cod_symbol(cod_symbol=cod_symbol, not_found_error=not_found_error)    
         
         if id_symbol is not None:
-            return self.__get_x_id(id_symbol=id_symbol, noleadt_found_error=not_found_error)
+            return self.__get_x_id(id_symbol=id_symbol)
 
         return None        
     
@@ -45,12 +45,7 @@ class SymbolReader:
         
         return record
 
-    def __get_x_id(self, id_symbol, not_found_error=False):
-        if self.__buffer is True:
-            symbol = self.__memoria.get(id_symbol)
-            if symbol is not None:
-                return symbol
-            
+    def __get_x_id(self, id_symbol):           
         query = db.select(
             StockSymbol    
         ).where(
@@ -58,14 +53,7 @@ class SymbolReader:
         )
 
         result = db.session.execute(query)
-        record = result.scalars().first()
-
-        if record is None and not_found_error is True:
-            raise AppException(msg=f"No se ha encontrado symbol para el id: {id_symbol}")
-        
-        if record is not None and self.__buffer is True:
-            self.__memoria[id_symbol] = record
-        
+        record = result.scalars().first()                        
         return record
 
     def get_list(args={}):

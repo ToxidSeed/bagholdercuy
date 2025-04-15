@@ -26,8 +26,9 @@
             <router-view class="col-12" 
                 :indata="data"          
                 :infiltros="filtros"                  
-            />          
+            />               
         </div>
+        <q-separator/>
         <WinFiltrosVaracionSemanal 
         v-model="win_filtro_variacion_semanal.open"        
         v-on:btn-aceptar-click="filtrar"

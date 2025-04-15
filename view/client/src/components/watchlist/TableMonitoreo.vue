@@ -9,6 +9,7 @@
             hide-header            
             separator="vertical"
             :pagination="pagination"
+            flat
         >            
         
             <template v-slot:top shrink>
@@ -49,7 +50,8 @@
                     </q-td>
                 </q-tr>                                                                    
             </template>
-        </q-table>            
+        </q-table>      
+        <q-separator/>       
     </div>
 </template>
 <script>

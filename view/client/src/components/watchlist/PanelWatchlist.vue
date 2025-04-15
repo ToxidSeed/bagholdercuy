@@ -23,9 +23,10 @@
             </q-toolbar>
         </q-card>        
         <q-separator/>        
-        <div class="row q-col-gutter-xs">            
-            <TableMonitoreo class="col-4"/>
-            <TableAlertasSymbol class="col-8"/>            
+        <div class="row q-col-xs">                        
+            <TableMonitoreo class="col-4"/> 
+            <q-separator vertical/>           
+            <TableAlertasSymbol class="col"/>                        
         </div>
         <WinGestionAlerta v-model="WinGestorAlertaStore.state.open"/>
     </div>

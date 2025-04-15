@@ -33,7 +33,7 @@ export default {
         this.state.data = this.state.tmp_data       
 
         let cotizacion = await Cotizacion.get_cotizacion(this.state.cod_symbol)                                
-        this.state.imp_accion = cotizacion.imp_cierre
+        this.state.imp_accion = cotizacion.imp_cierre        
 
         let idx_break = -1
 

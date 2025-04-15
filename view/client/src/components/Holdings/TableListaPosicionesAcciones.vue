@@ -1,5 +1,6 @@
 <template>
     <div>
+        <q-separator/>
         <q-table
         title="Acciones"
         :data="data"
@@ -7,7 +8,7 @@
         row-key="name"
         separator="vertical"
         dense
-
+        flat
         >				        
             <template v-slot:top>
                 <q-toolbar  class="text-blue-10"><q-toolbar-title>Acciones</q-toolbar-title></q-toolbar>

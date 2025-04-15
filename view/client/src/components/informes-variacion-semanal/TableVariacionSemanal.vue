@@ -7,6 +7,8 @@
         dense
         :pagination="pagination"       
         separator="vertical" 
+        flat         
+        square
     >
         <template v-slot:top>
             <div v-if="titulo_personalizado_visible">

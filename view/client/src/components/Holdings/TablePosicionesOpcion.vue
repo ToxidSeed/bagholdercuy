@@ -1,5 +1,6 @@
 <template>
     <div>        
+        <q-separator/>
         <q-table
             title="Opciones"
             :data="data"
@@ -9,6 +10,7 @@
             separator="vertical"
             dense            
             :pagination="pagination"
+            flat
         >        
             <template v-slot:top>
                 <q-toolbar  class="text-blue-10">
@@ -19,6 +21,7 @@
                 <!--<div class="text-h6">Opciones</div>-->
             </template>
         </q-table>
+        <q-separator/>
         <MessageBox :config="msgbox"/>
         <WinFiltrosPosicionOpciones v-model="WinFiltrosPosicionOpciones.open"
         v-on:filtrar-posiciones-opcion="filtrar"

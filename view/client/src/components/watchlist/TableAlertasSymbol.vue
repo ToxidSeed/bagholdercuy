@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div>        
         <q-table
             :data="tableAlertasSymbolStore.state.data"
             title="Alertas"
@@ -9,6 +9,7 @@
             dense
             separator="vertical"
             :pagination="pagination"
+            flat
         >        
             <template v-slot:top>
                 <q-toolbar class="q-pa-none q-ma-none">
@@ -62,6 +63,8 @@
                 <q-separator/>                
             </template>
         </q-table>
+        <q-separator/> 
+        
        <WinGestionComentariosAlerta/>       
        <WinComentariosAlerta/>  
     </div>
@@ -143,15 +146,17 @@ export default {
             
             let imp_accion = tableAlertasSymbolStore.state.imp_accion
 
-            let pct_claridad = ((imp_accion - imp_alerta) * 100 / imp_accion)
+            let pct_claridad = ((imp_accion - imp_alerta) * 100 / imp_accion)/2.5
             if(imp_accion > imp_alerta){
-                let pct_claridad_inicial = 60
+                let pct_claridad_inicial = 35
                 pct_claridad = pct_claridad + pct_claridad_inicial
+                console.log(pct_claridad)            
                 return `background-color: hsl(0, 100%, ${pct_claridad}%);color: rgb(255,255,255)`
             }else{
-                let pct_claridad_inicial = 40
-                pct_claridad = Math.abs(pct_claridad) + pct_claridad_inicial                
-                return `background-color: hsl(115, 80%, ${pct_claridad}%);color: rgb(255,255,255)`
+                let pct_claridad_inicial = 35
+                pct_claridad = Math.abs(pct_claridad) + pct_claridad_inicial    
+                console.log(pct_claridad)            
+                return `background-color: hsl(115, 70%, ${pct_claridad}%);color: rgb(255,255,255)`
             }
         },
         text_color_diff_alerta:function(imp_diff_alerta){            
