@@ -12,8 +12,6 @@ from common.Formatter import Formatter
 
 
 class MetricaController(Base):
-
-
     def get_metricas_diarias_de_cierres_positivos(self, args={}):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_diarias_de_cierres_positivos(args=args)

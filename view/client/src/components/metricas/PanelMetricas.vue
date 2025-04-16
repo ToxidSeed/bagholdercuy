@@ -18,7 +18,7 @@
             </div>            
             
             <q-toolbar class="text-green-10 col-12">
-                <q-btn label="Generar" no-caps flat dense icon="build" @click="generar" />
+                <q-btn label="Generar" no-caps flat dense icon="build" @click="btn_generar_click" />
             </q-toolbar>       
             <q-separator/>            
             <div class="row">
@@ -58,8 +58,8 @@
                         </q-menu>
                     </q-btn>
                     <div class="row q-gutter-xs">
-                        <q-input label="Fecha Inicio" stack-label color="blue-10" dense placeholder="dd/mm/yyyy"  mask="##/##/####" v-model="valor_inicial"/>
-                        <q-input label="Fecha Final" stack-label color="blue-10" dense placeholder="dd/mm/yyyy" mask="##/##/####" v-model="valor_final"/>
+                        <q-input label="Fecha Desde" stack-label color="blue-10" dense placeholder="dd/mm/yyyy"  mask="##/##/####" v-model="fch_desde"/>
+                        <q-input label="Fecha Hasta" stack-label color="blue-10" dense placeholder="dd/mm/yyyy" mask="##/##/####" v-model="fch_hasta"/>
                     </div>
                 </div>
             </div>                       
@@ -90,12 +90,12 @@
                         </q-item-section>                    
                     </template>
                     <q-separator/>                                                                              
-                    <div class="row q-col-gutter-xs">                                                        
+                    <div class="row q-col-xs">                                                        
                         <TableMetricasVariacionPositiva class="col-6"/>
+                        <q-separator vertical/>
                         <TableMetricasVariacionNegativa class="col"/>
                     </div>
-                </q-expansion-item>
-                <q-separator/>
+                </q-expansion-item>                
                 <q-expansion-item
                     default-opened
                     expand-separator  
@@ -112,13 +112,13 @@
                     <div class="row">
                         <PanelCotizacionSemana :cod_symbol="metricas.state.panel_metricas.cod_symbol"/>                            
                     </div>                     
-                    <div class="row q-col-gutter-xs">                                                        
+                    <div class="row q-col-xs">                                                        
                         <TableMetricasSemanalVariacionPositiva class="col-6"/>
+                        <q-separator vertical/>
                         <TableMetricasSemanalVariacionNegativa class="col"/>
                     </div>  
                     </q-card>             
-                </q-expansion-item>
-                <q-separator/>
+                </q-expansion-item>                
                 <q-expansion-item
                     default-opened
                     expand-separator     
@@ -131,8 +131,9 @@
                         </q-item-section> 
                     </template>    
                     <q-separator/>                    
-                    <div class="row q-col-gutter-xs">                                                        
+                    <div class="row q-col-xs">                                                        
                         <TableMetricasMensualVariacionPositiva class="col-6"/>
+                        <q-separator vertical/>
                         <TableMetricasMensualVariacionNegativa class="col"/>
                     </div>
                 </q-expansion-item>
@@ -154,6 +155,9 @@ import metricas from "./metricas-store"
 import store from "@/store/store"
 import metrica_api from "@/api/metrica"
 import {HttpResponseHandler} from "@/common/http-response-handler"
+import date from 'date-and-time';
+import _ from 'lodash';
+
 
 export default {
     name:"PanelMetricas",
@@ -192,8 +196,8 @@ export default {
                 "codigo":"",
                 "nombre":"Seleccionar rango"
             },
-            valor_inicial:"",
-            valor_final:""
+            fch_desde:"",
+            fch_hasta:""
         }
     },
     computed:{        
@@ -214,11 +218,21 @@ export default {
         })*/
     },
     methods:{
+        calc_fechas_rango: function(rango_item){            
+            if(rango_item.codigo == "ULTIMOS_100_DIAS"){
+                const now = new Date();
+                const fch_100_dias = date.addDays(now, -100)
+                this.fch_hasta = date.format(now, "DD/MM/YYYY")
+                this.fch_desde = date.format(fch_100_dias, "DD/MM/YYYY")                    
+            }
+        },
         sel_rango: function(rango){
+            console.log(rango)
             if (this.cod_tipo_periodo == ""){
                 return;
             }                                    
             this.rango_seleccionado = rango
+            this.calc_fechas_rango(this.rango_seleccionado)
         },
         select_symbol: function(item){
             metricas.state.panel_metricas.cod_symbol = item.value
@@ -244,23 +258,27 @@ export default {
             metricas.state.win_criterios_metricas_semanal.open=true
             console.log(metricas)
         },
-        generar: async function(){                                    
+        btn_generar_click: async function(){                                    
             this.get_metricas_diarias_de_cierres_positivos()
             this.get_metricas_diarias_de_cierres_negativos()
-            this.get_metricas_semanales_de_cierres_positivos()
+            /*this.get_metricas_semanales_de_cierres_positivos()
             this.get_metricas_semanales_de_cierres_negativos()
             this.get_metricas_mensuales_de_cierres_positivos()
             this.get_metricas_mensuales_de_cierres_negativos()
+            */
         },
         get_metricas_diarias_de_cierres_positivos: function(){
-            let metrica_api_instance = new metrica_api()            
-
-            let response_mdcp = metrica_api_instance.get_metricas_diarias_de_cierres_positivos({
+            let metrica_api_instance = new metrica_api()  
+            let params = {
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
-            })
+                cod_tipo_periodo: this.cod_tipo_periodo
+            }
+            if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
+                params.fch_desde = this.fch_desde
+                params.fch_hasta = this.fch_hasta
+            }
+
+            let response_mdcp = metrica_api_instance.get_metricas_diarias_de_cierres_positivos(params)
             response_mdcp.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
                 let httpdata = httpresp.data
@@ -281,13 +299,20 @@ export default {
             })
         },
         get_metricas_diarias_de_cierres_negativos: function(){
+            console.log("xxx")
             let metrica_api_instance = new metrica_api()
-            let response_mdcn = metrica_api_instance.get_metricas_diarias_de_cierres_negativos({
+
+            let params = {
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
-            })
+                cod_tipo_periodo:this.cod_tipo_periodo
+            }
+            
+            if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
+                params.fch_desde = this.fch_desde
+                params.fch_hasta = this.fch_hasta
+            }
+
+            let response_mdcn = metrica_api_instance.get_metricas_diarias_de_cierres_negativos(params)
             response_mdcn.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
                 let httpdata = httpresp.data
@@ -310,9 +335,7 @@ export default {
             let metrica_api_instance = new metrica_api()
             let response_mscp = metrica_api_instance.get_metricas_semanales_de_cierres_positivos({
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
+                cod_tipo_periodo:this.cod_tipo_periodo
             })
             response_mscp.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
@@ -336,9 +359,7 @@ export default {
             let metrica_api_instance = new metrica_api()
             let response_mscp = metrica_api_instance.get_metricas_semanales_de_cierres_negativos({
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
+                cod_tipo_periodo:this.cod_tipo_periodo
             })
             response_mscp.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
@@ -362,9 +383,7 @@ export default {
             let metrica_api_instance = new metrica_api()
             let response = metrica_api_instance.get_metricas_mensuales_de_cierres_positivos({
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
+                cod_tipo_periodo:this.cod_tipo_periodo
             })
             response.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
@@ -388,9 +407,7 @@ export default {
             let metrica_api_instance = new metrica_api()
             let response = metrica_api_instance.get_metricas_mensuales_de_cierres_negativos({
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
-                cod_tipo_periodo:this.cod_tipo_periodo,
-                valor_inicial_periodo:this.valor_inicial,
-                valor_final_periodo:this.valor_final
+                cod_tipo_periodo:this.cod_tipo_periodo
             })
             response.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)

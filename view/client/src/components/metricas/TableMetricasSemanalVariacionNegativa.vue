@@ -7,6 +7,7 @@
             dense
             separator="vertical"
             :pagination="pagination"
+            flat
         >
             <template v-slot:top>
                 <div  class="row q-gutter-md">                

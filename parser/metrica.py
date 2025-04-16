@@ -24,8 +24,8 @@ class MetricaParser(BaseParser):
         if cod_tipo_periodo.valor.upper() not in [DIAS, SEMANAS, MESES]:
             raise AppException(msg=f"El tipo de periodo {cod_tipo_periodo.valor} no es valido")
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True, datatype=date)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True, datatype=date)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True, datatype=date)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True, datatype=date)
 
         fch_desde = param_valor_inicial_periodo.valor
         fch_hasta = param_valor_final_periodo.valor
