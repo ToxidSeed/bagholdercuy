@@ -93,15 +93,15 @@ class MetricaParser(BaseParser):
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True)
 
         cod_semana_inicial = None
         cod_semana_final = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            cod_semana_inicial = self.convert_fecha_a_semana(self.parse_fecha_cliente(param_valor_inicial_periodo.valor))
-            cod_semana_final = self.convert_fecha_a_semana(self.parse_fecha_cliente(param_valor_final_periodo.valor))
+            cod_semana_inicial = self.convert_fecha_a_semana(date.fromisoformat(param_valor_inicial_periodo.valor))
+            cod_semana_final = self.convert_fecha_a_semana(date.fromisoformat(param_valor_final_periodo.valor))
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
             cod_semana_inicial = CodigoSemana(param_valor_inicial_periodo).value
@@ -126,15 +126,15 @@ class MetricaParser(BaseParser):
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True)
 
         cod_semana_inicial = None
         cod_semana_final = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            cod_semana_inicial = CodigoSemana(self.parse_fecha_cliente(param_valor_inicial_periodo.valor)).value
-            cod_semana_final = CodigoSemana(self.parse_fecha_cliente(param_valor_final_periodo.valor)).value
+            cod_semana_inicial = CodigoSemana(date.fromisoformat(param_valor_inicial_periodo.valor)).value
+            cod_semana_final = CodigoSemana(date.fromisoformat(param_valor_final_periodo.valor)).value
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
             cod_semana_inicial = CodigoSemana(param_valor_inicial_periodo.valor).value
