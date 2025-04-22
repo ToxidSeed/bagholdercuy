@@ -97,7 +97,7 @@ class Params:
                 return param
 
             if datatype == date:
-                valor = None if valor in [None, ""] else datetime.strptime(valor, app.config["CLIENT_DATE_FORMAT"])
+                valor = None if valor in [None, ""] else date.fromisoformat(valor)
 
                 param = Param(
                     nombre=nombre_param,
