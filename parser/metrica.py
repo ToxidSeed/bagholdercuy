@@ -55,15 +55,15 @@ class MetricaParser(BaseParser):
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True, datatype=date)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True, datatype=date)
 
         fch_desde = None
         fch_hasta = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            fch_desde = self.parse_fecha_cliente(param_valor_inicial_periodo.valor)
-            fch_hasta = self.parse_fecha_cliente(param_valor_final_periodo.valor)
+            fch_desde = param_valor_inicial_periodo.valor
+            fch_hasta = param_valor_final_periodo.valor
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
             fch_desde = self.convert_semana_a_fecha(param_valor_inicial_periodo.valor)

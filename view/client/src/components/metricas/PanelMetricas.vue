@@ -274,8 +274,8 @@ export default {
                 cod_tipo_periodo: this.cod_tipo_periodo
             }
             if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
-                params.fch_desde = this.fch_desde
-                params.fch_hasta = this.fch_hasta
+                params.fch_desde = date.transform(this.fch_desde,"DD/MM/YYYY","YYYY-MM-DD")
+                params.fch_hasta = date.transform(this.fch_hasta,"DD/MM/YYYY","YYYY-MM-DD")
             }
 
             let response_mdcp = metrica_api_instance.get_metricas_diarias_de_cierres_positivos(params)
@@ -308,8 +308,8 @@ export default {
             }
             
             if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
-                params.fch_desde = this.fch_desde
-                params.fch_hasta = this.fch_hasta
+                params.fch_desde = date.transform(this.fch_desde,"DD/MM/YYYY","YYYY-MM-DD")
+                params.fch_hasta = date.transform(this.fch_hasta,"DD/MM/YYYY","YYYY-MM-DD")
             }
 
             let response_mdcn = metrica_api_instance.get_metricas_diarias_de_cierres_negativos(params)
