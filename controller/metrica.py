@@ -116,6 +116,7 @@ class MetricaController(Base):
 
         df_stats = df_var.describe()
         df_stats = df_stats[(df_stats.index != "count")]
+        df_stats = df_stats.fillna(0)
         registros = Formatter().format_pandas_dataframe(df=df_stats)
         response = Response()
 

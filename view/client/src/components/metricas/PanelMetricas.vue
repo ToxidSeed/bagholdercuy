@@ -263,12 +263,9 @@ export default {
             this.get_metricas_diarias_de_cierres_positivos()
             this.get_metricas_diarias_de_cierres_negativos()
             this.get_metricas_semanales_de_cierres_positivos()            
-            this.get_metricas_semanales_de_cierres_negativos()
-            
-            /*
-            this.get_metricas_mensuales_de_cierres_positivos()
-            this.get_metricas_mensuales_de_cierres_negativos()
-            */
+            this.get_metricas_semanales_de_cierres_negativos()                    
+            this.get_metricas_mensuales_de_cierres_positivos()            
+            this.get_metricas_mensuales_de_cierres_negativos()            
         },
         get_metricas_diarias_de_cierres_positivos: function(){
             let metrica_api_instance = new metrica_api()  
@@ -396,11 +393,16 @@ export default {
             })
         },
         get_metricas_mensuales_de_cierres_positivos: function(){
-            let metrica_api_instance = new metrica_api()
-            let response = metrica_api_instance.get_metricas_mensuales_de_cierres_positivos({
+            let params = {
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
                 cod_tipo_periodo:this.cod_tipo_periodo
-            })
+            }
+            if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
+                params.fch_desde = date.transform(this.fch_desde,"DD/MM/YYYY","YYYY-MM-DD")
+                params.fch_hasta = date.transform(this.fch_hasta,"DD/MM/YYYY","YYYY-MM-DD")
+            }
+            let metrica_api_instance = new metrica_api()
+            let response = metrica_api_instance.get_metricas_mensuales_de_cierres_positivos(params)
             response.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
                 let httpdata = httpresp.data
@@ -420,11 +422,17 @@ export default {
             })
         },
         get_metricas_mensuales_de_cierres_negativos: function(){
-            let metrica_api_instance = new metrica_api()
-            let response = metrica_api_instance.get_metricas_mensuales_de_cierres_negativos({
+            let params = {
                 cod_symbol: metricas.state.panel_metricas.cod_symbol,
                 cod_tipo_periodo:this.cod_tipo_periodo
-            })
+            }
+            if (_.toUpper(this.cod_tipo_periodo) == "DIAS"){
+                params.fch_desde = date.transform(this.fch_desde,"DD/MM/YYYY","YYYY-MM-DD")
+                params.fch_hasta = date.transform(this.fch_hasta,"DD/MM/YYYY","YYYY-MM-DD")
+            }
+            
+            let metrica_api_instance = new metrica_api()
+            let response = metrica_api_instance.get_metricas_mensuales_de_cierres_negativos(params)
             response.then(httpresp => {
                 HttpResponseHandler.showMessageIfError(httpresp)
                 let httpdata = httpresp.data

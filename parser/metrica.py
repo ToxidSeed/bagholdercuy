@@ -2,7 +2,7 @@ from parser.base import BaseParser
 from datetime import date, datetime
 from common.AppException import AppException
 from domain.semana import CodigoSemana
-from domain.mes import CodigoMes
+from domain.mes import CodigoMes, Mes
 
 
 DIAS = "DIAS"
@@ -160,15 +160,15 @@ class MetricaParser(BaseParser):
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True)
 
         cod_mes_inicial = None
         cod_mes_final = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            cod_mes_inicial = CodigoMes.parse_string_client(param_valor_inicial_periodo.valor).value
-            cod_mes_final = CodigoMes.parse_string_client(param_valor_final_periodo.valor).value
+            cod_mes_inicial = Mes.from_isoformat(param_valor_inicial_periodo.valor).codigo()
+            cod_mes_final = Mes.from_isoformat(param_valor_final_periodo.valor).codigo()
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
             fch_semana_inicial = CodigoSemana(param_valor_inicial_periodo.valor).to_fecha_inicio_semana()

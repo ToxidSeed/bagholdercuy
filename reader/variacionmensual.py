@@ -24,7 +24,7 @@ class VariacionMensualReader:
         query = db.select(
             VariacionMensualModel
         ).where(
-            VariacionMensualModel.symbol == cod_symbol,
+            VariacionMensualModel.cod_symbol == cod_symbol,
             VariacionMensualModel.cod_mes >= cod_mes_desde,
             VariacionMensualModel.cod_mes <= cod_mes_hasta
         )

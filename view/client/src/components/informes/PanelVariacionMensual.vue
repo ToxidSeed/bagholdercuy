@@ -9,8 +9,7 @@
             </q-toolbar>
         </q-card>
         <TableVariacionMensual
-        v-bind:indata="data"
-        v-bind:symbol="symbol"
+        v-bind:indata="data"        
         v-bind:symbol_value="symbol_value"
         v-bind:symbol_nombre="symbol_text"
         />

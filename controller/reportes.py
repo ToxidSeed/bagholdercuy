@@ -54,9 +54,9 @@ class VariacionMensualBuilder(Base):
         stmt = db.select(
             VariacionMensualModel
         ).where(
-            VariacionMensualModel.symbol == symbol
+            VariacionMensualModel.cod_symbol == symbol
         ).order_by(
-            VariacionMensualModel.fch_ini_mes.desc()
+            VariacionMensualModel.fch_mes.desc()
         )
 
         result = db.session.execute(stmt)
