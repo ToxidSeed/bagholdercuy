@@ -102,6 +102,14 @@ class Mes:
         diff = (r.years + 12) + r.months
         return diff
 
+    @staticmethod
+    def from_isoformat(str_fecha):
+        fch_parsed = date.fromisoformat(str_fecha)
+        return Mes(
+            anyo=fch_parsed.year,
+            mes=fch_parsed.month
+        )
+
     def to_fecha_mes(self):
         return self.to_fecha_primer_dia()
 
