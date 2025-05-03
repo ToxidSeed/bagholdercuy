@@ -17,9 +17,11 @@ class Formatter:
     def format(self,indata=None):                
         if type(indata).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
             return self.process_list(inlist=indata)
+        if self.is_namedtuple(indata):
+            return self.process_namedtuple(indata)
         if type(indata).__name__ == "date":    
             #return indata.isoformat()
-            return indata.strftime("%d/%m/%Y")
+            return indata.strftime("%Y-%m-%d")
         if type(indata).__name__ == "Decimal":
             return float(indata)
         if type(indata).__name__ == "time":
@@ -35,6 +37,15 @@ class Formatter:
             return self.format_dict(output)
         
         return indata
+
+    def is_namedtuple(self, node=None):
+        if isinstance(node, tuple) and hasattr(node, "_fields"):
+            return True
+        else:
+            return False
+
+    def process_namedtuple(self, node):
+        return node._asdict()
 
     def format_dict(self, element=None):
         for key, value in element.items():
