@@ -8,7 +8,7 @@ import logging
 WRITE_MODE_AGREGAR = app.config["WRITE_MODE_AGREGAR"]
 WRITE_MODE_REEMPLAZAR = app.config["WRITE_MODE_REEMPLAZAR"]
 
-logger = logging.getLogger(__name__)
+from common.logger import logger
 
 class VariacionDiariaService:
     def __init__(self):

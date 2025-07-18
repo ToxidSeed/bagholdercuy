@@ -10,8 +10,7 @@ import sys, os
 import json
 import logging
 from datetime import date
-
-logger = logging.getLogger(__name__)
+from common.logger import logger
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -20,12 +19,12 @@ class EntryAPI(Resource):
         response.headers["file_name"] = obj_loader.response['file_name']
         return response
 
-    def post(self, module_name, class_name, method_name):        
+    def post(self, module_name, class_name, method_name):
         try:
+            logger.info(f"call class_name: {class_name}, method_name: {method_name}")
+            #logging.basicConfig(filename=f"logs/bagholder_post_{date.today().isoformat()}.log", level=logging.INFO)
 
-            logging.basicConfig(filename=f"logs/bagholder_post_{date.today().isoformat()}.log", level=logging.INFO)
-
-            #solo para probar se poneuser_id                
+            #solo para probar se poneuser_id
             session["user_id"] = 1
 
             data = None
@@ -59,12 +58,12 @@ class Loader:
         if obj_reference.AUTH_REQUIRED == False:
             self.obj = obj_reference()
         else:
-            self.obj = obj_reference()            
+            self.obj = obj_reference()
             self.obj.validar_token(data.get("access_token"))
 
         method_to_call = getattr(self.obj, method_name)
         self.response = method_to_call(data)
-    
+
 
 
 class ImageLoader(Resource):

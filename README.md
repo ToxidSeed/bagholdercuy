@@ -12,3 +12,4 @@ export BAGHOLDERAPI_SETTINGS=/home/alone/.config/bagholderapi/settings.py
 # API
 Daily Chart EOD API
 https://site.financialmodelingprep.com/developer/docs#daily-chart-charts
+

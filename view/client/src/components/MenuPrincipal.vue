@@ -67,19 +67,7 @@
                 >
                     <q-item-section>Rentabilidad</q-item-section>
                 </q-item>
-            </q-expansion-item>
-            <q-item 
-            active-class="my-menu-link"
-            to="/stats">
-                <q-item-section>Stats</q-item-section>
-            </q-item>
-            <q-item
-            active-class="my-menu-link"
-            to="/metricas"            
-            dense
-            >
-                <q-item-section>Metricas</q-item-section>
-            </q-item>
+            </q-expansion-item>            
             <q-expansion-item
                 expand-separator  
                 default-opened          
@@ -106,6 +94,25 @@
                     active-class="my-menu-link"
                     to="/rentabilidadoperaciones">
                         <q-item-section>Rentabilidad Operaciones</q-item-section>
+                    </q-item>
+                    <q-item 
+                    active-class="my-menu-link"
+                    to="/stats">
+                        <q-item-section>Stats</q-item-section>
+                    </q-item>
+                    <q-item
+                    active-class="my-menu-link"
+                    to="/metricas"            
+                    dense
+                    >
+                        <q-item-section>Metricas</q-item-section>
+                    </q-item>
+                    <q-item
+                    active-class="my-menu-link"
+                    to="/ciclos"            
+                    dense
+                    >
+                        <q-item-section>Ciclos</q-item-section>
                     </q-item>
                 </q-list>
             </q-expansion-item>

@@ -2,6 +2,7 @@ import {postconfig} from "@/common/request.js"
 import axios from "axios"
 import store from "@/store/store"
 import { HttpError } from "../common/custom-error"
+import {SERIE} from './endpoints'
 
 class Serie{
 
@@ -42,6 +43,10 @@ class Serie{
         }catch(err){
             console.log(err)
         }
+    }
+
+    load_marketstack_series = function(params){        
+        return axios.post(SERIE.MARKETSTACK_LOAD, params, postconfig())
     }
         
 }

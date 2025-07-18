@@ -81,6 +81,10 @@ import MainStockSplit from './components/split/MainStockSplit.vue';
 import PanelStockSplitLoader from "@/components/split/PanelStockSplitLoader.vue"
 
 import Main from '@/Main.vue'
+import PageCiclos from './components/ciclos/PageCiclos.vue';
+import PanelCiclosDuracion from './components/ciclos/PanelCiclosDuracion.vue'
+import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
+
 
 Vue.use(VueRouter);
 
@@ -242,6 +246,21 @@ const routes =  [
                 component: PanelEvolucionDiariaSeries
               }
             ]
+          },{
+            path:"/ciclos",
+            name:"ciclos",
+            component: PageCiclos,
+            children: [{
+              path:"",
+              name:"ciclos-duracion",
+              props:true,
+              component:PanelCiclosDuracion
+            },{
+              path:"/ciclos/variacion",
+              name:"ciclos-variacion",
+              props:true,
+              component:PanelCiclosVariacion
+            }]
           },{
             path:"/simulacion-rentabilidad",
             name:"simulacion-rentabilidad",

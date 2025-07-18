@@ -20,7 +20,7 @@ class MetricaController(Base):
         df = reader.get_variaciones_x_symbol(cod_symbol=params.get("cod_symbol"), fch_desde=params.get("fch_desde"), fch_hasta=params.get("fch_hasta"), pandas=True)
         df_cierre_positivo = df[(df.imp_variacion_cierre >= 0.00)]
         df_cierre_positivo["imp_var_max_min"] = df["imp_maximo"] - df["imp_minimo"]
-        df_cierre_positivo["imp_var_max_cierre"] = df["imp_cierre"] - df["imp_maximo"]
+        df_cierre_positivo["imp_var_max_cierre"] = df["imp_maximo"] - df["imp_cierre_ant"]
 
         df_stats = df_cierre_positivo.describe()
         df_stats = df_stats[(df_stats.index != 'count')]

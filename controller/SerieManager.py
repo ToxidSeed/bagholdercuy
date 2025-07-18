@@ -19,11 +19,6 @@ from model.StockData import StockData
 from model.seriediaria import SerieDiariaModel
 from model.seriemensual import SerieMensualModel
 from parser.serie import SimulacionVariacionParser, SerieManagerLoaderParser, SerieControllerParser, ReparadorSeriesParser
-from processor.seriediaria import SerieDiariaWriter
-from processor.seriesemanal import SerieSemanalLoader
-from processor.variaciondiaria import VariacionDiariaLoader
-from processor.variacionmensual import VariacionMensualWriter
-from processor.variacionsemanal import VariacionSemanalWriter
 from reader.seriediaria import SerieDiariaReader
 from reader.variaciondiaria import VariacionDiariaReader
 from reader.seriesemanal import SerieSemanalReader
@@ -35,22 +30,18 @@ from manager.variaciaciondiaria import VariacionDiariaManager
 from manager.serieintegridad import *
 from service.seriediaria import SerieDiariaService
 from service.variaciondiaria import VariacionDiariaService
-# from service.variaciondiaria import VariacionDiariaProcesador
-# from service.seriesemanal import SerieSemanalReprocesador
 from service.seriesemanal import SerieSemanalService
-# from service.variacionsemanal import ReprocesadorVariacionSemanalService
 from service.variacionsemanal import VariacionSemanalService
 from service.seriemensual import SerieMensualService
 from service.variacionmensual import VariacionMensualService
 from service.resumenserie import ResumenSerieService
-
 import structure.inputfiles as inputfiles
-
+import structure.series_structure as series_structure
 from domain.semana import CodigoSemana, Semana
 from domain.mes import Mes
-
 from dataclasses import dataclass
-from rich.pretty import pprint
+from api.marketstack import MarketStackAPI
+
 
 LUNES = 1
 VIERNES = 5
@@ -264,25 +255,7 @@ class SerieController(Base):
             return Response().from_exception(e)
 
 
-class NasdaqCsvLoader(Base):
-    def __init__(self):
-        self.fichero_ruta = None
-
-    def load(self, args=None):
-        try:
-            tmp_fichero = args.get("files").get("fichero")
-            form = args.get("form")
-            cod_symbol = form.get("cod_symbol")
-            modo_carga = form.get("modo_carga")
-            self.__guardar_fichero_temporal(tmp_fichero, cod_symbol)
-            contenido = self.parse_contenido_fichero()
-            self.__crear_series(series=contenido, cod_symbol=cod_symbol, modo_carga=modo_carga)
-            db.session.commit()
-            return Response(msg="Se ha procesado correctamente el fichero con los codigos de opcion")
-        except Exception as e:
-            db.session.rollback()
-            return Response().from_exception(e)
-
+class MultipleLoaderController(Base):
     def generar_series_diarias(self, cod_symbol, series, flg_importes_ajustados, mode):
         serie_diaria_service = SerieDiariaService()
         fch_inicio_insercion = serie_diaria_service.insertar_multiples_series(cod_symbol, series, flg_importes_ajustados, mode)
@@ -316,9 +289,8 @@ class NasdaqCsvLoader(Base):
     def guardar_resumen_series(self, cod_symbol):
         rss = ResumenSerieService()
         rss.guardar(cod_symbol)
-    
 
-    def __crear_series(self, series, cod_symbol, modo_carga):   
+    def crear_series(self, series, cod_symbol, modo_carga):
         if not series:
             raise AppException("No hay series válidas")            
 
@@ -339,13 +311,26 @@ class NasdaqCsvLoader(Base):
         self.generar_series_mensuales(cod_symbol, fch_inicio_procesamiento)
         self.generar_variaciones_mensuales(cod_symbol, fch_inicio_procesamiento)
         self.guardar_resumen_series(cod_symbol)
-        
 
-    def get_datos_primera_serie(self, primera_serie):
-        fch_serie, *otros = primera_serie
-        semana = CodigoSemana(fch_serie)
-        mes = Mes.from_fecha(fch_serie)
-        return semana, mes
+
+class NasdaqCsvLoader(MultipleLoaderController):
+    def __init__(self):
+        self.fichero_ruta = None
+
+    def load(self, args=None):
+        try:
+            tmp_fichero = args.get("files").get("fichero")
+            form = args.get("form")
+            cod_symbol = form.get("cod_symbol")
+            modo_carga = form.get("modo_carga")
+            self.__guardar_fichero_temporal(tmp_fichero, cod_symbol)
+            contenido = self.parse_contenido_fichero()
+            self.crear_series(series=contenido, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            db.session.commit()
+            return Response(msg="Se ha procesado correctamente el fichero con los codigos de opcion")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
 
     def __guardar_fichero_temporal(self, tmp_fichero, cod_symbol):
         tmp_dir = app.config.get("RUTA_TMP")
@@ -387,6 +372,40 @@ class NasdaqCsvLoader(Base):
         contenido = sorted(contenido)
         return contenido
 
+class MarketStackLoaderController(MultipleLoaderController):
+    def load(self, args=None):
+        try:
+            cod_symbol = args.get("cod_symbol")
+            fch_desde = args.get("fch_desde")
+            fch_hasta = args.get("fch_hasta")
+            modo_carga = args.get("modo_carga")
+
+            #get series
+            series = self.get_series(cod_symbol, fch_desde, fch_hasta)
+            self.crear_series(series=series, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            db.session.commit()
+            return Response(msg="Se ha realizado la carga correctamente")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    def get_series(self, cod_symbol, fch_desde, fch_hasta):
+        series = MarketStackAPI.get_historical_data(cod_symbol, fch_desde, fch_hasta)
+        data = series.get('data')
+        norm_series = []
+        for elem in data:
+            serie = series_structure.Serie(
+                fch_serie=datetime.strptime(elem.get('date'), "%Y-%m-%dT%H:%M:%S%z").date(),
+                imp_apertura=elem.get('adj_open'),
+                imp_maximo=elem.get('adj_high'),
+                imp_minimo=elem.get('adj_low'),
+                imp_cierre=elem.get('adj_close'),
+                volumen=elem.get('volume')
+            )
+            norm_series.append(serie)
+        norm_series = sorted(norm_series)    
+        return norm_series
+    
 class SimulacionVariacionManager(Base):
     def __init__(self):
         self.serie_diaria_reader = SerieDiariaReader()

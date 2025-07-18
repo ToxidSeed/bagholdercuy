@@ -4,6 +4,7 @@ from reader.stocksplit import StockSplitReader
 from model.seriediaria import SerieDiariaModel
 from model.stocksplit import StockSplitModel
 import structure.inputfiles as inputfiles
+import structure.series_structure as series_structure
 
 from domain.semana import Semana
 from domain.mes import Mes
@@ -58,6 +59,10 @@ class SerieDiariaService:
     def get_importes_ajustados(self, serie, flg_importes_ajustados):
         if flg_importes_ajustados == True:
             if isinstance(serie, inputfiles.CsvNasdaq):
+                ImportesAjustados = namedtuple("ImportesAjustados", ["imp_apertura","imp_maximo","imp_minimo","imp_cierre"])
+                importes_ajustados = ImportesAjustados(serie.imp_apertura, serie.imp_maximo, serie.imp_minimo, serie.imp_cierre)
+                return importes_ajustados
+            elif isinstance(serie, series_structure.Serie):
                 ImportesAjustados = namedtuple("ImportesAjustados", ["imp_apertura","imp_maximo","imp_minimo","imp_cierre"])
                 importes_ajustados = ImportesAjustados(serie.imp_apertura, serie.imp_maximo, serie.imp_minimo, serie.imp_cierre)
                 return importes_ajustados
@@ -160,14 +165,15 @@ class SerieDiariaService:
         return factor_split_acum   
 
     def calc_importes_sin_ajustar(self, cod_symbol,  serie_ajustada, imp_factor_split):
-        
-        ImportesSinAjustar = namedtuple("ImportesSinAjustar", ["imp_aper_sin_ajus", "imp_max_sin_ajus", "imp_min_sin_ajus", "imp_cierre_sin_ajus"])            
-
-        imp_aper_sin_ajus = serie_ajustada.imp_apertura / float(imp_factor_split)
-        imp_max_sin_ajus = serie_ajustada.imp_maximo / float(imp_factor_split)
-        imp_min_sin_ajus = serie_ajustada.imp_minimo / float(imp_factor_split)    
-        imp_cierre_sin_ajus = serie_ajustada.imp_cierre / float(imp_factor_split)
-        importes_sin_ajustar =  ImportesSinAjustar(imp_aper_sin_ajus, imp_max_sin_ajus, imp_min_sin_ajus, imp_cierre_sin_ajus)        
+        try:        
+            ImportesSinAjustar = namedtuple("ImportesSinAjustar", ["imp_aper_sin_ajus", "imp_max_sin_ajus", "imp_min_sin_ajus", "imp_cierre_sin_ajus"])            
+            imp_aper_sin_ajus = serie_ajustada.imp_apertura / float(imp_factor_split)
+            imp_max_sin_ajus = serie_ajustada.imp_maximo / float(imp_factor_split)
+            imp_min_sin_ajus = serie_ajustada.imp_minimo / float(imp_factor_split)    
+            imp_cierre_sin_ajus = serie_ajustada.imp_cierre / float(imp_factor_split)
+            importes_sin_ajustar =  ImportesSinAjustar(imp_aper_sin_ajus, imp_max_sin_ajus, imp_min_sin_ajus, imp_cierre_sin_ajus)        
+        except Exception as e:
+            raise e
         
         return importes_sin_ajustar
 

@@ -21,7 +21,7 @@ class SerieSemanalService:
         #logger.info(f"Max fch semana: {str(max_fch_semana)}")
 
         # Si hay datos luego de la fecha de semana inicio procesamiento
-        if max_fch_semana >= fch_semana_procesamiento:
+        if max_fch_semana is not None and max_fch_semana >= fch_semana_procesamiento:
             SerieSemanalModel.eliminar_por_symbol_desde_fecha(cod_symbol, fch_semana=fch_semana_procesamiento)
 
         # obtenemos las pre series

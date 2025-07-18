@@ -23,13 +23,7 @@ class VariacionSemanalModel(db.Model):
 
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):
-        stmt = db.session.delete(
-            VariacionSemanalModel
-        ).where(
-            VariacionSemanalModel.symbol == cod_symbol
-        )
-
-        result = db.session.execute(stmt)
+        result = VariacionSemanalModel.query.filter(VariacionSemanalModel.symbol == cod_symbol).delete()        
         return result
 
     @classmethod
