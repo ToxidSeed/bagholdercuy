@@ -1,12 +1,15 @@
 from app import app, db
-from model.orden import OrdenModel
 
 from datetime import datetime, date, time
 from common.AppException import AppException
 from common.Response import Response
+from domain.mes import Mes
+from domain.semana import Semana
 
+from model.orden import OrdenModel
 from model.StockSymbol import StockSymbol
 from model.posicion import PosicionModel
+from model.transaccion import TransaccionModel
 
 from processor.orden import OrdenProcessor, CargadorMultipleProcessor, ReprocesadorOrdenesProcessor
 
@@ -20,14 +23,18 @@ from sqlalchemy.sql import extract
 
 import json, csv
 from config.general import CLIENT_DATE_FORMAT
+from schemas.orden_schema import OrdenManagerEjecutarParams
+
+# params = CicloVariacionGetCiclosDiarios(**args)
 
 class OrdenManager(Base):
-    
+
     def ejecutar(self, args={}):
         try:
+            params = OrdenManagerEjecutarParams(**args)
             procesador = OrdenProcessor()
-            self.__validar_procesar(args)
-            orden = self.__collect(args)            
+            # self.__validar_procesar(args)
+            orden = self.__collect(params)            
             procesador.ejecutar(orden)
             db.session.commit()
             return Response(msg="la orden se procesó correctamente").get()
@@ -35,33 +42,43 @@ class OrdenManager(Base):
             db.session.rollback()
             return Response().from_exception(e)
 
+    def __registrar_transaccion(self, params: OrdenManagerEjecutarParams):
+        now = datetime.now()
+        transaccion = TransaccionModel(
+            cod_symbol=params.cod_symbol,
+            cod_symbol_opcion=params.cod_symbol_opcion,
+            fch_transaccion=params.fch_registro,
+            num_transaccion=TransaccionModel.get_next_num_transaccion(
+                params.cod_symbol, params.cod_symbol_opcion, params.fch_registro
+            ),
+            cod_tipo_transaccion=params.cod_tipo_orden,
+            cantidad=params.cantidad,
+            cod_mes=Mes.from_fecha(params.fch_registro).codigo(),
+            cod_semana=Semana.from_fecha(params.fch_registro).codigo(),
+            imp_accion=params.imp_accion,
+            imp_transaccion=params.imp_accion * cantidad,
+            fch_registro=date.today(),
+            hora_registro=f"{now.hour}:{now.minute}:{now.second}",
+            id_cuenta = self.usuario.id
+        )
+
+        return transaccion
+
+    def __registrar_movimientos(self):
+        pass
+
+    def __actualizar_posiciones(self):
+        pass
+
     def __collect(self, args={}):        
-
-        cod_opcion = args.get('cod_opcion')        
-        cod_symbol = args.get('cod_symbol')
-
-        cod_symbol = None if cod_opcion != "" and cod_opcion is not None else cod_symbol
-        cod_opcion = None if cod_symbol != "" and cod_symbol is not None else cod_opcion
-               
-        orden = OrdenModel(
-                cod_symbol = cod_symbol,       
-                cod_opcion = cod_opcion,
-                cod_tipo_orden = args["tipo_orden"],
-                cantidad = int(args["cantidad"]),
-                usuario_id = self.usuario.id,
-                imp_accion = float(args["imp_accion"]),
-                fch_orden = datetime.strptime(args["fch_orden"],CLIENT_DATE_FORMAT).date(),
-                fch_registro = datetime.now().date()
-            )        
-
-        return orden
+        pass
 
     def __validar_procesar(self, args={}):
-        #validate symbol    
+        # validate symbol
         errors = []
         if "cod_symbol" not in args and "cod_opcion" not in args:
             errors.append("No se ha enviado el instrumento financiero")                        
-        
+
         tipo_orden = args["tipo_orden"]
         if tipo_orden not in ["B","S"]:
             errors.append("el valor del parámetro [tipo_orden] es invalido, valor enviado: {}".format(trade_type))
@@ -77,14 +94,14 @@ class OrdenManager(Base):
 
         if "fch_orden" not in args:
             errors.append("No se ha enviado [fch_orden] como parámetro del request")
-        
+
         fch_orden = datetime.strptime(args.get("fch_orden"),CLIENT_DATE_FORMAT).date()        
         if fch_orden is None:
             errors.append("No se ha enviado una fecha de transacción correcta, valor enviado: {}".format(args["fch_orden"]))
 
         if "imp_accion" not in args:
             errors.append("No se ha enviado [imp_accion] como parámetro del request")
-        
+
         imp_accion = args.get("imp_accion")
         imp_accion = 0 if imp_accion == "" else imp_accion
         if float(imp_accion) <= 0.00:
@@ -94,7 +111,6 @@ class OrdenManager(Base):
 
         if len(errors) > 0:
             raise AppException(msg="Se han encontrado errores de validacion", errors=errors)
-
 
     def get_symbol(self, symbol=""):
         symbol = StockSymbol.query.filter(
@@ -150,9 +166,6 @@ class ReprocesadorManager(Base):
         reprocesador.cod_symbol = cod_symbol
         reprocesador.cod_opcion = cod_opcion         
         reprocesador.usuario_id = self.usuario.id
-            
-
-
 
 
 """
@@ -237,7 +250,7 @@ class Reprocesador(OrdenManager):
             OrderModel.symbol.in_(symbols)
         ).all()
         return ordenes
-    
+
 class EliminadorEntryPoint:
     def __init__(self):
         pass
@@ -413,14 +426,3 @@ class CargadorMultipleManager(Base):
         except Exception as e:        
             db.session.rollback()
             return Response().from_exception(e)
-
-    
-            
-
-    
-
-
-
-
-
-        

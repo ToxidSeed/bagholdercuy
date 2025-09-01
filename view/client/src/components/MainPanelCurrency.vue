@@ -45,7 +45,7 @@ import PanelCurrency from './PanelCurrency.vue'
 import TablePairs from './TablePairs.vue'
 import TableCurrency from './TableCurrency.vue'
 import PanelAddPair from './PanelAddPair.vue'
-import MessageBox from './MessageBox.vue'
+import MessageBox from './dialogs/MessageBox.vue'
 
 export default {
     name:"MainPanelCurrency",

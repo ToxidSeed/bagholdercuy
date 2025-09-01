@@ -10,7 +10,7 @@
 <script>
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from "../dialogs/MessageBox.vue";
 import {postconfig} from '@/common/request.js';
 
 export default {

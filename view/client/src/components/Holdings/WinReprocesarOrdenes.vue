@@ -37,12 +37,12 @@
                 </q-inner-loading>
             </q-card>
         </q-dialog>
-        <MessageBox :config="MsgBox"/>
+        
     </div>
 </template>
 <script>
 import SelectSymbol from "@/components/SelectSymbol.vue";
-import MessageBox from '@/components/MessageBox.vue';
+
 import {get_postconfig} from "@/common/request.js"
 export default {
     name:"WinReprocesarOrdenes",
@@ -53,7 +53,7 @@ export default {
     },
     components:{
         SelectSymbol,
-        MessageBox
+        
     },
     watch:{
         open:function(newval){

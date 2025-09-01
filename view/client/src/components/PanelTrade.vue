@@ -84,7 +84,7 @@
                 </div>            
             </q-card-section>
             <q-separator />            
-            <MessageBox ref="msgbox"/>
+            
         </q-card> 
         <q-dialog v-model="win_opciones.visible">
             <PanelOptionsChain style="max-width:750px"
@@ -99,7 +99,7 @@
 </template>
 <script>
 
-import MessageBox from './MessageBox.vue';
+
 import date from 'date-and-time'
 import PanelOptionsChain from '@/components/common/PanelOptionsChain.vue';
 import {postconfig} from '@/common/request.js';
@@ -108,7 +108,7 @@ import {CLIENT_DATE_FORMAT, TIPO_ACTIVO_OPT} from '@/common/constants.js'
 export default {
     name:"PanelTrade",
     components:{
-        MessageBox,
+
         PanelOptionsChain
     },
     props:{

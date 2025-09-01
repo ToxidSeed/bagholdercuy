@@ -29,11 +29,11 @@
                 </q-inner-loading>     
             </q-card>
         </q-dialog>
-        <MessageBox :config="msgbox"/>
+        
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+
 import {get_postconfig} from '@/common/request.js';
 export default {
     name:"WinCargaMultiple",
@@ -43,7 +43,7 @@ export default {
         }
     },
     components:{
-        MessageBox
+        
     },
     watch:{
         open:function(newval){

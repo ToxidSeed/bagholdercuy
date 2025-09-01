@@ -39,7 +39,7 @@
 </template>
 <script>
 import {postconfig} from '@/common/request.js'
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue';
 import TableComandos from '@/components/common/TableComandos.vue';
 
 export default {

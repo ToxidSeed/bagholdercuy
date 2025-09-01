@@ -19,6 +19,11 @@
                                 <div>Carga de series desde <span class="text-blue-10 text-bold">marketstack</span></div>                               
                             </q-item-section>                            
                         </q-item>
+                        <q-item  clickable v-close-popup @click="win_investing_csv_loader_open=true">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga de series desde <span class="text-blue-10 text-bold">Investing CSV</span></div>                               
+                            </q-item-section>                            
+                        </q-item>
                     </q-list>
                 </q-menu>
             </q-btn>
@@ -43,6 +48,7 @@
         </q-card>      
         <WinNasdaqCsvLoader v-model="store.state.w_nasdaq_loader.open"/>
         <WinMarketStackLoader v-model="win_marketstack_loader_open"/>
+        <WinInvestingLoader v-model="win_investing_csv_loader_open"/>
     </div>
 </template>
 <script>
@@ -50,21 +56,23 @@ import store from './store'
 import TableResumenSerie from '@/components/serie/TableResumenSerie.vue'
 import WinNasdaqCsvLoader from './WinNasdaqCsvLoader.vue'
 import WinMarketStackLoader from './WinMarketStackLoader.vue'
+import WinInvestingLoader from './WinInvestingLoader.vue'
 //import PanelSerieLoader from '@/components/serie/PanelSerieLoader.vue'
 export default {
     name:"MainMantSerie",
     components:{
         TableResumenSerie,
         WinNasdaqCsvLoader,
-        WinMarketStackLoader
-
+        WinMarketStackLoader,
+        WinInvestingLoader
   //      PanelSerieLoader
     },
     data: () => {
         return {
             visible:0,
             store: store,
-            win_marketstack_loader_open: false
+            win_marketstack_loader_open: false,
+            win_investing_csv_loader_open: false
         }
     }
 }

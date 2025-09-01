@@ -21,7 +21,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from './dialogs/MessageBox.vue'
 
 export default {
     name:"PanelCurrency",

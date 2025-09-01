@@ -15,7 +15,7 @@
 </template>
 <script>
 import {postconfig} from '@/common/request.js';
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 
 export default {
     name:"TableRentabilidadOperacionesDiaria",

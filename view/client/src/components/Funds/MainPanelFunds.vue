@@ -53,12 +53,12 @@
         v-bind:visible="mantvisible"
         v-on:procesar-fin="procesar_fin_handler"
         />
-        <MessageBox ref="msgbox"/>
+
     </div>
 </template>
 <script>
 import PanelFunds from '@/components/Funds/PanelFunds.vue';
-import MessageBox from '@/components/MessageBox.vue'
+
 import {postconfig} from '@/common/request.js';
 //import TableFundsHistory from '@/components/Funds/TableFundsHistory.vue';
 
@@ -66,7 +66,7 @@ export default {
     name:"MainPanelFunds",
     components:{
         PanelFunds,
-        MessageBox
+
     },
     data: () => {
         return {

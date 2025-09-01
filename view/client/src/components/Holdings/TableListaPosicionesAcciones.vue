@@ -53,18 +53,18 @@
                 </q-td>                
             </template>                        
         </q-table>
-        <MessageBox ref="msgbox"/>
+        
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+
 import {postconfig} from '@/common/request.js';
 import date from 'date-and-time';
 
 export default {
     name:"TableListaPosicionesAcciones",
     components:{
-        MessageBox
+        
     },
     data: () => {        
         return {            

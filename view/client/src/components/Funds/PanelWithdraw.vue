@@ -67,7 +67,7 @@
 <script>
 //import SelectFunds from './SelectFunds.vue'
 import SelectMoneda from '@/components/SelectMoneda.vue'
-import MessageBox from '../MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
 import {config} from '@/common/request.js'
 import date from 'date-and-time'

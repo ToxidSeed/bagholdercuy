@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy import select
 
 class UsuarioModel(db.Model):
     __tablename__="tb_usuario"
@@ -16,3 +17,20 @@ class UsuarioModel(db.Model):
             UsuarioModel.id == usuario_id
         ).one()
         return user
+
+    @classmethod
+    def get_user_safe(cls, usuario):
+        query = select(
+            cls.id,
+            cls.usuario,
+            cls.nombres,
+            cls.apellidos,
+            cls.moneda_id,
+            cls.id_cuenta_default
+        ).where(
+            cls.usuario == usuario
+        )
+
+        result = db.session.execute(query)
+        record = result.first()
+        return record

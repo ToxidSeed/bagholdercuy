@@ -1,8 +1,9 @@
 import jwt
-from app import app
+from app import app, db
 from flask import request
 from datetime import datetime
 from model.usuario import UsuarioModel
+from sqlalchemy import select
 
 
 class TokenHandler:    
@@ -11,8 +12,17 @@ class TokenHandler:
         exp = data.get("exp")
         dt = datetime.fromtimestamp(exp)
 
-        user = UsuarioModel.query.filter(
+        query = select(
+            UsuarioModel.id,
+            UsuarioModel.usuario,
+            UsuarioModel.nombres,
+            UsuarioModel.apellidos,
+            UsuarioModel.id_cuenta_default
+        ).where(
             UsuarioModel.usuario == data.get('usuario')
-        ).one()
+        )
+
+        result = db.session.execute(query)
+        user = result.one()
         return user
         

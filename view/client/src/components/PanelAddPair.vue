@@ -19,7 +19,7 @@
 </template>
 <script>
 import SelectMoneda from './SelectMoneda.vue'
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from './dialogs/MessageBox.vue'
 
 export default {
     name:"PanelAddPair",

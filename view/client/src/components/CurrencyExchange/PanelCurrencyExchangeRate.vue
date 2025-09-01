@@ -35,7 +35,7 @@ import date from 'date-and-time';
 import { CLIENT_DATE_FORMAT } from '@/common/constants';
 import {postconfig} from '@/common/request.js';
 import Confirmar from '@/components/dialogs/Confirmar.vue';
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 
 export default {
     name:"PanelCurrencyExchangeRate",

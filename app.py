@@ -64,8 +64,6 @@ class Loader:
         method_to_call = getattr(self.obj, method_name)
         self.response = method_to_call(data)
 
-
-
 class ImageLoader(Resource):
     def get(self, image_loader):
         try:

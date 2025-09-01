@@ -36,3 +36,21 @@ class MarketStackAPI:
         )
         
         return response.json()
+
+    @staticmethod
+    def get_ticketlist(search=""):
+        endpoint = f"{BASE_ENDPOINT}tickerslist"
+ 
+        params = {
+            'access_key': TOKEN
+        }
+
+        if search:
+            params["search"] = search
+
+        response = requests.get(
+            endpoint,
+            params=params
+        )
+        
+        return response.json()

@@ -48,7 +48,7 @@
 import {CLIENT_DATE_FORMAT,ISO_DATE_FORMAT} from '@/common/constants.js'
 import {get_postconfig} from '@/common/request.js'
 import date from 'date-and-time';
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue';
 import SelectAnyosOrden from '@/components/helpers/SelectAnyosOrden.vue'
 import SelectMesesOrden from '@/components/helpers/SelectMesesOrden.vue'
 export default {

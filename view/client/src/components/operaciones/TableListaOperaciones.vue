@@ -85,7 +85,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 import {get_postconfig} from '@/common/request.js';
 import WinFiltrarOperaciones from "@/components/operaciones/WinFiltrarOperaciones.vue"
 

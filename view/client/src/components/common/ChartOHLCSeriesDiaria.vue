@@ -10,7 +10,7 @@
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import _ from "lodash";
-//import MessageBox from '@/components/MessageBox.vue';
+//import MessageBox from '../../dialogs/MessageBox.vue';
 import {postconfig} from '@/common/request.js';
 import {HttpResponseHandler} from "@/common/http-response-handler"
 import date from "date-and-time";

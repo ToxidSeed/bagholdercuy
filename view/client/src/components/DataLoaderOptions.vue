@@ -28,7 +28,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from './dialogs/MessageBox.vue'
 import SelectSymbol from '@/components/SelectSymbol.vue'
 import {postconfig} from '@/common/request.js'
 //import date from 'date-and-time'

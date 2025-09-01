@@ -41,19 +41,18 @@
                 </q-card-actions>
             </q-card >            
         </div>
-        <MsgBox ref="msgbox"/>
+
     </div>
 </template>
 <script>
 //import MessageBox from './MessageBox.vue';
 import SelectSymbol from "@/components/SelectSymbol.vue"
-import MsgBox from "@/components/MessageBox.vue"
+
 
 export default {
     name:"DataLoader",
     components:{        
-        SelectSymbol,
-        MsgBox
+        SelectSymbol
     },
     props:{
         action:{

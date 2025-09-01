@@ -15,10 +15,8 @@ from config.app_constants import SERIES_PROF_CARGA_ULT1ANYO
 from config.app_constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_YTD, \
     SERIES_PROF_CARGA_ULT3MESES, SERIES_PROF_CARGA_ULT6MESES
 from controller.base import Base
-from model.StockData import StockData
-from model.seriediaria import SerieDiariaModel
-from model.seriemensual import SerieMensualModel
-from parser.serie import SimulacionVariacionParser, SerieManagerLoaderParser, SerieControllerParser, ReparadorSeriesParser
+
+from parser.serie import SimulacionVariacionParser, SerieControllerParser
 from reader.seriediaria import SerieDiariaReader
 from reader.variaciondiaria import VariacionDiariaReader
 from reader.seriesemanal import SerieSemanalReader
@@ -405,6 +403,31 @@ class MarketStackLoaderController(MultipleLoaderController):
             norm_series.append(serie)
         norm_series = sorted(norm_series)    
         return norm_series
+
+class InvestingLoader(Base):
+    def resumen(self, args=None):
+        pass
+
+    def load(self, args=None):
+        try:
+            tmp_fichero = args.get("files").get("fichero")
+            cod_symbol = args.get("cod_symbol")            
+
+            # get series
+            # series = self.get_series(cod_symbol, fch_desde, fch_hasta)
+            self.crear_series(series=series, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            db.session.commit()
+            return Response(msg="Se ha realizado la carga correctamente")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    def __guardar_fichero_temporal(self, tmp_fichero, cod_symbol):
+        tmp_dir = app.config.get("RUTA_TMP")
+        fch_actual_iso = date.today().isoformat()
+        fichero_nombre = f"nasdaq_{cod_symbol}_{str(uuid.uuid1())}.csv"
+        self.fichero_ruta = os.path.join(tmp_dir, fichero_nombre)
+        tmp_fichero.save(self.fichero_ruta)
     
 class SimulacionVariacionManager(Base):
     def __init__(self):

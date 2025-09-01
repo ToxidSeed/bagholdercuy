@@ -22,14 +22,14 @@
             </template>
         </q-table>
         <q-separator/>
-        <MessageBox :config="msgbox"/>
+        
         <WinFiltrosPosicionOpciones v-model="WinFiltrosPosicionOpciones.open"
         v-on:filtrar-posiciones-opcion="filtrar"
         />
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+
 import WinFiltrosPosicionOpciones from '@/components/Holdings/WinFiltrosPosicionOpciones.vue';
 import {postconfig} from '@/common/request.js';
 //import date from 'date-and-time'
@@ -43,7 +43,7 @@ export default {
         }
     },
     components:{
-        MessageBox,
+
         WinFiltrosPosicionOpciones
     },    
     data: () => {

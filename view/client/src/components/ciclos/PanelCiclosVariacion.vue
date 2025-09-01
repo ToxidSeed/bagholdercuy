@@ -16,7 +16,12 @@
           No Data
         </div>
         -->
-        <div><span class="text-indigo">{{confirmedParams.cod_symbol}}</span> - {{confirmedParams.nom_symbol}} | ({{ confirmedParams.fch_desde}} - {{ confirmedParams.fch_hasta }})</div>
+        <div v-if="confirmedParams.cod_symbol">
+          <span class="text-indigo">{{confirmedParams.cod_symbol}}</span>
+           - {{confirmedParams.nom_symbol}} 
+           | {{ confirmedParams.fch_desde}} - {{ confirmedParams.fch_hasta }}
+           | Dia: 
+        </div>
         <div class="row">
           <div class="col-6">
             <div id="chartVariacion" class="panel-variacion"></div>

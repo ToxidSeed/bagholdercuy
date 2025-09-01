@@ -69,7 +69,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from "../dialogs/MessageBox.vue";
 import SelectCuenta from "@/components/cuenta/SelectCuenta.vue"
 import Confirmar from "@/components/dialogs/Confirmar.vue";
 import {postconfig} from '@/common/request.js';

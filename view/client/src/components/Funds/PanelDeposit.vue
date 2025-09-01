@@ -43,7 +43,7 @@
 </template>
 <script>    
 import SelectMoneda from '../SelectMoneda.vue'
-import MessageBox from '../MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
 import date from 'date-and-time'
 import {headers} from '@/common/common.js'

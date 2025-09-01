@@ -22,7 +22,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '../MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import {headers} from '@/common/common.js'
 export default {
     name:"TableTransaccionesFondosFecha",    

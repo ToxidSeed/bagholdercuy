@@ -13,7 +13,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 import {postconfig} from '@/common/request.js';
 
 export default {

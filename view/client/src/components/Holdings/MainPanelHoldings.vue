@@ -45,7 +45,7 @@
                 <q-spinner-gears size="50px" color="primary" />
             </q-inner-loading>
         </q-splitter>
-        <MessageBox :config="MsgBox"/>
+        
         <WinCargaMultiple v-model="WinCargaMultiple.open"/>
         <WinReprocesarOrdenes v-model="WinReprocesarOrdenes.open"/>
         <Confirmar v-model="Confirmar.show" 
@@ -59,7 +59,7 @@ import TableListaPosicionesAcciones from '@/components/Holdings/TableListaPosici
 import TablePosicionesOpcion from '@/components/Holdings/TablePosicionesOpcion.vue';
 import WinCargaMultiple from '@/components/Holdings/WinCargaMultiple.vue';
 import WinReprocesarOrdenes from '@/components/Holdings/WinReprocesarOrdenes.vue';
-import MessageBox from '@/components/MessageBox.vue';
+
 import Confirmar from '@/components/dialogs/Confirmar.vue'
 import {get_postconfig} from '@/common/request.js'
 
@@ -73,7 +73,7 @@ export default {
         TablePosicionesOpcion,
         WinCargaMultiple,
         WinReprocesarOrdenes,
-        MessageBox,
+
         Confirmar 
     },
     props:{

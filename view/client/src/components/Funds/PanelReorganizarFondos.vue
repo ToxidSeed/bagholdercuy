@@ -32,7 +32,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 import {headers} from '@/common/common.js';
 import HelperFechasTransaccionesFondos from '@/components/helpers/HelperFechasTransaccionesFondos.vue';
 import TableTransaccionesFondosFecha from '@/components/Funds/TableReorganizarFondos.vue';

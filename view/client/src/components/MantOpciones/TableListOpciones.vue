@@ -48,7 +48,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 //import date from 'date-and-time'
 //import {CLIENT_DATE_FORMAT, ISO_DATE_FORMAT} from '@/common/constants.js'
 import {postconfig} from '@/common/request.js'

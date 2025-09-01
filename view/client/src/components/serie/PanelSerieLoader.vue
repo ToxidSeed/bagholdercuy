@@ -40,7 +40,7 @@
 </template>
 <script>
 import SelectSymbol from "@/components/SelectSymbol.vue"
-import MessageBox from "@/components/MessageBox.vue"
+import MessageBox from "../dialogs/MessageBox.vue"
 import {headers} from '@/common/common.js'
 
 export default {

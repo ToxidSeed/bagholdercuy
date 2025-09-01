@@ -55,7 +55,7 @@
 //import TableVariacionDiaria from '@/components/informes/TableVariacionDiaria.vue'
 import WinFiltrosVariacionDiaria from '@/components/informes/WinFiltrosVariacionDiaria.vue';
 //import {postconfig} from '@/common/request.js';
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 import _ from "lodash"
 
 export default {

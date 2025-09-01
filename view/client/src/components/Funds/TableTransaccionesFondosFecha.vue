@@ -32,11 +32,11 @@
                 -->
             </template>
         </q-table>   
-        <MessageBox ref="msgbox"/>     
+        
     </div>
 </template>
 <script>
-import MessageBox from '../MessageBox.vue';
+
 import {postconfig} from '@/common/request.js';
 import {CLIENT_DATE_FORMAT} from '@/common/constants.js'
 import date from 'date-and-time';
@@ -45,7 +45,7 @@ import {cdate} from '@/common/custom-date.js';
 export default {
     name:"TableTransaccionesFondosFecha",    
     components:{
-        MessageBox
+
     },
     props:{
         in_filter:{

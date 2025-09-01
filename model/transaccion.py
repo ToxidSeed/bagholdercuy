@@ -4,22 +4,26 @@ class TransaccionModel(db.Model):
     __tablename__ = 'tb_transaccion'
 
     id_transaccion = db.Column(db.Integer,primary_key=True,nullable=False)
-    id_orden = db.Column(db.Integer,nullable=False)
-    num_orden = db.Column(db.Integer)
-    num_orden_transaccion = db.Column(db.Integer)
-    id_symbol = db.Column(db.Integer)
-    id_contrato_opcion = db.Column(db.Integer)    
-    cod_tipo_activo = db.Column(db.Integer,nullable=False)    
-    cantidad = db.Column(db.Numeric(15,3),nullable=False)
-    ctd_saldo_transaccion = db.Column(db.Integer,nullable=False)
+    id_cuenta = db.Column(db.Integer,nullable=False)
+    num_transaccion = db.Column(db.Integer, nullable=False)
+    cod_symbol = db.Column(db.String, nullable=False)
+    cod_symbol_opcion = db.Column(db.String)
+    cod_tipo_transaccion = db.Column(db.String)
     fch_transaccion = db.Column(db.Date,nullable=False)
-    cod_mes_transaccion = db.Column(db.Integer,nullable=False)     
-    cod_semana_transaccion = db.Column(db.Integer,nullable=False)
-    imp_accion = db.Column(db.Numeric(17,2),nullable=False)
+    cantidad = db.Column(db.Numeric(15,3),nullable=False)
+    cod_mes = db.Column(db.Integer,nullable=False)     
+    cod_semana = db.Column(db.Integer,nullable=False)
+    imp_accion = db.Column(db.Numeric(17,2))
     imp_transaccion = db.Column(db.Numeric(17,2),nullable=False)
-    id_transaccion_ref = db.Column(db.Integer)
-    imp_accion_origen = db.Column(db.Numeric(17,2))
-    imp_rentabilidad = db.Column(db.Numeric(17,2))
     fch_registro = db.Column(db.Date)
     hora_registro = db.Column(db.Time)
-    id_cuenta = db.Column(db.Integer)
+
+    @classmethod
+    def get_next_num_transaccion(cls, cod_symbol, cod_symbol_opcion, fch_transaccion):
+        query = cls.query.filter_by(
+            cod_symbol=cod_symbol,
+            cod_symbol_opcion=cod_symbol_opcion,
+            fch_transaccion=fch_transaccion
+        )
+
+        return query.first()

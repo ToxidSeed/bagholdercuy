@@ -68,8 +68,7 @@ export default {
             this.$refs.selsymbol.blur()            
             this.$emit('select-symbol',selected)   
         },
-        filterFn:function(val, update ) {  
-            console.log(val)
+        filterFn:function(val, update ) {              
             if (val === '') {
                 update(() => {
                     this.symbol_list = []

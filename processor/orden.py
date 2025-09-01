@@ -25,7 +25,6 @@ from sqlalchemy import delete
 from app import db
 
 
-
 class OrdenProcessor:
 
     def __init__(self):

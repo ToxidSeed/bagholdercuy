@@ -54,7 +54,7 @@ class SymbolManager(Base):
 
     def __append(self,symbol_obj):
         db.session.add(symbol_obj)
-
+    
     def __update(self, args={}):
         symbol_to_update = SymbolModel.query.filter(
             SymbolModel.id == args["symbol_id"]

@@ -66,7 +66,7 @@ import SelectSymbol from '@/components/SelectSymbol.vue'
 import SelectMoneda from '@/components/SelectMoneda.vue'
 import date from "date-and-time"
 import {postconfig} from "@/common/request.js"
-import MessageBox from "@/components/MessageBox.vue"
+import MessageBox from '../dialogs/MessageBox.vue'
 
 export default {
     name:"PanelMantOpciones",
