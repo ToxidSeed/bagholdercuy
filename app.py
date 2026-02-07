@@ -84,6 +84,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 
 app.config.from_object(Config)
+app.config.from_object("config.constants")
 
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
 

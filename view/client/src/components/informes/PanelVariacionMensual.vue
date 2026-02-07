@@ -54,6 +54,7 @@ export default {
                     try{                        
                         element.imp_cierre_ant = element.imp_cierre_ant.toFixed(2)
                         element.imp_apertura = element.imp_apertura.toFixed(2)
+                        element.fch_ini_mes = element.fch_mes
                         element.imp_maximo = element.imp_maximo.toFixed(2)
                         element.imp_minimo = element.imp_minimo.toFixed(2)
                         element.imp_cierre = element.imp_cierre.toFixed(2)

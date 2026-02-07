@@ -40,6 +40,7 @@ from domain.semana import CodigoSemana
 from domain.mes import Mes
 from dataclasses import dataclass
 from api.marketstack import MarketStackAPI
+from api.marketdata import MarketDataAPI
 from model.seriediaria import SerieDiariaModel
 from model.variaciondiaria import VariacionDiariaModel
 from model.seriesemanal import SerieSemanalModel
@@ -401,21 +402,6 @@ class MarketStackLoaderController(MultipleLoaderController):
     def get_api_series(self, cod_symbol, fch_desde, fch_hasta):
         series = MarketStackAPI.get_historical_data(cod_symbol, fch_desde, fch_hasta)
         data = series.get('data')
-        
-        """
-        norm_series = []
-        for elem in data:
-            serie = series_structure.Serie(
-                fch_serie=datetime.strptime(elem.get('date'), "%Y-%m-%dT%H:%M:%S%z").date(),
-                imp_apertura=elem.get('adj_open'),
-                imp_maximo=elem.get('adj_high'),
-                imp_minimo=elem.get('adj_low'),
-                imp_cierre=elem.get('adj_close'),
-                volumen=elem.get('volume')
-            )
-            norm_series.append(serie)
-        norm_series = sorted(norm_series)    
-        """
         df_series = pd.DataFrame(data)
         return df_series
 
@@ -438,6 +424,64 @@ class MarketStackLoaderController(MultipleLoaderController):
         fch_min_serie = df["fch_serie"].min()
         return df, fch_max_serie, fch_min_serie
 
+class MarketDataLoaderController(MultipleLoaderController):
+    def load(self, args=None):
+        try:
+            cod_symbol = args.get("cod_symbol")
+            fch_desde = args.get("fch_desde")
+            fch_hasta = args.get("fch_hasta")
+            modo_carga = args.get("modo_carga")
+
+            df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(df_series)
+            fch_inicio_series = SerieDiariaLoader().load(cod_symbol, df_series, modo_carga)
+            VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            ResumenSerieService().guardar(cod_symbol)
+            db.session.commit()
+            return Response(msg="Se ha realizado la carga correctamente")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    def get_api_series(self, cod_symbol, fch_desde, fch_hasta):
+        series = MarketDataAPI.candles(cod_symbol, "1D", fch_desde, fch_hasta)
+        data = {
+            't': series.get('t'),
+            'o': series.get('o'),
+            'h': series.get('h'),
+            'l': series.get('l'),
+            'c': series.get('c'),
+            'v': series.get('v')
+        }
+        df_series = pd.DataFrame(data)
+        df_series['cod_symbol'] = cod_symbol
+        return df_series
+
+    def parse_incoming_series(self, df_series):
+        df_series = df_series.rename(columns={
+            't': 'fch_serie',
+            'o': 'imp_apertura',
+            'h': 'imp_maximo',
+            'l': 'imp_minimo',
+            'c': 'imp_cierre',
+            'v': 'volumen'
+        })
+        
+        df_series["fch_serie"] = pd.to_datetime(df_series["fch_serie"], unit='s').dt.date
+        
+        # Duplicating columns for adjusted/unadjusted as the source only provides one set
+        df_series['imp_apertura_sin_ajus'] = df_series['imp_apertura']
+        df_series['imp_maximo_sin_ajus'] = df_series['imp_maximo']
+        df_series['imp_minimo_sin_ajus'] = df_series['imp_minimo']
+        df_series['imp_cierre_sin_ajus'] = df_series['imp_cierre']
+
+        fch_max_serie = df_series["fch_serie"].max()
+        fch_min_serie = df_series["fch_serie"].min()
+        return df_series, fch_max_serie, fch_min_serie
 
 
 class InvestingLoader(Base):        

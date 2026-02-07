@@ -24,7 +24,7 @@ class MarketDataAPI:
         result = response.json()
         return result
 
-    def get_quote(self, cod_symbol):
+    def quote(self, cod_symbol):
         headers = {
             'Accept': 'application/json',
             'Authorization': f'Bearer {TOKEN}'
@@ -35,3 +35,14 @@ class MarketDataAPI:
         result = response.json()
         return result
         
+    @staticmethod
+    def candles(cod_symbol, interval="1D", start_date="", end_date=""):
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': f'Bearer {TOKEN}'
+        }
+
+        endpoint = f"{BASE_ENDPOINT}stocks/candles/{interval}/{cod_symbol}/?from={start_date}&to={end_date}"
+        response = requests.request("GET", endpoint, headers=headers)
+        result = response.json()
+        return result
