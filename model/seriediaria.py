@@ -27,3 +27,14 @@ class SerieDiariaModel(db.Model):
             SerieDiariaModel.fch_serie >= fch_serie
         )
         db.session.execute(stmt)
+
+    @classmethod
+    def eliminar_x_symbol(cls, cod_symbol):
+        stmt = delete(SerieDiariaModel).where(
+            SerieDiariaModel.cod_symbol == cod_symbol            
+        )
+        db.session.execute(stmt)
+
+    @classmethod
+    def insertar_pandas_dataframe(cls, df):
+        db.session.bulk_insert_mappings(cls, df.to_dict(orient="records"))

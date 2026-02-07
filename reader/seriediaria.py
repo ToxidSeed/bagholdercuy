@@ -51,6 +51,7 @@ class SerieDiariaReader:
         record = result.first()
         return record
 
+    @staticmethod
     def get_fch_serie_previa(symbol, fch_serie):
         stmt = db.select(
             func.max(SerieDiariaModel.fch_serie).label("fch_serie")
@@ -60,8 +61,8 @@ class SerieDiariaReader:
         )
 
         result = db.session.execute(stmt)
-        record = result.scalars().first()
-        return record
+        fch_max_serie = result.scalars().first()
+        return fch_max_serie
 
     @staticmethod
     def get_serie(symbol, fch_serie):

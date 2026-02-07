@@ -21,7 +21,7 @@
             </template>
             <template v-slot:after >
                 <q-toolbar>
-                    <q-btn color="blue-10" label="Buy" @click="comprar()"/>                
+                    <q-btn color="blue-10" label="Buy" @click="buy()"/>                
                     <q-btn color="red-10 " label="Sell" @click="vender()" class="q-ml-xs" />                
                     <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="transfer_within_a_station"
                     >Transferir posiciones</q-btn>
@@ -52,6 +52,7 @@
         :config="Confirmar.config"
         v-on:confirmar-reprocesar="reprocesar"
         />
+        <WinTrade v-model="winTrade.open"/>
     </div>
 </template>
 <script>
@@ -59,6 +60,8 @@ import TableListaPosicionesAcciones from '@/components/Holdings/TableListaPosici
 import TablePosicionesOpcion from '@/components/Holdings/TablePosicionesOpcion.vue';
 import WinCargaMultiple from '@/components/Holdings/WinCargaMultiple.vue';
 import WinReprocesarOrdenes from '@/components/Holdings/WinReprocesarOrdenes.vue';
+//import PanelTrade from '../generic/PanelTrade.vue';
+import WinTrade from '../generic/WinTrade.vue';
 
 import Confirmar from '@/components/dialogs/Confirmar.vue'
 import {get_postconfig} from '@/common/request.js'
@@ -66,14 +69,13 @@ import {get_postconfig} from '@/common/request.js'
 export default {
     name:"MainPanelHoldings",
     components:{
-        //PanelTrade,
+        WinTrade,
         //-->PanelResumen,
         //PanelOptionsChain,
         TableListaPosicionesAcciones,
         TablePosicionesOpcion,
         WinCargaMultiple,
         WinReprocesarOrdenes,
-
         Confirmar 
     },
     props:{
@@ -109,6 +111,9 @@ export default {
                     callback:""
                 }                
             },
+            winTrade:{
+                open: false
+            },
             MsgBox:{},
             progress:false            
         }
@@ -137,7 +142,9 @@ export default {
                 this.first_panel_size = 30
             }
         },
-        buy:function(row){     
+        buy:function(row){         
+            console.log(row)        
+            /*
             this.order.symbol = ""            
             this.open_panel_order = true
             this.order.order_type = "B"
@@ -149,6 +156,8 @@ export default {
             }else{
                 this.order.asset_type = "stock"
             }
+            */
+           this.winTrade.open = true
         },
         sell:function(row){           
             this.order.symbol = "" 

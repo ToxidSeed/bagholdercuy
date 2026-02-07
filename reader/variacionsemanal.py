@@ -2,7 +2,7 @@ from model.variacionsemanal import VariacionSemanalModel
 from app import db
 from sqlalchemy.sql import func
 import pandas as pd
-import pandas as pd
+
 
 class VariacionSemanalReader:
 
@@ -60,3 +60,20 @@ class VariacionSemanalReader:
         record = result.first()
         if record:
             return record.fch_semana_var
+
+    @staticmethod
+    def get_variaciones_desde_fecha(cod_symbol, fch_semana):
+        query = db.select(
+            VariacionSemanalModel
+        ).where(
+            VariacionSemanalModel.symbol == cod_symbol,
+        )
+
+        if fch_semana:
+            query = query.where(
+                VariacionSemanalModel.fecha >= fch_semana
+            )
+                    
+        result = db.session.execute(query)
+        records = result.scalars().all()
+        return records

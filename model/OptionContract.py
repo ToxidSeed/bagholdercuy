@@ -3,8 +3,7 @@ from app import db
 class OptionContractModel(db.Model):
     __tablename__ = "tb_option_contract"
 
-    id = db.Column(db.Integer, primary_key=True)
-    symbol_id = db.Column(db.Integer)
+    id = db.Column(db.Integer, primary_key=True)    
     contract_size = db.Column(db.Integer)
     currency = db.Column(db.String(5))
     description = db.Column(db.String(250))

@@ -133,16 +133,16 @@ class MetricaParser(BaseParser):
         cod_semana_final = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            cod_semana_inicial = CodigoSemana(date.fromisoformat(param_valor_inicial_periodo.valor)).value
-            cod_semana_final = CodigoSemana(date.fromisoformat(param_valor_final_periodo.valor)).value
+            cod_semana_inicial = CodigoSemana.from_fecha(date.fromisoformat(param_valor_inicial_periodo.valor)).value
+            cod_semana_final = CodigoSemana.from_fecha(date.fromisoformat(param_valor_final_periodo.valor)).value
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
-            cod_semana_inicial = CodigoSemana(param_valor_inicial_periodo.valor).value
-            cod_semana_final = CodigoSemana(param_valor_final_periodo.valor).value
+            cod_semana_inicial = CodigoSemana.from_fecha(param_valor_inicial_periodo.valor).value
+            cod_semana_final = CodigoSemana.from_fecha(param_valor_final_periodo.valor).value
 
         if param_cod_tipo_periodo.valor.upper() == MESES:
-            cod_semana_inicial = CodigoSemana(CodigoMes(param_valor_inicial_periodo.valor).get_fecha_primer_dia()).value
-            cod_semana_final = CodigoSemana(CodigoMes(param_valor_final_periodo.valor).get_fecha_ult_dia()).value
+            cod_semana_inicial = CodigoSemana.from_fecha(CodigoMes(param_valor_inicial_periodo.valor).get_fecha_primer_dia()).value
+            cod_semana_final = CodigoSemana.from_fecha(CodigoMes(param_valor_final_periodo.valor).get_fecha_ult_dia()).value
 
         if cod_semana_inicial > cod_semana_final:
             raise AppException(msg="La semana inicial debe ser menor o igual a la semana final")

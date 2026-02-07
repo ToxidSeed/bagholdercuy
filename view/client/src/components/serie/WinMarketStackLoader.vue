@@ -81,11 +81,11 @@ export default {
             fichero:null,
             cod_symbol:"",
             nom_symbol:"",
-            modo_carga:"Agregar",
+            modo_carga:"Append",
             fch_desde:"",
             fch_hasta:"",
             loading: false,
-            lista_modos_carga:["Agregar","Reemplazar"],
+            lista_modos_carga:["Append","Replace"],
             rangos_fechas: [
                 {
                     "codigo":"RANGOS_FECHAS",
@@ -102,6 +102,9 @@ export default {
                 },{
                     "codigo":"ANYO_EN_CURSO",
                     "nombre":"Año en curso"
+                },{
+                    "codigo":"MAX",
+                    "nombre":"Máximo posible"
                 }
             ],
             rango_seleccionado:{"codigo":"ULTIMOS_7_DIAS","nombre":"Ultimos 7 dias"}
@@ -131,11 +134,15 @@ export default {
                 case 'ULTIMOS_100_DIAS':
                     [fch_desde, fch_hasta] = this.calc_ultimos_n_dias(100)
                     break;
+                case 'ANYO_EN_CURSO':
+                    [fch_desde, fch_hasta] = this.calc_anyo_en_curso()
+                    break;
+                case 'MAX':
+                    [fch_desde, fch_hasta] = this.calc_max()
+                    break;
                 default:
                     break;
-            }
-            console.log(fch_desde)
-            console.log(fch_hasta)
+            }            
             this.fch_desde = fch_desde
             this.fch_hasta = fch_hasta
         },
@@ -143,6 +150,18 @@ export default {
             const now = new Date()
             const fch_desde = date.format(date.addDays(now, n_dias * -1), "DD/MM/YYYY")
             const fch_hasta = date.format(now, "DD/MM/YYYY")
+            return [fch_desde, fch_hasta]
+        },
+        calc_anyo_en_curso: function(){
+            const now = new Date()
+            const fch_desde = date.format(new Date(now.getFullYear(), 0, 1), "DD/MM/YYYY")
+            const fch_hasta = date.format(now, "DD/MM/YYYY")
+            return [fch_desde, fch_hasta]
+        },
+        calc_max: function(){
+            const now = new Date()
+            const fch_hasta = date.format(now, "DD/MM/YYYY")
+            const fch_desde = "01/01/1000"
             return [fch_desde, fch_hasta]
         },
         select_symbol:function(symbol){

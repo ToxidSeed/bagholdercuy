@@ -25,11 +25,13 @@ class VariacionMensualModel(db.Model):
 
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):
-        db.session.add(
+        rows_affected = db.session.query(
             VariacionMensualModel
         ).where(
-            VariacionMensualModel.symbol == cod_symbol
-        )
+            VariacionMensualModel.cod_symbol == cod_symbol
+        ).delete()
+
+        return rows_affected
 
     @classmethod
     def del_desde_fecha(cls, cod_symbol, fch_mes_desde):
@@ -43,7 +45,9 @@ class VariacionMensualModel(db.Model):
         rows_affected = stmt.delete()
         return rows_affected
 
-
+    @classmethod
+    def insertar_pandas_dataframe(cls, df):
+        db.session.bulk_insert_mappings(cls, df.to_dict(orient="records"))
 
         
 

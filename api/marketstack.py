@@ -27,7 +27,8 @@ class MarketStackAPI:
             'access_key': TOKEN,
             'symbols':symbols,
             'date_from': fch_desde,
-            'date_to':fch_hasta
+            'date_to':fch_hasta,
+            'limit':1000
         }
 
         response = requests.get(

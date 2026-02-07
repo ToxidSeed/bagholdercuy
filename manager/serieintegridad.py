@@ -3,7 +3,7 @@ from reader.variaciondiaria import VariacionDiariaReader
 from reader.seriesemanal import SerieSemanalReader
 from reader.stocksplit import StockSplitReader
 from dataclasses import dataclass
-from domain.semana import Semana
+from domain.semana import CodigoSemana
 from domain.mes import Mes
 from model.stocksplit import StockSplitModel
 from datetime import date
@@ -142,13 +142,13 @@ class VariacionDiariaIntegridad:
 class SerieSemanalIntegridad:
         
     def eval_min_cod_semana(self, min_fch_serie, min_cod_semana):
-        semana = Semana.from_fecha(min_fch_serie)
-        resp = (semana.codigo() == min_cod_semana)        
+        cod_semana_obj = CodigoSemana.from_fecha(min_fch_serie)
+        resp = (cod_semana_obj.value == min_cod_semana)        
         return resp
 
     def eval_max_cod_semana(self, max_fch_serie, max_cod_semana):
-        semana = Semana.from_fecha(max_fch_serie)
-        resp = (semana.codigo() == max_cod_semana)
+        cod_semana_obj = CodigoSemana.from_fecha(max_fch_serie)
+        resp = (cod_semana_obj.value == max_cod_semana)
         return resp
 
     def eval_cantidad(self, min_cod_semana, max_cod_semana, cantidad):

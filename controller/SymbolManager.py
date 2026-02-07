@@ -18,7 +18,7 @@ from sqlalchemy.sql import func
 from sqlalchemy import or_
 from parser.symbol import SymbolFinderParser, SymbolParser
 from processor.symbol import SymbolRemover
-from config.app_constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from config.constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
 from controller.base import Base
 
 

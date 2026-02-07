@@ -5,6 +5,7 @@ class StockSymbol(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     symbol = db.Column(db.String(20))
+    id_instrumento_financiero = db.Column(db.Integer)
     name = db.Column(db.String(250))
     moneda_id = db.Column(db.String(3))
     region = db.Column(db.String(2))

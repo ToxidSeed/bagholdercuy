@@ -1,6 +1,6 @@
 from re import S
 from app import app, db
-from config.app_constants import TIPO_OPERACION_TRANSFERENCIA
+from config.constants import TIPO_OPERACION_TRANSFERENCIA
 
 from common.AppException import AppException
 from common.Formatter import Formatter

@@ -75,3 +75,15 @@ class SerieMensualReader:
         record = result.scalars().first()
         return record
 
+    @staticmethod
+    def get_fch_mes_anterior(cod_symbol, fch_serie_mensual):
+        stmt = db.select(
+            func.max(SerieMensualModel.fch_mes).label("fch_mes")
+        ).where(
+            SerieMensualModel.cod_symbol == cod_symbol,
+            SerieMensualModel.fch_mes < fch_serie_mensual
+        )
+
+        result = db.session.execute(stmt)
+        fch_mes = result.scalars().first()
+        return fch_mes

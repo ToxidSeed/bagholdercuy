@@ -4,7 +4,7 @@ from common.Response import Response
 from model.resumenserie import ResumenSerieModel
 from controller.base import Base
 from collections import namedtuple
-from domain.semana import Semana
+from domain.semana import CodigoSemana
 from domain.mes import Mes
 import utils.calendario as calendario
 from common.Formatter import Formatter
@@ -112,34 +112,23 @@ class ResumenSerie(Base):
 
         return CONST_EST_CORRECTO
 
-    def eval_serie_semanal(self, record: ResumenSerieModel):
+    
+    def eval_serie_semanal(self, record: ResumenSerieModel):    
 
-        sem_primera_serie_diaria = Semana.from_fecha(record.fch_primera_serie_diaria)
-        sem_primera_serie_semanal = Semana.from_fecha(record.fch_primera_serie_semanal)
-
-        if sem_primera_serie_diaria != sem_primera_serie_semanal:
+        if CodigoSemana.from_fecha(record.fch_primera_serie_diaria) != CodigoSemana.from_fecha(record.fch_primera_serie_semanal):
             return CONST_EST_DEFECTUOSO
-
-        sem_ultima_serie_diaria = Semana.from_fecha(record.fch_ultima_serie_diaria)
-        sem_ultima_serie_semanal = Semana.from_fecha(record.fch_ultima_serie_semanal)
-
-        if sem_ultima_serie_diaria != sem_ultima_serie_semanal:
+    
+        if CodigoSemana.from_fecha(record.fch_ultima_serie_diaria) != CodigoSemana.from_fecha(record.fch_ultima_serie_semanal):
             return CONST_EST_DEFECTUOSO
 
         return CONST_EST_CORRECTO
 
     def eval_var_semanal(self, record: ResumenSerieModel):
-
-        sem_primera_serie_diaria = Semana.from_fecha(record.fch_primera_serie_diaria)
-        sem_primera_var_semanal = Semana.from_fecha(record.fch_primera_var_semanal)
-
-        if sem_primera_serie_diaria != sem_primera_var_semanal:
+        
+        if CodigoSemana.from_fecha(record.fch_primera_serie_diaria) != CodigoSemana.from_fecha(record.fch_primera_var_semanal):
             return CONST_EST_DEFECTUOSO
 
-        sem_ultima_serie_diaria = Semana.from_fecha(record.fch_ultima_serie_diaria)
-        sem_ultima_serie_semanal = Semana.from_fecha(record.fch_ultima_var_semanal)
-
-        if sem_ultima_serie_diaria != sem_ultima_serie_semanal:
+        if CodigoSemana.from_fecha(record.fch_ultima_serie_diaria) != CodigoSemana.from_fecha(record.fch_ultima_var_semanal):
             return CONST_EST_DEFECTUOSO
 
         return CONST_EST_CORRECTO

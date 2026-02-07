@@ -11,6 +11,10 @@ import json
 import logging
 from datetime import date
 from common.logger import logger
+from dotenv import load_dotenv
+from config.config import Config
+
+load_dotenv()
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -74,22 +78,23 @@ class ImageLoader(Resource):
 
 ###############
 
+
+
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 
-app.config.from_object("config.default_settings")
-app.config.from_envvar("BAGHOLDERAPI_SETTINGS")
-# app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
-app.config["SQLALCHEMY_ECHO"] = False
+app.config.from_object(Config)
 
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
 
 db = SQLAlchemy(app)
+from boot.loader import init_constants
+init_constants()
 api = Api(app)
 
-api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["APPNAME"]))
+api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["BAGHOLDER_APPNAME"]))
 # api.add_resource(ConfirmRegistration, '/entablar/ConfirmRegistration',endpoint="confirm")
-api.add_resource(ImageLoader, "/{}/<string:image_loader>/".format(app.config["APPNAME"]))
+api.add_resource(ImageLoader, "/{}/<string:image_loader>/".format(app.config["BAGHOLDER_APPNAME"]))
 
 
 #app.run(debug=True)

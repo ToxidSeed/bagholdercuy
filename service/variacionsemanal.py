@@ -3,7 +3,7 @@ from model.seriesemanal import SerieSemanalModel
 from reader.seriesemanal import SerieSemanalReader
 from reader.variacionsemanal import VariacionSemanalReader
 
-from domain.semana import Semana
+from domain.semana import CodigoSemana
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,8 +12,8 @@ from app import db
 class VariacionSemanalService:
     def generar_series(self, cod_symbol, fch_inicio_procesamiento):
 
-        semana_procesamiento = Semana.from_fecha(fch_inicio_procesamiento)
-        fch_semana_procesamiento = semana_procesamiento.fch_semana()
+        semana_procesamiento = CodigoSemana.from_fecha(fch_inicio_procesamiento)
+        fch_semana_procesamiento = semana_procesamiento.to_fecha_inicio_semana()
 
         max_fch_semana_var = VariacionSemanalReader.get_max_fch_variacion(cod_symbol)
 
@@ -101,3 +101,4 @@ class VariacionSemanalService:
 
         db.session.add(new_serie)
         return new_serie
+

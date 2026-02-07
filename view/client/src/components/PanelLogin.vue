@@ -19,6 +19,8 @@
     </div>
 </template>
 <script>
+import store from '../store/store.js'
+
 export default {
     name:"PanelLogin",
     data: () => {
@@ -28,23 +30,25 @@ export default {
         }
     },
     methods:{
-        login:function(){
-            this.$http.post(
-                '/auth/LoginController/login',{
-                    usuario:this.usuario,
-                    password:this.password
+        login: async function(){
+            try{
+                const loginResp = await this.$http.post(
+                    '/auth/LoginController/login',{
+                        usuario:this.usuario,
+                        password:this.password
+                    }
+                )
+
+                const loginData = loginResp.data
+
+                if (loginData.success == true){
+                    this.set_auth_data(loginData.data)
+                    await store.dispatch('serverConstants/getList')
+                    this.$router.push({name:"main"})                    
                 }
-            ).then(httpresp => {
-                let appresp = httpresp.data
-                if(appresp.success==true){
-                    //console.log('xxx')
-                    this.set_auth_data(appresp.data)
-                    this.$router.push({name:"main"})
-                    
-                }
-            }).catch(error => {
+            } catch(error){
                 console.log(error)
-            })
+            }        
         },
         set_auth_data:function(appdata){         
             localStorage.setItem("id_usuario", appdata.id_usuario)   

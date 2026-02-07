@@ -6,14 +6,15 @@ from common.Response import Response
 from common.Formatter import Formatter
 
 from parser.posicion import PosicionParser
+from schemas.posicion_schema import GetPosicionesAccionesParams
 
 from domain.contratoopcion import ContratoOpcion
 
-class PosicionManager(Base):
+class PosicionController(Base):
     def get_posiciones_acciones(self, args={}):
-        args = PosicionParser.parse_args_get_posiciones_acciones(args=args)
-        id_cuenta = args.get("id_cuenta")        
-        records = PosicionReader.get_pos_abiertas_agrup_x_accion(id_cuenta=id_cuenta)
+        params = GetPosicionesAccionesParams(**args)
+        id_cuenta = params.id_cuenta
+        records = PosicionReader.get_saldos_actuales_por_cuenta(id_cuenta=id_cuenta)
         return Response().from_raw_data(records)
     
     def get_posiciones_contratos_opciones(self, args={}):

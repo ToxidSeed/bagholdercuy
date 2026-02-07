@@ -75,3 +75,8 @@ class IEXCLOUD(Enum):
             ("max", "5y")
     ]
 
+CONST_WRITE_MODE_TEXT_APPEND = "Append"
+CONST_WRITE_MODE_TEXT_REPLACE = "Replace"
+CONST_WRITE_MODE_TEXT_OVERWRITE = "Overwrite"
+
+#

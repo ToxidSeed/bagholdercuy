@@ -27,7 +27,7 @@
 <script>
 import TableListaOperaciones from '@/components/operaciones/TableListaOperaciones.vue'
 import WinCargaMultiple from '@/components/Holdings/WinCargaMultiple.vue';
-import PanelTrade from '@/components/PanelTrade.vue';
+import PanelTrade from '../generic/PanelTrade.vue';
 
 export default {
     name:"MainOperacion",

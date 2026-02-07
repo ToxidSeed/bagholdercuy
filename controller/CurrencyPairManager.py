@@ -2,7 +2,7 @@ from app import db
 #from model.CurrencyPairModel import CurrencyPairModel
 from model.MonedaParModel import MonedaParModel
 from common.Response import Response
-from config.app_constants import IND_INACTIVO, PAR_OPERACION_DIV
+from config.constants import IND_INACTIVO, PAR_OPERACION_DIV
 from controller.base import Base 
 
 class CurrencyPairManager:

@@ -2,12 +2,14 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import alerta from "./alerta"
 import configuracion_alerta from "./configuracion-alerta"
+import serverConstants from './server-constants'
 Vue.use(Vuex);
 
 export default new Vuex.Store({
     modules:{
         alerta,
-        configuracion_alerta
+        configuracion_alerta,
+        serverConstants
     },
     state:{
         messagebox:{
@@ -52,4 +54,3 @@ export default new Vuex.Store({
         }
     }    
 });
-    

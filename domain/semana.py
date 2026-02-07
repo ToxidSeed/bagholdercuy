@@ -2,8 +2,32 @@ from common.AppException import AppException
 from datetime import datetime, date, timedelta, MINYEAR, MAXYEAR
 
 class CodigoSemana:
-    def __init__(self, value):
-        self.value = self.parse(value)
+    def __init__(self, anyo, semana):
+        if not (1 <= anyo <= 9999):
+            raise ValueError(f"year {anyo} is out of range")
+        if not (1 <= semana <= 53):
+            raise ValueError(f"week {semana} is out of range")
+
+        try:
+            date.fromisocalendar(anyo, semana, 1)
+        except ValueError:
+            raise ValueError(f"Invalid ISO week {anyo} for year {semana}")
+
+        self.__anyo = anyo
+        self.__semana = semana
+        self.__value =  int(f"{str(anyo)}{str(semana).zfill(2)}")
+
+    @property
+    def anyo(self):
+        return self.__anyo
+
+    @property
+    def semana(self):
+        return self.__semana
+
+    @property
+    def value(self):
+        return self.__value
 
     def restar(self, num_semanas):
         cod_semana_str = str(self.value)
@@ -14,9 +38,15 @@ class CodigoSemana:
         num_anyo_resultado, num_semana_resultado, num_dia_semana_resultado = fch_nueva_semana.isocalendar()
         return CodigoSemana(
             value=CodigoSemana.componer(num_anyo_semana=num_anyo_resultado, num_semana=num_semana_resultado)
-        )
+        )    
 
-    def parse(self, valor):
+    @classmethod
+    def from_fecha(cls, fecha):
+        num_anyo, num_semana, num_dia_semana = fecha.isocalendar()
+        #return CodigoSemana.componer(num_anyo_semana=num_anyo, num_semana=num_semana)
+        return cls(num_anyo, num_semana)
+
+    def parse(cls, valor):
         # Si es nulo retorna null
         if valor in [None, ""]:
             return None
@@ -85,38 +115,8 @@ class CodigoSemana:
         return CodigoSemana.descomponer(self.value)
 
 
-class Semana:
-    def __init__(self, anyo=None, semana=None):
-        self.anyo = anyo
-        self.semana = semana
+    def __eq__(self, other):
+        if isinstance(other, CodigoSemana):
+            return self.__value == other.value
 
-    @staticmethod
-    def from_fecha(fecha: date):
-        num_anyo, num_semana, num_dia_semana = fecha.isocalendar()
-        sem = Semana(
-            num_anyo,
-            num_semana
-        )
-        return sem
-
-    @staticmethod
-    def diferencia(cod_semana_base, cod_semana_referencia):
-        fch_semana_base = Semana.from_codigo(cod_semana_base).fch_semana()
-        fch_semana_ref = Semana.from_codigo(cod_semana_referencia).fch_semana()
-        return abs((fch_semana_ref - fch_semana_base).days / 7)
-
-    @staticmethod
-    def from_codigo(cod_semana):
-        valor = str(cod_semana)
-        num_anyo = int(valor[:4])
-        num_semana = int(valor[-2:])
-        return Semana(anyo=num_anyo, semana=num_semana)
-
-    def codigo(self):
-        return int("{0}{1}".format(str(self.anyo), str(self.semana).zfill(2)))
-
-    def fch_semana(self):
-        return date.fromisocalendar(self.anyo, self.semana, 1)
-
-    def __eq__(self, otra_semana):
-        return self.anyo == otra_semana.anyo and self.semana == otra_semana.semana
+        return NotImplemented

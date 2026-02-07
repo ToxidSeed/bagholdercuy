@@ -67,6 +67,19 @@ class SerieSemanalReader:
         return record
 
     @staticmethod
+    def get_fch_semana_previa(cod_symbol, fch_serie_semanal):
+        stmt = db.select(
+            func.max(SerieSemanalModel.fch_semana).label("fch_semana")
+        ).where(
+            SerieSemanalModel.symbol == cod_symbol,
+            SerieSemanalModel.fch_semana < fch_serie_semanal
+        )
+
+        result = db.session.execute(stmt)
+        fch_semana = result.scalars().first()
+        return fch_semana
+
+    @staticmethod
     def get_serie_anterior(symbol, fch_serie_semanal):
         stmt = db.select(
             SerieSemanalModel

@@ -6,7 +6,7 @@ from model.stocksplit import StockSplitModel
 import structure.inputfiles as inputfiles
 import structure.series_structure as series_structure
 
-from domain.semana import Semana
+from domain.semana import CodigoSemana
 from domain.mes import Mes
 
 from dataclasses import dataclass, field
@@ -179,7 +179,7 @@ class SerieDiariaService:
 
     def crear_serie(self, cod_symbol, fch_serie, importes_ajustados, importes_sin_ajustar):        
 
-        fch_semana = Semana.from_fecha(fch_serie).fch_semana()
+        fch_semana = CodigoSemana.from_fecha(fch_serie).to_fecha_inicio_semana()
         fch_mes = Mes.from_fecha(fch_serie).to_fecha_mes()
 
         serie_nu = SerieDiariaModel(

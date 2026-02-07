@@ -31,7 +31,7 @@
 </template>
 <script>
 import TableListaOrdenes from '@/components/Ordenes/TableListaOrdenes.vue'
-import PanelTrade from '@/components/PanelTrade.vue';
+import PanelTrade from '../generic/PanelTrade.vue';
 import PanelOptionsChain from '@/components/common/PanelOptionsChain.vue'
 
 

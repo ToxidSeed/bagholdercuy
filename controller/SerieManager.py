@@ -4,15 +4,15 @@ import csv
 from datetime import date, timedelta, datetime
 import logging
 from dateutil.relativedelta import relativedelta
-
+from decimal import Decimal
 
 from app import db, app
 from common.AppException import AppException
 from common.Response import Response
 from common.Formatter import Formatter
 from common.api.iexcloud import iexcloud, RangoHelper
-from config.app_constants import SERIES_PROF_CARGA_ULT1ANYO
-from config.app_constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_YTD, \
+from config.constants import SERIES_PROF_CARGA_ULT1ANYO
+from config.constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_YTD, \
     SERIES_PROF_CARGA_ULT3MESES, SERIES_PROF_CARGA_ULT6MESES
 from controller.base import Base
 
@@ -33,12 +33,19 @@ from service.variacionsemanal import VariacionSemanalService
 from service.seriemensual import SerieMensualService
 from service.variacionmensual import VariacionMensualService
 from service.resumenserie import ResumenSerieService
+from service.serie_service import VariacionSemanalLoader, SerieMensualLoader, VariacionMensualLoader, SerieDiariaLoader, VariacionDiariaLoader, SerieSemanalLoader
 import structure.inputfiles as inputfiles
 import structure.series_structure as series_structure
-from domain.semana import CodigoSemana, Semana
+from domain.semana import CodigoSemana
 from domain.mes import Mes
 from dataclasses import dataclass
 from api.marketstack import MarketStackAPI
+from model.seriediaria import SerieDiariaModel
+from model.variaciondiaria import VariacionDiariaModel
+from model.seriesemanal import SerieSemanalModel
+from config.constants import CONST_WRITE_MODE_TEXT_APPEND, CONST_WRITE_MODE_TEXT_REPLACE
+
+import pandas as pd
 
 
 LUNES = 1
@@ -288,10 +295,7 @@ class MultipleLoaderController(Base):
         rss = ResumenSerieService()
         rss.guardar(cod_symbol)
 
-    def crear_series(self, series, cod_symbol, modo_carga):
-        if not series:
-            raise AppException("No hay series válidas")            
-
+    def crear_series(self, series, cod_symbol, modo_carga):        
         if modo_carga == "Agregar":
             modo_carga = WRITE_MODE_AGREGAR
         elif modo_carga == "Reemplazar":
@@ -379,17 +383,26 @@ class MarketStackLoaderController(MultipleLoaderController):
             modo_carga = args.get("modo_carga")
 
             #get series
-            series = self.get_series(cod_symbol, fch_desde, fch_hasta)
-            self.crear_series(series=series, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)            
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(cod_symbol, df_series, modo_carga)
+            fch_inicio_series = SerieDiariaLoader().load(cod_symbol, df_series, modo_carga)
+            VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            ResumenSerieService().guardar(cod_symbol)
             db.session.commit()
             return Response(msg="Se ha realizado la carga correctamente")
         except Exception as e:
             db.session.rollback()
             return Response().from_exception(e)
 
-    def get_series(self, cod_symbol, fch_desde, fch_hasta):
+    def get_api_series(self, cod_symbol, fch_desde, fch_hasta):
         series = MarketStackAPI.get_historical_data(cod_symbol, fch_desde, fch_hasta)
         data = series.get('data')
+        
+        """
         norm_series = []
         for elem in data:
             serie = series_structure.Serie(
@@ -402,33 +415,80 @@ class MarketStackLoaderController(MultipleLoaderController):
             )
             norm_series.append(serie)
         norm_series = sorted(norm_series)    
-        return norm_series
+        """
+        df_series = pd.DataFrame(data)
+        return df_series
 
-class InvestingLoader(Base):
-    def resumen(self, args=None):
-        pass
+    def parse_incoming_series(self, cod_symbol, df, modo_carga):
+        df = df.rename(columns={
+            'symbol':'cod_symbol',
+            'date':'fch_serie',
+            'open':'imp_apertura_sin_ajus',
+            'high':'imp_maximo_sin_ajus',
+            'low':'imp_minimo_sin_ajus',
+            'close':'imp_cierre_sin_ajus',
+            'adj_open':'imp_apertura',
+            'adj_high':'imp_maximo',
+            'adj_low':'imp_minimo',
+            'adj_close':'imp_cierre',
+        })
 
+        df["fch_serie"] = pd.to_datetime(df["fch_serie"], format="%Y-%m-%dT%H:%M:%S%z").dt.date
+        fch_max_serie = df["fch_serie"].max()
+        fch_min_serie = df["fch_serie"].min()
+        return df, fch_max_serie, fch_min_serie
+
+
+
+class InvestingLoader(Base):        
     def load(self, args=None):
         try:
             tmp_fichero = args.get("files").get("fichero")
-            cod_symbol = args.get("cod_symbol")            
+            form_data = args.get("form")
+            cod_symbol = form_data.get("cod_symbol")
+            modo_carga = form_data.get("modo_carga")
 
-            # get series
-            # series = self.get_series(cod_symbol, fch_desde, fch_hasta)
-            self.crear_series(series=series, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            df = pd.read_csv(tmp_fichero)            
+            df, fch_max_serie, fch_min_serie = self.load_series_diarias(cod_symbol, df, modo_carga)                                                                                        
+            VariacionDiariaLoader().load(cod_symbol, fch_min_serie, modo_carga)
+            SerieSemanalLoader().load(cod_symbol, fch_min_serie, modo_carga)
+            VariacionSemanalLoader().load(cod_symbol, fch_min_serie, modo_carga)
+            SerieMensualLoader().load(cod_symbol, fch_min_serie, modo_carga)
+            VariacionMensualLoader().load(cod_symbol, fch_min_serie, modo_carga)
+            ResumenSerieService().guardar(cod_symbol)
             db.session.commit()
+            #db.session.rollback()
             return Response(msg="Se ha realizado la carga correctamente")
         except Exception as e:
             db.session.rollback()
-            return Response().from_exception(e)
+            return Response().from_exception(e)            
+        
+    def load_series_diarias(self, cod_symbol, df, modo_carga):
+        df = df.rename(columns={
+           "Último":"imp_cierre",
+           "Fecha":"fch_serie",
+           "Apertura":"imp_apertura",
+           "Máximo":"imp_maximo",
+           "Mínimo":"imp_minimo"
+        })
 
-    def __guardar_fichero_temporal(self, tmp_fichero, cod_symbol):
-        tmp_dir = app.config.get("RUTA_TMP")
-        fch_actual_iso = date.today().isoformat()
-        fichero_nombre = f"nasdaq_{cod_symbol}_{str(uuid.uuid1())}.csv"
-        self.fichero_ruta = os.path.join(tmp_dir, fichero_nombre)
-        tmp_fichero.save(self.fichero_ruta)
-    
+        df["cod_symbol"] = cod_symbol
+        df["fch_serie"] = pd.to_datetime(df["fch_serie"], format="%d.%m.%Y").dt.date
+        df["imp_cierre"] = df["imp_cierre"].str.replace(",", ".").apply(Decimal)        
+        df["imp_apertura"] = df["imp_apertura"].str.replace(",", ".").apply(Decimal)        
+        df["imp_maximo"] = df["imp_maximo"].str.replace(",",".").apply(Decimal)        
+        df["imp_minimo"] = df["imp_minimo"].str.replace(",",".").apply(Decimal)        
+        df["imp_apertura_sin_ajus"] = df["imp_apertura"]
+        df["imp_maximo_sin_ajus"] = df["imp_maximo"]
+        df["imp_minimo_sin_ajus"] = df["imp_minimo"]
+        df["imp_cierre_sin_ajus"] = df["imp_cierre"]
+        
+        SerieDiariaLoader().load(cod_symbol, df, modo_carga)
+        fch_max_serie = df["fch_serie"].max()
+        fch_min_serie = df["fch_serie"].min()
+        return df, fch_max_serie, fch_min_serie
+            
+
 class SimulacionVariacionManager(Base):
     def __init__(self):
         self.serie_diaria_reader = SerieDiariaReader()

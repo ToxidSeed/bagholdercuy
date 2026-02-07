@@ -1,6 +1,6 @@
 import requests
 from app import app, db
-from config.app_constants import IEXCLOUD
+from config.constants import IEXCLOUD
 from common.StatusMessage import StatusMessage
 from datetime import datetime, date, timedelta
 from common.Error import Error

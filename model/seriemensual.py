@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy import delete
 
 class SerieMensualModel(db.Model):
     __tablename__ = "tb_serie_mensual"
@@ -19,7 +20,7 @@ class SerieMensualModel(db.Model):
     
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):
-        stmt = db.session.delete(
+        stmt = delete(
             SerieMensualModel
         ).where(
             SerieMensualModel.cod_symbol == cod_symbol
@@ -39,3 +40,7 @@ class SerieMensualModel(db.Model):
 
         rows_affected = query.delete()
         return rows_affected
+
+    @classmethod
+    def insertar_pandas_dataframe(cls, df):
+        db.session.bulk_insert_mappings(cls, df.to_dict(orient="records"))

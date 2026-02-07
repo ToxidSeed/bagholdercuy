@@ -12,7 +12,7 @@ from sqlalchemy.orm import join
 from sqlalchemy import and_
 from datetime import date
 
-from config.app_constants import TIPO_ACTIVO_OPT
+from config.constants import TIPO_ACTIVO_OPT
 
 class TransaccionReader:
 
@@ -407,4 +407,18 @@ class TransaccionReader:
         )
 
         results = db.session.execute(stmt)
-        return results.scalars().all()
+    @staticmethod
+    def get_next_orden_fifo(id_cuenta, cod_symbol):
+        stmt = db.select(
+            func.max(TransaccionModel.orden_fifo).label("max_num")
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.cod_symbol == cod_symbol
+        )
+        
+        result = db.session.execute(stmt)
+        max_num = result.scalars().first()
+        
+        if max_num is None:
+            return 1
+        return max_num + 1

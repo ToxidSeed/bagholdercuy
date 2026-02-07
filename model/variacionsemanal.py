@@ -38,5 +38,9 @@ class VariacionSemanalModel(db.Model):
         rows_affected = stmt.delete()
         return rows_affected
 
+    @classmethod
+    def insertar_pandas_dataframe(cls, df):
+        db.session.bulk_insert_mappings(cls, df.to_dict(orient="records"))
+
 
 

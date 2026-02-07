@@ -60,6 +60,7 @@
 
 import {postconfig} from '@/common/request.js';
 import date from 'date-and-time';
+import store from "@/store/store"
 
 export default {
     name:"TableListaPosicionesAcciones",
@@ -72,8 +73,8 @@ export default {
                 {
                     label:"Instrumento",
                     align: 'left',
-                    field:"symbol",
-                    name:"symbol",
+                    field:"cod_symbol",
+                    name:"cod_symbol",
                     style:"width:150px;"                              
                 },{
                     label:"En cartera desde",
@@ -163,20 +164,20 @@ export default {
             }
 
             this.$http.post(
-            'posicion/PosicionManager/get_posiciones_acciones',{
+            'posicion/PosicionController/get_posiciones_acciones',{
                 id_cuenta: localStorage.getItem("id_cuenta")
             },postconfig()).then(httpresp =>{                
-                this.data = []
-                this.$refs.msgbox.http_resp_on_error(httpresp)
+                this.data = []                
+                store.dispatch('incluir_httpresp_si_apperror', httpresp);
 
                 var appresp = httpresp.data
                 if(appresp.success){                    
-                    appresp.data.forEach(elem => {
+                    appresp.data.forEach(elem => {                        
                         elem.cantidad = elem.cantidad.toFixed(0)
-                        elem.imp_minimo = elem.imp_minimo.toFixed(2)
-                        elem.imp_promedio = elem.imp_promedio.toFixed(2)
-                        elem.imp_maximo = elem.imp_maximo.toFixed(2)
-                        //elem.imp_posicion_incial = elem.imp_posicion_incial.toFixed(2)
+                        elem.imp_minimo = elem.min_imp_unitario.toFixed(2)
+                        elem.imp_promedio = elem.mean_imp_unitario.toFixed(2)
+                        elem.imp_maximo = elem.max_imp_unitario.toFixed(2)
+                        elem.imp_posicion_incial = elem.imp_posicion_incial.toFixed(2)
                         /*elem.imp_min_accion = elem.imp_min_accion.toFixed(2)
                         elem.imp_max_accion = elem.imp_max_accion.toFixed(2)
                         elem.imp_posicion = elem.imp_posicion.toFixed(2)

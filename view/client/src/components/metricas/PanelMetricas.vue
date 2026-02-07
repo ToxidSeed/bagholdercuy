@@ -22,7 +22,7 @@
             </q-toolbar>       
             <q-separator/>            
             <div class="row">
-                <div>
+                <div class="col-3">
                     <div class="col-3">                
                         <SelectSymbol v-on:select-symbol="select_symbol"/>
                     </div>                

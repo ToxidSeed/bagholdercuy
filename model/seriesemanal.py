@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy import delete
 
 class SerieSemanalModel(db.Model):
     __tablename__ = "tb_serie_semanal"
@@ -12,15 +13,15 @@ class SerieSemanalModel(db.Model):
     imp_maximo = db.Column(db.Numeric(15,4))
     imp_minimo = db.Column(db.Numeric(15,4))
     imp_cierre = db.Column(db.Numeric(15,4))    
-    imp_apertura_ajus = db.Column(db.Numeric(15,4))
-    imp_maximo_ajus = db.Column(db.Numeric(15,4))
-    imp_minimo_ajus = db.Column(db.Numeric(15,4))
-    imp_cierre_ajus = db.Column(db.Numeric(15,4))    
+    imp_apertura_sin_ajus = db.Column(db.Numeric(15,4))
+    imp_maximo_sin_ajus = db.Column(db.Numeric(15,4))
+    imp_minimo_sin_ajus = db.Column(db.Numeric(15,4))
+    imp_cierre_sin_ajus = db.Column(db.Numeric(15,4))    
     fch_registro = db.Column(db.Date)
     
     @classmethod
     def eliminar_x_symbol(cls, cod_symbol):  
-        stmt = db.session.delete(
+        stmt = delete(
             SerieSemanalModel
         ).where(
             SerieSemanalModel.symbol == cod_symbol
@@ -39,3 +40,8 @@ class SerieSemanalModel(db.Model):
         ).delete()
 
         return rows_affected
+
+    @classmethod
+    def insertar_pandas_dataframe(cls, df):
+        objects = [cls(**row) for row in df.to_dict(orient="records")]
+        db.session.add_all(objects)

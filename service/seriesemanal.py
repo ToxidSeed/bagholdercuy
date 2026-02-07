@@ -3,7 +3,7 @@ from reader.seriediaria import SerieDiariaReader
 from reader.seriesemanal import SerieSemanalReader
 from model.seriesemanal import SerieSemanalModel
 from datetime import date
-from domain.semana import Semana
+from domain.semana import CodigoSemana
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,8 +13,8 @@ class SerieSemanalService:
     def generar_series(self, cod_symbol, fch_inicio_procesamiento):
         #logger.info(f"cod_symbol: {cod_symbol}")
 
-        semana_procesamiento = Semana.from_fecha(fch_inicio_procesamiento)
-        fch_semana_procesamiento = semana_procesamiento.fch_semana()
+        semana_procesamiento = CodigoSemana.from_fecha(fch_inicio_procesamiento)
+        fch_semana_procesamiento = semana_procesamiento.to_fecha_inicio_semana()
         #logger.info(f"semana procesamiento: {str(semana_procesamiento)}")
 
         max_fch_semana = SerieSemanalReader.get_max_fch_semana(cod_symbol)
@@ -43,7 +43,7 @@ class SerieSemanalService:
             fch_semana = pre_serie.fch_semana,
             anyo = pre_serie.anyo,
             semana = pre_serie.semana,
-            cod_semana = Semana(pre_serie.anyo, pre_serie.semana).codigo(),
+            cod_semana = CodigoSemana(pre_serie.anyo, pre_serie.semana).value,
             imp_apertura = serie_apertura.imp_apertura,
             imp_maximo = pre_serie.imp_maximo,
             imp_minimo = pre_serie.imp_minimo,

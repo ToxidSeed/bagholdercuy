@@ -30,7 +30,8 @@
                         <template v-slot:prepend>
                             <q-icon name="attach_file" />
                         </template>
-                    </q-file>                 
+                    </q-file>    
+                    <q-select v-model="loadMode" :options="loadModeOptions" label="Modo de Carga" />
                 </q-card-section>            
                 <q-inner-loading :showing="loading">
                     <q-spinner-gears size="50px" color="primary" />
@@ -71,6 +72,8 @@ export default {
             fichero:null,
             nom_symbol: "",
             cod_symbol: "",
+            loadMode:"Append",
+            loadModeOptions:["Append","Replace"],
             loading:false,
             rulesFichero: [val => !!val]        
         }
@@ -91,12 +94,14 @@ export default {
             let form_data = new FormData();            
 
             form_data.append("fichero", this.fichero)
-            form_data.append("cod_symbol", this.cod_symbol)                        
+            form_data.append("cod_symbol", this.cod_symbol)  
+            form_data.append("modo_carga", this.loadMode)
+            //console.log(form_data)                      
             
             this.$http.post(
                 '/SerieManager/InvestingLoader/load',form_data,postConfig                
             ).then(httpresp => {                
-                store.dispatch("incluir_httpresp_si_apperror", httpresp)
+                store.dispatch("incluir_httpresp", httpresp)
             }).finally(() => {
                 this.loading = false
             })

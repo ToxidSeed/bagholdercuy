@@ -196,7 +196,7 @@ export default {
         },
         get_posiciones_opcion:function(){            
             this.$http.post(
-                '/posicion/PosicionManager/get_posiciones_contratos_opciones',{
+                '/posicion/PosicionController/get_posiciones_contratos_opciones',{
                     id_cuenta:localStorage.getItem("id_cuenta")
                 },
                 postconfig()
