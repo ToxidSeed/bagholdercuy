@@ -77,7 +77,7 @@
 </template>
 <script>
 import SelectMoneda from '../SelectMoneda.vue'
-import MessageBox from '../MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import func from '@/common/InputNumericHandler.js'
 import date from 'date-and-time'
 import {CLIENT_DATE_FORMAT} from '@/common/constants.js'

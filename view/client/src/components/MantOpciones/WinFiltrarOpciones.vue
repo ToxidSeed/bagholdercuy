@@ -6,8 +6,11 @@
             </q-toolbar>
             <q-separator/>
             <q-card-section>
+                <div >
+                    <q-input color="blue-10" stack-label v-model="id_contrato_opcion" label="Identificador contrato opcion"/>
+                </div>
                 <SelectSymbol
-                    v-on:select-symbol="sel_symbol"
+                    v-on:select-symbol="sel_symbol" :label="'Subyacente'"
                 />
                 <div class="q-pt-xs text-blue-10 text-h6">{{ cod_symbol }}</div>
                 <div>{{ nom_symbol }}</div>
@@ -20,7 +23,7 @@
                         <q-input stack-label label="strike" v-model="imp_ejercicio" />
                     </div>
                     <div class="col-5 q-pl-xs">
-                        <q-input stack-label label="Fch. Expiración" v-model="fch_expiracion" hint="dd/mm/yyyy" mask="##/##/####" ></q-input>
+                        <q-input stack-label label="Fch. Expiración" v-model="fch_expiracion" hint="dd/mm/yyyy" mask="##/##/####" color="blue-10"></q-input>
                     </div>
                 </div>
             </q-card-section>
@@ -34,7 +37,7 @@
 </template>
 <script>
 import SelectSymbol from '@/components/SelectSymbol.vue'
-import date from 'date-and-time'
+//import date from 'date-and-time'
 
 export default {
     name:"WinFiltrarOpciones",
@@ -61,6 +64,7 @@ export default {
     data(){
         return {
             open:this.value,
+            id_contrato_opcion:"",
             selection:[],
             cod_symbol:"",
             fch_expiracion:"",
@@ -74,17 +78,20 @@ export default {
             this.nom_symbol = selected.label
         },
         aplicar_filtro:function(){
+            /*
             let fch_exp_iso_format = ""
 
             if (this.fch_expiracion != ""){
                 fch_exp_iso_format = date.transform(this.fch_expiracion, "DD/MM/YYYY","YYYY-MM-DD")
-            }            
+            }
+            */            
 
             this.$emit(
                 'btn-aceptar-click',{
+                    id_contrato_opcion: this.id_contrato_opcion,
                     cod_symbol:this.cod_symbol,
                     sentidos:this.selection,
-                    fch_expiracion:fch_exp_iso_format,
+                    fch_expiracion:this.fch_expiracion,
                     imp_ejercicio:this.imp_ejercicio
                 }
             )

@@ -14,7 +14,19 @@
         :options="symbol_list"                            
         clearable      
         :readonly="readonly"              
-    />
+    >
+    <template v-slot:option="scope">
+        <q-item        
+        v-bind="scope.itemProps"
+        v-on="scope.itemEvents"
+        >
+            <q-item-section>
+                <span class="text-blue-10 text-bold">{{scope.opt.value}}</span><span>{{ scope.opt.label }}</span>
+            </q-item-section>
+        </q-item>
+    </template>
+    </q-select>
+    
 </template>
 <script>
 import {headers} from '@/common/common.js'
@@ -56,8 +68,7 @@ export default {
             this.$refs.selsymbol.blur()            
             this.$emit('select-symbol',selected)   
         },
-        filterFn:function(val, update ) {  
-            console.log(val)
+        filterFn:function(val, update ) {              
             if (val === '') {
                 update(() => {
                     this.symbol_list = []
@@ -79,6 +90,7 @@ export default {
                     var options = []
                     for (let element of appresponse.data){
                         options.push({
+                            "id_symbol": element["id"],
                             "value":element["symbol"],
                             "label":element["name"]
                         })

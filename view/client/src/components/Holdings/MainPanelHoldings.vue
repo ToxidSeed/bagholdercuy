@@ -1,11 +1,11 @@
 <template>
-    <div>
+    <div >
         <q-toolbar class="text-blue-10">
             <q-btn flat round dense icon="menu"></q-btn>
             <q-toolbar-title>
                 Holdings
             </q-toolbar-title>
-        </q-toolbar>
+        </q-toolbar>        
         <q-splitter
             v-model="first_panel_size"
             :limits="[0,100]"
@@ -21,54 +21,61 @@
             </template>
             <template v-slot:after >
                 <q-toolbar>
-                    <q-btn color="blue-10" label="Buy" @click="comprar()"/>                
+                    <q-btn color="blue-10" label="Buy" @click="buy()"/>                
                     <q-btn color="red-10 " label="Sell" @click="vender()" class="q-ml-xs" />                
-                    <!--<q-btn color="green" label="Options Chain" to="/order" class="q-ml-xs" />-->
+                    <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="transfer_within_a_station"
+                    >Transferir posiciones</q-btn>
+                    <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="calculate"
+                    >Calcular Rentabilidad</q-btn>
+                    <!--
                     <q-btn flat outline color="blue-10" class="q-ml-xs text-capitalize" icon="upload"
-                    @click="WinCargaMultiple.open=true">Carga multiple</q-btn>
+                    @click="WinCargaMultiple.open=true">Carga multiple</q-btn>                    
                     <q-btn flat outline color="blue-10" label="Reprocesar Ordenes" class="q-ml-xs text-capitalize" icon="sync"
                     @click="WinReprocesarOrdenes.open=true"
                     ></q-btn>
+                    -->
                 </q-toolbar>
-                <TableHoldings
+                <TableListaPosicionesAcciones
                     v-on:vender="table_btn_vender_click"
                     v-on:comprar="table_btn_comprar_click"
                 />
-                <TablePosicionesOpcion/>
+                <TablePosicionesOpcion class="q-pt-xs q-pb-xs"/>
             </template>
             <q-inner-loading :showing="progress">
                 <q-spinner-gears size="50px" color="primary" />
             </q-inner-loading>
         </q-splitter>
-        <MessageBox :config="MsgBox"/>
+        
         <WinCargaMultiple v-model="WinCargaMultiple.open"/>
         <WinReprocesarOrdenes v-model="WinReprocesarOrdenes.open"/>
         <Confirmar v-model="Confirmar.show" 
         :config="Confirmar.config"
         v-on:confirmar-reprocesar="reprocesar"
         />
+        <WinTrade v-model="winTrade.open"/>
     </div>
 </template>
 <script>
-import TableHoldings from '@/components/Holdings/TableHoldings.vue';
+import TableListaPosicionesAcciones from '@/components/Holdings/TableListaPosicionesAcciones.vue';
 import TablePosicionesOpcion from '@/components/Holdings/TablePosicionesOpcion.vue';
 import WinCargaMultiple from '@/components/Holdings/WinCargaMultiple.vue';
 import WinReprocesarOrdenes from '@/components/Holdings/WinReprocesarOrdenes.vue';
-import MessageBox from '@/components/MessageBox.vue';
+//import PanelTrade from '../generic/PanelTrade.vue';
+import WinTrade from '../generic/WinTrade.vue';
+
 import Confirmar from '@/components/dialogs/Confirmar.vue'
 import {get_postconfig} from '@/common/request.js'
 
 export default {
     name:"MainPanelHoldings",
     components:{
-        //PanelTrade,
+        WinTrade,
         //-->PanelResumen,
         //PanelOptionsChain,
-        TableHoldings,
+        TableListaPosicionesAcciones,
         TablePosicionesOpcion,
         WinCargaMultiple,
         WinReprocesarOrdenes,
-        MessageBox,
         Confirmar 
     },
     props:{
@@ -104,6 +111,9 @@ export default {
                     callback:""
                 }                
             },
+            winTrade:{
+                open: false
+            },
             MsgBox:{},
             progress:false            
         }
@@ -132,7 +142,9 @@ export default {
                 this.first_panel_size = 30
             }
         },
-        buy:function(row){     
+        buy:function(row){         
+            console.log(row)        
+            /*
             this.order.symbol = ""            
             this.open_panel_order = true
             this.order.order_type = "B"
@@ -144,6 +156,8 @@ export default {
             }else{
                 this.order.asset_type = "stock"
             }
+            */
+           this.winTrade.open = true
         },
         sell:function(row){           
             this.order.symbol = "" 

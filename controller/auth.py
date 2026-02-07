@@ -4,10 +4,10 @@ from model.usuario import UsuarioModel
 from common.AppException import AppException
 from common.Response import Response
 from common.logger import logger
+from reader.cuenta import CuentaReader
 
-from config.general import AUTH_SECRET_KEY
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from app import db
+from app import db, app
 import logging
 
 
@@ -19,6 +19,7 @@ class LoginController:
             usuario = args.get('usuario')
             password = args.get('password')
             userdb = None
+            cuenta = None
             token = ""
 
             passdb = hashlib.sha224("{0}{1}".format(usuario,password).encode("utf-8")).hexdigest()
@@ -28,10 +29,19 @@ class LoginController:
             ).one()    
 
             if passdb == userdb.password:
+                id_cuenta_default = userdb.id_cuenta_default
+                if id_cuenta_default is None:
+                    raise AppException(msg="El usuario no tiene asociada una cuenta")
+
+                cuenta = CuentaReader.get(id_cuenta=id_cuenta_default)
                 token = self._crear_token(usuario=usuario)
             else:
                 raise AppException(msg="Usuario o password incorrectos")
-            return Response().from_raw_data({"token":token,"id_usuario":userdb.id, "usuario":userdb.usuario}) 
+
+            return Response().from_raw_data({"token":token,"id_usuario":userdb.id, "usuario":userdb.usuario,"id_cuenta_default":userdb.id_cuenta_default,
+            "cod_cuenta":cuenta.cod_cuenta,
+            "nom_cuenta":cuenta.nom_cuenta
+            }) 
         except NoResultFound as e:
             return Response(msg="Usuario no encontrado").from_exception(e)
         except MultipleResultsFound as e:
@@ -48,7 +58,7 @@ class LoginController:
             "exp":exp
         }        
         
-        return jwt.encode(payload, AUTH_SECRET_KEY, algorithm="HS256")        
+        return jwt.encode(payload, app.config.get("AUTH_SECRET_KEY"), algorithm="HS256")
 
     def validar_token(self, args={}):
         try:
@@ -56,7 +66,7 @@ class LoginController:
             if token is None:
                 raise AppException(msg="No se ha enviado el token")
 
-            decodificado = jwt.decode(token, AUTH_SECRET_KEY, algorithms=["HS256"])
+            decodificado = jwt.decode(token, app.config.get("AUTH_SECRET_KEY"), algorithms=["HS256"])
 
             #exp_date = datetime.utcfromtimestamp(decodificado.get('exp'))
 

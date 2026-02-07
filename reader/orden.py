@@ -5,50 +5,43 @@ from model.orden import OrdenModel
 
 class OrdenReader:
 
-    def get_max_num_orden(usuario_id, fch_orden, cod_symbol=None, cod_opcion=None):
-        num_orden = None
+    def get_max_num_orden(id_cuenta, fch_orden):        
 
         stmt = db.session.query(
             func.max(OrdenModel.num_orden).label("num_orden")
         ).filter(
-            OrdenModel.usuario_id == usuario_id,            
+            OrdenModel.id_cuenta == id_cuenta,            
             OrdenModel.fch_orden == fch_orden
         )
-
-        if cod_symbol is not None and cod_symbol != "":
-            stmt = stmt.where(OrdenModel.cod_symbol == cod_symbol)
-        else:
-            stmt = stmt.where(OrdenModel.cod_opcion == cod_opcion)           
 
         result = db.session.execute(stmt)
         record = result.first()
 
-        if record is not None:
-            num_orden = record.num_orden
+        if record is None:
+            return 0
+        if record.num_orden is None:
+            return 0
+        else:
+            return 0
 
-        return num_orden
-
-    def get_ordenes(usuario_id, cod_symbol=None, cod_opcion=None):
+    def get_ordenes(id_cuenta, id_symbol=None, id_contrato_opcion=None):
         stmt = db.session.query(
-            OrdenModel
+            OrdenModel.id_orden,
+            OrdenModel.id_operacion,
+            OrdenModel.id_cuenta,
+            OrdenModel.num_orden,
+            OrdenModel.cod_tipo_orden,
+            OrdenModel.id_symbol,
+            OrdenModel.id_contrato_opcion,
+            OrdenModel.cod_tipo_activo,
+            OrdenModel.cantidad,
+            OrdenModel.imp_accion,
+            OrdenModel.fch_registro,
+            OrdenModel.fch_orden
+        ).join(
+            
         ).where(
-            OrdenModel.usuario_id == usuario_id
-        )
-
-        if cod_symbol is not None:
-            stmt = stmt.where(
-                OrdenModel.cod_symbol == cod_symbol
-            )
-
-        if cod_opcion is not None:
-            stmt = stmt.where(
-                OrdenModel.cod_opcion == cod_opcion
-            )
-
-        stmt = stmt.order_by(
-            OrdenModel.fch_orden,
-            OrdenModel.cod_opcion,
-            OrdenModel.cod_symbol
+            OrdenModel.id_cuenta == id_cuenta
         )
 
         result = db.session.execute(stmt)

@@ -33,11 +33,13 @@
                 ></router-view>
             </template>
             <template v-slot:after>
-                <q-toolbar>
-                    <q-btn color="blue-10" label="Nuevo" :to="{name:'opciones-new'}"></q-btn>                    
-                    <!--<q-btn class="q-ml-xs" color="blue-10" label="Carga Masiva" :to="{name:'opciones-loader'}"></q-btn>-->
-                    <q-btn class="q-ml-xs text-capitalize"  color="blue-10" flat dense icon="filter_alt" @click="WinFiltrarOpciones.open=true">Filtrar</q-btn>
-                </q-toolbar>
+                <div class="q-pb-xs">
+                    <q-bar class="bg-white">
+                        <q-btn color="blue-10" label="Nuevo" :to="{name:'opciones-new'}"></q-btn>                    
+                        <!--<q-btn class="q-ml-xs" color="blue-10" label="Carga Masiva" :to="{name:'opciones-loader'}"></q-btn>-->
+                        <q-btn color="blue-10" flat dense icon="filter_alt" @click="WinFiltrarOpciones.open=true">Filtrar</q-btn>
+                    </q-bar>
+                </div>
                 <TableListOpciones
                     :infiltros="TableListOpciones.filtros"
                     v-on:copiar="copiar_opcion"

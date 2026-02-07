@@ -5,16 +5,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from common.Response import Response
 
-from settings import config
-
 import traceback
 import sys, os
 import json
+import logging
+from datetime import date
+from common.logger import logger
+from dotenv import load_dotenv
+from config.config import Config
 
-class AppManager:
-    def get_database_uri():
-        env = config["default"]["env"]         
-        return config["database"][env]
+load_dotenv()
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -23,9 +23,12 @@ class EntryAPI(Resource):
         response.headers["file_name"] = obj_loader.response['file_name']
         return response
 
-    def post(self, module_name, class_name, method_name):        
+    def post(self, module_name, class_name, method_name):
         try:
-            #solo para probar se poneuser_id                
+            logger.info(f"call class_name: {class_name}, method_name: {method_name}")
+            #logging.basicConfig(filename=f"logs/bagholder_post_{date.today().isoformat()}.log", level=logging.INFO)
+
+            #solo para probar se poneuser_id
             session["user_id"] = 1
 
             data = None
@@ -49,6 +52,7 @@ class EntryAPI(Resource):
             return jsonify(response)
         except Exception as e:
             response = Response().from_exception(e)
+            logger.error(json.dumps(response))
             return jsonify(response)
 
 class Loader:
@@ -58,13 +62,11 @@ class Loader:
         if obj_reference.AUTH_REQUIRED == False:
             self.obj = obj_reference()
         else:
-            self.obj = obj_reference()            
+            self.obj = obj_reference()
             self.obj.validar_token(data.get("access_token"))
 
         method_to_call = getattr(self.obj, method_name)
         self.response = method_to_call(data)
-    
-
 
 class ImageLoader(Resource):
     def get(self, image_loader):
@@ -76,22 +78,23 @@ class ImageLoader(Resource):
 
 ###############
 
+
+
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
 app = Flask(__name__)
 
-app.config.from_object("config.general")
-#app.secret_key = "4CE30D91FB0487BCAF5858A822D66C4C40897BB397D7D26AE651CD78BF1BB8FD"
-app.config["SQLALCHEMY_DATABASE_URI"] = AppManager.get_database_uri()
-app.config["SQLALCHEMY_ECHO"] = False
+app.config.from_object(Config)
 
 CORS(app,expose_headers=["Content-Disposition", "file_name"])
 
 db = SQLAlchemy(app)
+from boot.loader import init_constants
+init_constants()
 api = Api(app)
 
-api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["APPNAME"]))
-#api.add_resource(ConfirmRegistration, '/entablar/ConfirmRegistration',endpoint="confirm")
-api.add_resource(ImageLoader, "/{}/<string:image_loader>/".format(app.config["APPNAME"]))
+api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["BAGHOLDER_APPNAME"]))
+# api.add_resource(ConfirmRegistration, '/entablar/ConfirmRegistration',endpoint="confirm")
+api.add_resource(ImageLoader, "/{}/<string:image_loader>/".format(app.config["BAGHOLDER_APPNAME"]))
 
 
 #app.run(debug=True)

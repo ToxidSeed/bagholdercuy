@@ -40,7 +40,7 @@ class UsuarioParser:
     
         return usuario
 
-    def parse_args_actualizar(self, args={}):        
+    def parse_args_actualizar(args={}):        
 
         id_usuario = args.get("id_usuario")
         if id_usuario in [None, ""]:

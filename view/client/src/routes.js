@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import { BASE_PATH } from './common/constants'
+import store from './store/store.js'
 import axios from 'axios'
 
 import VueRouter from 'vue-router'
 //import PanelSimulationDataEntry from './components/PanelSimulationDataEntry.vue';
 import PanelTradeList from './components/PanelTradeList.vue';
-import PanelTrade from './components/PanelTrade.vue';
+import PanelTrade from './components/generic/PanelTrade.vue';
 import PanelStats from './components/PanelStats.vue';
 import DataLoader from './components/DataLoader.vue';
 import MainPanelHoldings from './components/Holdings/MainPanelHoldings.vue';
@@ -13,18 +14,28 @@ import MainPanelFunds from './components/Funds/MainPanelFunds.vue'
 import MainPanelCurrencyExchange from './components/CurrencyExchange/MainPanelCurrencyExchange.vue';
 import MainPanelCurrency from './components/MainPanelCurrency.vue';
 import MainPanelSymbol from './components/Symbol/MainPanelSymbol.vue';
-import PanelHistorialOperaciones from '@/components/Holdings/PanelHistorialOperaciones.vue';
-import MainPanelHistorialOrdenes from '@/components/Ordenes/MainPanelHistorialOrdenes.vue';
+import MainOperacion from '@/components/operaciones/MainOperacion.vue';
+import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
-import PanelVariacionSemanal from '@/components/informes/PanelVariacionSemanal.vue';
+import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
+import PanelVariacionDiariaSeries from "@/components/informes-variacion-diaria/PanelVariacionDiariaSeries.vue";
+import PanelEvolucionDiariaSeries from "@/components/informes-variacion-diaria/PanelEvolucionDiariaSeries.vue"
+
+import PanelSerieLoader from '@/components/serie/PanelSerieLoader.vue'
+
+//Simulacion de rentabilidad
+import PanelSimulacionRentabilidadOpciones from "@/components/simulacion-rentabilidad/opciones/PanelSimulacionRentabilidadOpciones.vue"
 
 //Rentabilidad operaciones
 import PanelRentabilidadOperaciones from '@/components/informes/PanelRentabilidadOperaciones.vue';
 //import TableRentabilidadOperacionesDiaria from '@/components/informes/TableRentabilidadOperacionesDiaria.vue';
 import PanelRentabilidadOperacionesDiaria from '@/components/informes/PanelRentabilidadOperacionesDiaria.vue';
+import MainRentabilidadOperacionesMensual from '@/components/operaciones/rentabilidadoperaciones/MainRentabilidadOperacionesMensual.vue';
+import MainRentabilidadOperacionesSemanal from '@/components/operaciones/rentabilidadsemanal/MainRentabilidadOperacionesSemanal.vue';
+import MainRentabilidadOperacionesAnual from '@/components/operaciones/rentabilidadanual/MainRentabilidadOperacionesAnual.vue';
 
 import PanelMantOpciones from '@/components/MantOpciones/PanelMantOpciones.vue'
 import DataLoaderOptions from '@/components/DataLoaderOptions.vue'
@@ -40,8 +51,12 @@ import PanelReorganizarFondos from '@/components/Funds/PanelReorganizarFondos.vu
 import PanelCurrencyExchangeRate from '@/components/CurrencyExchange/PanelCurrencyExchangeRate.vue';
 import PanelCurrencyExchangeRateLoader from '@/components/CurrencyExchange/PanelCurrencyExchangeRateLoader.vue'
 
-import TableVariacionSemanal from '@/components/informes/TableVariacionSemanal.vue';
-import PanelEvolucionSemanal from '@/components/informes/PanelEvolucionSemanal.vue'
+//
+import PanelSimulacionRentabilidad from "@/components/simulacion-rentabilidad/PanelSimulacionRentabilidad";
+import PanelWatchlist from "@/components/watchlist/PanelWatchlist.vue"
+
+import TableVariacionSemanal from '@/components/informes-variacion-semanal/TableVariacionSemanal.vue';
+import PanelEvolucionSemanal from '@/components/informes-variacion-semanal/PanelEvolucionSemanal.vue'
 
 //Configuracion
 import PanelCalendarioSemanalLoader from '@/components/Configuracion/PanelCalendarioSemanalLoader.vue'
@@ -58,275 +73,394 @@ import MainCuenta from '@/components/cuenta/MainCuenta.vue'
 import PanelUsuario from '@/components/usuario/PanelUsuario.vue'
 import MainUsuario from '@/components/usuario/MainUsuario.vue'
 
+//metricas
+import PanelMetricas from "@/components/metricas/PanelMetricas.vue"
+
+//stock splits
+import PanelMantStockSplit from "@/components/split/PanelMantStockSplit.vue"
+import MainStockSplit from './components/split/MainStockSplit.vue';
+import PanelStockSplitLoader from "@/components/split/PanelStockSplitLoader.vue"
+
 import Main from '@/Main.vue'
+import PageCiclos from './components/ciclos/PageCiclos.vue';
+import PanelCiclosDuracion from './components/ciclos/PanelCiclosDuracion.vue'
+import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
+
 
 Vue.use(VueRouter);
 
-const routes =  [
-    {
-      path:'/', component:Main,     
-      name:"main",
-      children:[
+const routes = [
+  {
+    path: '/', component: Main,
+    name: "main",
+    children: [
+      {
+        path: '/funds', component: MainPanelFunds,
+        name: "funds",
+        children: [
           {
-            path:'/funds', component:MainPanelFunds,
-            name:"funds",
-            children:[
-              {
-                path:"deposito",
-                name:"funds-deposito",
-                component:PanelDeposit
-              },        
-              {
-                path:"retiro",
-                name:"funds-retiro",
-                component:PanelWithdraw
-              },
-              {
-                path:"conversion",
-                name:"funds-conversion",
-                component:PanelCurrencyConversion
-              },
-              {
-                path:"recalcularfondos",
-                name:"funds-recalcular",
-                component:PanelRecalcularFondos
-              },{
-                path:"reorganizarfondos",
-                name:"funds-reorganizar",
-                component:PanelReorganizarFondos
-              }
-            ]
-          },{
-            path:'/currencyexchange', 
-            component:MainPanelCurrencyExchange,
-            name:"currencyexchange",
-            props:true,
-            children:[
-              {
-                path:"nuevo",
-                name:"currencyexchange-nuevo",
-                component:PanelCurrencyExchangeRate,
-                meta: {size:30},
-                props:{inFirstPanelSize:50}
-              },{
-                path:"loader",
-                name:"currencyexchange-loader",
-                component:PanelCurrencyExchangeRateLoader
-              }
-            ]
-          },{
-            path:'/tradelist', component:PanelTradeList
-          },{
-            path:'/trade', component:PanelTrade
-          },{
-            path:'/trade/:symbol/:asset_type/:trade_type', component:PanelTrade, props:true
-          },{
-            path:'/stats', component:PanelStats
-          },{
-            path:'/dataloader', component:DataLoader
-          },{
-            path:'/holdings', 
-            name:'holdings',
-            component:MainPanelHoldings,
-            children:[{
-              path:'trade',
-              name:'holdings-trade',
-              component:PanelTrade
-            }
-
-            ]
-          },{
-            path:'/historial_operaciones', component:PanelHistorialOperaciones
-          },{
-            path:'/currency', component:MainPanelCurrency
-          },{
-            path:'/currency/:action=:moneda_id', component:MainPanelCurrency, props:true
-          },{
-            path:'/calendariosemanalloader', component:PanelCalendarioSemanalLoader, props:true,
-            name:"calendario-semanal-loader"
-          },{
-            path:'/calendariodiarioloader', component: PanelCalendarioDiarioLoader, props: true,
-            name:'calendario-diario-loader'            
-          },{
-            path:'/currency/:action', component:MainPanelCurrency, props:true
-          },{
-            path:"/symbols", component:MainPanelSymbol
-          },{
-            path:"/historial_ordenes", component:MainPanelHistorialOrdenes
-          },{
-            path:"/opciones", component:MainMantOpciones,
-            name:"opciones",
-            props:true,
-            children:[
-              {
-                path:"mant/new",
-                name:"opciones-new",
-                component:PanelMantOpciones,
-                props:true
-              },{
-                path:"mant/edit/:id",
-                name:"opciones-edit",
-                component:PanelMantOpciones
-              },{
-                path:"loader",
-                name:"opciones-loader",
-                component:DataLoaderOptions
-              },{
-                path:"loader/fichero",
-                name:"opciones-loader-fichero",
-                component:PanelOpcionCargaFichero
-              }
-            ]
-          },{
-            path:"/reorganizarorden",component:PanelReorganizar
-          },{
-            path:"/variacionmensual",component:PanelVariacionMensual
-          },{
-            path:"/variacionsemanal",component:PanelVariacionSemanal,
-            children:[
-              {
-                path:"",
-                name:"variacion-semanal-series",
-                props:true,
-                component: TableVariacionSemanal
-              },{
-                path:"evolucion",
-                name:"variacion-semanal-evolucion",
-                props:true,
-                component: PanelEvolucionSemanal
-              }
-            ]
-          },{
-            path:"/variaciondiaria",component:PanelVariacionDiaria
-          },{
-            path:"/rentabilidadoperaciones", component:PanelRentabilidadOperaciones,
-            name:"rentabilidad-operaciones",
-            children:[
-              {
-                path:"",
-                name:"rentabilidad-operaciones-diaria",
-                props:true,
-                component: PanelRentabilidadOperacionesDiaria
-              }
-            ]
-          },{
-            path:"/series",
-            component:MainMantSerie
-          },{
-            path:"/broker",
-            name:"broker",
-            component:MainBroker,
-            props:true,
-            children:[
-              {
-                path:"new",
-                name:"broker-new",
-                component:PanelBroker
-              },
-              {
-                path:"ver/:id_broker",
-                name:"broker-ver",
-                props:true,
-                component:PanelBroker
-              },
-              {
-                path:"editar/:id_broker",
-                name:"broker-editar",
-                props:true,
-                component:PanelBroker
-              }
-            ]
-          },{
-            path:"/cuenta",
-            name:"cuenta",
-            component: MainCuenta,
-            props:true,
-            children:[
-              {
-                path:"nuevo",
-                name:"cuenta-nuevo",
-                component:PanelCuenta
-              },
-              {
-                path:"ver",
-                name:"cuenta-ver/:id_cuenta",
-                props:true,
-                component:PanelCuenta
-              },
-              {
-                path:"editar",
-                name:"cuenta-editar/:id_cuenta",
-                props:true,
-                component:PanelCuenta
-              }
-            ]
+            path: "deposito",
+            name: "funds-deposito",
+            component: PanelDeposit
           },
           {
-            path:"/usuario",
-            name:"usuario",
-            component:MainUsuario,
-            props:true,
-            children:[
-              {
-                path:"nuevo",
-                name:"usuario-nuevo",
-                props:true,
-                component: PanelUsuario                
-              },
-              {
-                path:"configurar/:id_usuario",
-                name:"usuario-config",
-                props:true,
-                component: PanelUsuario
-              }
-            ]
+            path: "retiro",
+            name: "funds-retiro",
+            component: PanelWithdraw
+          },
+          {
+            path: "conversion",
+            name: "funds-conversion",
+            component: PanelCurrencyConversion
+          },
+          {
+            path: "recalcularfondos",
+            name: "funds-recalcular",
+            component: PanelRecalcularFondos
+          }, {
+            path: "reorganizarfondos",
+            name: "funds-reorganizar",
+            component: PanelReorganizarFondos
           }
-      ]         
-    },{
-      path:"/login",
-      name:"login",
-      component:PanelLogin
-    }
+        ]
+      }, {
+        path: '/currencyexchange',
+        component: MainPanelCurrencyExchange,
+        name: "currencyexchange",
+        props: true,
+        children: [
+          {
+            path: "nuevo",
+            name: "currencyexchange-nuevo",
+            component: PanelCurrencyExchangeRate,
+            meta: { size: 30 },
+            props: { inFirstPanelSize: 50 }
+          }, {
+            path: "loader",
+            name: "currencyexchange-loader",
+            component: PanelCurrencyExchangeRateLoader
+          }
+        ]
+      }, {
+        path: '/tradelist', component: PanelTradeList
+      }, {
+        path: '/trade', component: PanelTrade
+      }, {
+        path: '/trade/:symbol/:asset_type/:trade_type', component: PanelTrade, props: true
+      }, {
+        path: '/stats', component: PanelStats
+      }, {
+        path: '/dataloader', component: DataLoader
+      }, {
+        path: '/holdings',
+        name: 'holdings',
+        component: MainPanelHoldings,
+        children: [{
+          path: 'trade',
+          name: 'holdings-trade',
+          component: PanelTrade
+        }
+
+        ]
+      }, {
+        path: '/watchlist', component: PanelWatchlist
+      }, {
+        path: '/operacion', component: MainOperacion
+      }, {
+        path: '/currency', component: MainPanelCurrency
+      }, {
+        path: '/currency/:action=:moneda_id', component: MainPanelCurrency, props: true
+      }, {
+        path: '/calendariosemanalloader', component: PanelCalendarioSemanalLoader, props: true,
+        name: "calendario-semanal-loader"
+      }, {
+        path: '/calendariodiarioloader', component: PanelCalendarioDiarioLoader, props: true,
+        name: 'calendario-diario-loader'
+      }, {
+        path: '/currency/:action', component: MainPanelCurrency, props: true
+      }, {
+        path: "/symbols", component: MainPanelSymbol
+      }, {
+        path: "/orden", component: MainOrden
+      }, {
+        path: "/opciones", component: MainMantOpciones,
+        name: "opciones",
+        props: true,
+        children: [
+          {
+            path: "mant/new",
+            name: "opciones-new",
+            component: PanelMantOpciones,
+            props: true
+          }, {
+            path: "mant/edit/:id",
+            name: "opciones-edit",
+            component: PanelMantOpciones
+          }, {
+            path: "loader",
+            name: "opciones-loader",
+            component: DataLoaderOptions
+          }, {
+            path: "loader/fichero",
+            name: "opciones-loader-fichero",
+            component: PanelOpcionCargaFichero
+          }
+        ]
+      },
+      {
+        path: "/metricas", component: PanelMetricas, props: true, name: "metricas"
+      },
+      {
+        path: "/reorganizarorden", component: PanelReorganizar
+      }, {
+        path: "/variacionmensual", component: PanelVariacionMensual
+      }, {
+        path: "/variacionsemanal", component: PanelVariacionSemanal,
+        children: [
+          {
+            path: "",
+            name: "variacion-semanal-series",
+            props: true,
+            component: TableVariacionSemanal
+          }, {
+            path: "evolucion",
+            name: "variacion-semanal-evolucion",
+            props: true,
+            component: PanelEvolucionSemanal
+          }
+        ]
+      }, {
+        path: "/variaciondiaria",
+        component: PanelVariacionDiaria,
+        name: "variacion-diaria",
+        props: true,
+        children: [
+          {
+            path: "",
+            mame: "variacion-diaria-series",
+            props: true,
+            component: PanelVariacionDiariaSeries
+          }, {
+            path: "series-evolucion",
+            props: true,
+            name: "variacion-diaria-series-evolucion",
+            component: PanelEvolucionDiariaSeries
+          }
+        ]
+      }, {
+        path: "/ciclos",
+        name: "ciclos",
+        component: PageCiclos,
+        children: [{
+          path: "",
+          name: "ciclos-duracion",
+          props: true,
+          component: PanelCiclosDuracion
+        }, {
+          path: "/ciclos/variacion",
+          name: "ciclos-variacion",
+          props: true,
+          component: PanelCiclosVariacion
+        }]
+      }, {
+        path: "/simulacion-rentabilidad",
+        name: "simulacion-rentabilidad",
+        component: PanelSimulacionRentabilidad,
+        children: [
+          {
+            path: "",
+            name: "simulacion-rentabilidad-opciones",
+            props: true,
+            component: PanelSimulacionRentabilidadOpciones
+          }
+        ]
+      }, {
+        path: "/rentabilidadoperaciones", component: PanelRentabilidadOperaciones,
+        name: "rentabilidad-operaciones",
+        children: [
+          {
+            path: "",
+            name: "rentabilidad-operaciones-diaria",
+            props: true,
+            component: PanelRentabilidadOperacionesDiaria
+          },
+          {
+            path: "/rentabilidadoperaciones/mensual",
+            name: "rentabilidad-operaciones-mensual",
+            props: true,
+            component: MainRentabilidadOperacionesMensual
+          },
+          {
+            path: "/rentabilidadoperaciones/anual",
+            name: "rentabilidad-operaciones-anual",
+            props: true,
+            component: MainRentabilidadOperacionesAnual
+          },
+          {
+            path: "/rentabilidadoperaciones/semanal",
+            name: "rentabilidad-operaciones-semanal",
+            props: true,
+            component: MainRentabilidadOperacionesSemanal
+          }
+        ]
+      }, {
+        path: "/series",
+        component: MainMantSerie,
+        children: [{
+          path: "iexcloud-loader",
+          name: "iexcloud-loader",
+          component: PanelSerieLoader
+        }]
+      }, {
+        path: "/broker",
+        name: "broker",
+        component: MainBroker,
+        props: true,
+        children: [
+          {
+            path: "new",
+            name: "broker-new",
+            component: PanelBroker
+          },
+          {
+            path: "ver/:id_broker",
+            name: "broker-ver",
+            props: true,
+            component: PanelBroker
+          },
+          {
+            path: "editar/:id_broker",
+            name: "broker-editar",
+            props: true,
+            component: PanelBroker
+          }
+        ]
+      }, {
+        path: "/cuenta",
+        name: "cuenta",
+        component: MainCuenta,
+        props: true,
+        children: [
+          {
+            path: "nuevo",
+            name: "cuenta-nuevo",
+            component: PanelCuenta
+          },
+          {
+            path: "ver",
+            name: "cuenta-ver/:id_cuenta",
+            props: true,
+            component: PanelCuenta
+          },
+          {
+            path: "editar",
+            name: "cuenta-editar/:id_cuenta",
+            props: true,
+            component: PanelCuenta
+          }
+        ]
+      },
+      {
+        path: "/usuario",
+        name: "usuario",
+        component: MainUsuario,
+        props: true,
+        children: [
+          {
+            path: "nuevo",
+            name: "usuario-nuevo",
+            props: true,
+            component: PanelUsuario
+          },
+          {
+            path: "ver/:id_usuario",
+            name: "usuario-ver",
+            props: true,
+            component: PanelUsuario
+          },
+          {
+            path: "configurar/:id_usuario",
+            name: "usuario-config",
+            props: true,
+            component: PanelUsuario
+          }
+        ]
+      },
+      {
+        path: "/stocksplit",
+        name: "stocksplit",
+        component: MainStockSplit,
+        props: true,
+        children: [
+          {
+            path: "loader",
+            name: "stocksplit-loader",
+            props: true,
+            component: PanelStockSplitLoader
+          },
+          {
+            path: "ver/:id_stock_split",
+            name: "stocksplit-ver",
+            props: true,
+            component: PanelMantStockSplit
+          },
+          {
+            path: "editar/:id_stock_split",
+            name: "stocksplit-editar",
+            props: true,
+            component: PanelMantStockSplit
+          }
+        ]
+      }
+    ]
+  }, {
+    path: "/login",
+    name: "login",
+    component: PanelLogin
+  }
 ]
 
 const router = new VueRouter({
   routes
 })
 
-router.beforeEach(async(to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   let token = localStorage.getItem('token')
   //console.log(token)
-  let token_valido = await validar_token(token)  
+  let token_valido = await validar_token(token)
 
-  if (token_valido != true){      
-    if (to.name != 'login'){
-      next({ name: 'login' })      
-    }    
-    next()        
+  if (token_valido != true) {
+    if (to.name != 'login') {
+      next({ name: 'login' })
+    }
+    next()
+  } else {
+    await store.dispatch('serverConstants/getList')
+    next()
   }
-  
-  if (to.name == 'login'){    
-    next({name:'main'})      
+
+  if (to.name == 'login') {
+    next({ name: 'main' })
   }
   next()
 })
 
-async function validar_token(token){
-  if (token == null || token == undefined){
+async function validar_token(token) {
+  if (token == null || token == undefined) {
     return false
   }
 
   const http = axios.create({
-    baseUrl:BASE_PATH    
+    baseUrl: BASE_PATH
   })
 
-  const response = await http.post('/auth/LoginController/validar_token',{
-    token:token
+  const response = await http.post('/auth/LoginController/validar_token', {
+    token: token
   })
 
-  let data = response.data 
+  let data = response.data
 
-  if (data.expired == true){    
+  if (data.expired == true) {
     localStorage.removeItem('token')
     return false
   }

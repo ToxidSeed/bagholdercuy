@@ -13,12 +13,12 @@ from common.api.iexcloud import iexcloud
 from common.AppException import AppException
 from common.api.MarketAPI import MarketAPI
 
-from reader.posicion import PosicionReader
+from reader.transaccion import TransaccionReader
 
 from pytz import HOUR, timezone
 from datetime import datetime, date
 from config.general import APP_DEC_PREC, MARKET_API_LIST
-from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from config.constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
 
 #from controller.StockDataProvider import StockDataProvider
 import common.Markets as Markets
@@ -46,12 +46,6 @@ class HoldingsManager(Base):
         .all()
 
         return holdings
-
-
-
-
-    
-
 
     def get_list(self, args={}):                             
         active_holdings = self.__get_active_holdings()
@@ -193,7 +187,7 @@ class iexcloud_bridge:
             "avg_buy_price" : avg_buy_price,
             "daily_change" : daily_change,
             "total_change":total_change,
-            "total_pl":total_pl,
+        "total_pl":total_pl,
             "last_price_date": close_date,
             "last_price":imp_close,
             "market_value":market_value

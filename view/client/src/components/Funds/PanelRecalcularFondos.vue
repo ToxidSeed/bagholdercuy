@@ -26,16 +26,16 @@
                 </q-badge>
             </q-card-section>
         </q-card>
-        <Messagebox ref="msgbox" />
+        <MessageBox ref="msgbox" />
     </div>
 </template>
 <script>
-import Messagebox from '@/components/MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import {config} from '@/common/request.js'
 export default {
     name:"PanelRecalcularFondos",
     components:{
-        Messagebox
+        MessageBox
     },
     data: () => {
         return {

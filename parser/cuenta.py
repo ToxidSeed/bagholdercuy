@@ -72,6 +72,13 @@ class CuentaParser:
 
         return cuenta
 
+    def parse_id_cuenta(args={}):
+        id_cuenta = args.get("id_cuenta")
+        if id_cuenta in [None, ""]:
+            raise AppException(msg="No se ha enviado el id de cuenta")
+            
+        return id_cuenta
+
     def parse_args_get_cuentas(args={}):
         return args
 

@@ -1,192 +1,96 @@
-from app import db
-from model.posicion import PosicionModel
 from model.OptionContract import OptionContractModel
-
-import sqlalchemy.sql.functions as func
-from sqlalchemy.sql import extract
-from sqlalchemy.orm import join
-from sqlalchemy import and_
-from datetime import date
-
-from config.negocio import TIPO_ACTIVO_OPT
+from model.StockSymbol import StockSymbol
+from model.transaccion import TransaccionModel
+from model.transaccion_saldo import TransaccionSaldoModel
+from constants.instrumento_financiero import get_instrumento_financiero
+from sqlalchemy import func
+from app import db
+import pandas as pd
 
 class PosicionReader:
-
-    def get_posiciones_abiertas(usuario_id, cod_symbol=None, cod_opcion=None):        
-
+    def get_active_holdings(id_cuenta):
+        """
+        Retrieves active holdings based on transaction balances.
+        """
         stmt = db.select(
-            PosicionModel
-        ).where(
-            PosicionModel.ctd_saldo_posicion != 0,
-            PosicionModel.usuario_id == usuario_id
-        ).order_by(
-            PosicionModel.num_posicion.asc()
-        )
-
-        if cod_symbol is not None and cod_symbol != "":
-            stmt.where(PosicionModel.cod_symbol == cod_symbol)
-        else:
-            stmt.where(PosicionModel.cod_opcion == cod_opcion)                    
-
-        result = db.session.execute(stmt)       
-
-        records = result.scalars().all()
-        return records
-
-    def get_posiciones_abiertas_x_opcion(usuario_id, cod_opcion):
-        stmt = db.select(
-            PosicionModel
-        ).where(
-            PosicionModel.ctd_saldo_posicion != 0,
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_opcion == cod_opcion
-        ).order_by(
-            PosicionModel.num_posicion.asc()
-        )
-
-        result = db.session.execute(stmt)       
-
-        records = result.scalars().all()
-        return records
-
-    def get_posiciones_abiertas_x_symbol(usuario_id, cod_symbol):
-        stmt = db.select(
-            PosicionModel
-        ).where(
-            PosicionModel.ctd_saldo_posicion != 0,
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_symbol == cod_symbol
-        ).order_by(
-            PosicionModel.num_posicion.asc()
-        )
-
-        result = db.session.execute(stmt)       
-
-        records = result.scalars().all()
-        return records
-
-
-    def get_max_num_posicion(usuario_id, fch_referencia, cod_symbol=None, cod_opcion=None):
- 
-        stmt = db.select(
-            func.max(PosicionModel.num_posicion).label("num_posicion")
-        ).where(
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.fch_transaccion == fch_referencia          
-        )
-
-        if cod_symbol is not None and cod_symbol != "":
-            stmt = stmt.where(PosicionModel.cod_symbol == cod_symbol)
-        
-        if cod_opcion is not None and cod_symbol != "":
-            stmt = stmt.where(PosicionModel.cod_opcion == cod_opcion)        
-
-        result = db.session.execute(stmt)
-        record = result.first()
-        
-        if record is not None:
-            return record.num_posicion
-        else:
-            return None
-
-    
-    def get_pos_abiertas_agrup_x_opcion(usuario_id, cod_opcion=None, cod_subyacente=None, anyo_expiracion=None, mes_expiracion=None
-    , dia_expiracion=None, flg_call=True, flg_put=True):
-        stmt = db.select(                        
-            PosicionModel.cod_opcion,
-            PosicionModel.cod_tipo_activo,
-            func.min(PosicionModel.fch_transaccion).label('fch_primera_posicion'),
-            func.sum(PosicionModel.ctd_saldo_posicion).label("ctd_saldo_posicion"),
-            func.sum(PosicionModel.ctd_saldo_posicion * PosicionModel.imp_accion*100).label("imp_posicion_incial"),
-            func.min(PosicionModel.imp_accion).label('imp_min_accion'),
-            func.max(PosicionModel.imp_accion).label('imp_max_accion'),
-            func.sum(PosicionModel.ctd_saldo_posicion*PosicionModel.imp_accion).label('imp_posicion'),
-            (func.sum(PosicionModel.ctd_saldo_posicion * PosicionModel.imp_accion)/func.sum(PosicionModel.ctd_saldo_posicion)).label("imp_prom_accion")            
+            TransaccionModel.cod_symbol,
+            TransaccionModel.id_instrumento_financiero.label("cod_tipo_activo"),
+            
+            func.min(TransaccionModel.fch_transaccion).label('holding_since'),
+            func.sum(TransaccionModel.imp_unitario * TransaccionSaldoModel.ctd_saldo).label("sum_imp_accion"), # Weighted sum price * quantity
+            
+            func.sum(TransaccionSaldoModel.imp_saldo).label("sum_imp_operacion"), # Remaining invested amount
+            
+            func.sum(TransaccionSaldoModel.ctd_saldo).label("sum_shares_balance"),
+            func.min(TransaccionModel.fch_transaccion).label("min_trade_date"),
+            # Placeholder for option/active specifics if needed. 
+            # Legacy expected 'cod_opcion' for options. 
+            # If type is OPT, cod_symbol is expected to be the option code.
+            TransaccionModel.cod_symbol.label("cod_opcion") 
         ).select_from(
-            PosicionModel
+            TransaccionModel
         ).join(
-            OptionContractModel, and_(
-                PosicionModel.cod_opcion == OptionContractModel.symbol,
-                OptionContractModel.expiration_date >= date.today()
-            )
-        ).filter(
-            PosicionModel.ctd_saldo_posicion != 0,            
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_tipo_activo == TIPO_ACTIVO_OPT
+            TransaccionSaldoModel, TransaccionModel.id_transaccion == TransaccionSaldoModel.id_transaccion
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionSaldoModel.ctd_saldo != 0
         ).group_by(
-            PosicionModel.cod_symbol,
-            PosicionModel.cod_opcion
+            TransaccionModel.cod_symbol,
+            TransaccionModel.id_instrumento_financiero
         )
-
-        if cod_opcion is not None:
-            stmt = stmt.where(
-                PosicionModel.cod_opcion == cod_opcion
-            )
-        if cod_subyacente is not None:
-            stmt = stmt.where(
-                OptionContractModel.underlying == cod_subyacente
-            )
-                
-        if anyo_expiracion is not None:
-            stmt = stmt.where(
-                extract("year", OptionContractModel.expiration_date) == anyo_expiracion
-            )
-        if mes_expiracion is not None:
-            stmt = stmt.where(
-                extract("month", OptionContractModel.expiration_date) == mes_expiracion
-            )
-        if dia_expiracion is not None:
-            stmt = stmt.where(
-                extract("day", OptionContractModel.expiration_date) == dia_expiracion
-            )   
-
-        tipos_opciones = []
-
-        if flg_call == True:
-            tipos_opciones.append("call")             
         
-        if flg_put == True:
-            tipos_opciones.append("put")
-
-        if len(tipos_opciones) > 0:
-            stmt = stmt.where(
-                OptionContractModel.side.in_(tipos_opciones)
-            )
-
-
-
         result = db.session.execute(stmt)
-        records = result.all()
-        return records
+        return result.all()
 
-    def get_pos_abiertas_agrup_x_accion(usuario_id):
-        stmt = db.select(                        
-            PosicionModel.cod_symbol,
-            PosicionModel.cod_tipo_activo,
-            func.min(PosicionModel.fch_transaccion).label('fch_primera_posicion'),
-            func.sum(PosicionModel.ctd_saldo_posicion).label("ctd_saldo_posicion"),
-            func.sum(PosicionModel.ctd_saldo_posicion * PosicionModel.imp_accion).label("imp_posicion_incial"),
-            func.min(PosicionModel.imp_accion).label('imp_min_accion'),
-            func.max(PosicionModel.imp_accion).label('imp_max_accion'),
-            func.sum(PosicionModel.ctd_saldo_posicion*PosicionModel.imp_accion).label('imp_posicion'),
-            (func.sum(PosicionModel.imp_accion)/func.sum(PosicionModel.ctd_saldo_posicion)).label("imp_prom_accion")            
-        ).filter(
-            PosicionModel.ctd_saldo_posicion != 0,            
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.cod_tipo_activo != TIPO_ACTIVO_OPT
-        ).group_by(
-            PosicionModel.cod_symbol,
-            PosicionModel.cod_opcion
-        )
-
-        result = db.session.execute(stmt)
-        records = result.all()
-        return records
-    
-    def get_operaciones(usuario_id):
+    def get_saldos_actuales_por_cuenta(id_cuenta):
         stmt = db.select(
-            PosicionModel
+            TransaccionModel.cod_symbol,
+            StockSymbol.name,
+            TransaccionModel.orden_fifo,
+            TransaccionModel.fch_transaccion,
+            TransaccionModel.imp_unitario,
+            TransaccionModel.id_transaccion,
+            TransaccionSaldoModel.ctd_saldo.label('saldo')
+        ).select_from(
+            TransaccionModel
+        ).join(
+            TransaccionSaldoModel, TransaccionModel.id_transaccion == TransaccionSaldoModel.id_transaccion
+        ).join(
+            StockSymbol, TransaccionModel.cod_symbol == StockSymbol.symbol
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.id_instrumento_financiero != get_instrumento_financiero().OPTION,
+            TransaccionSaldoModel.ctd_saldo != 0
         )
 
-        results = db.session.execute(stmt)
-        return results.scalars().all()
+        result = db.session.execute(stmt)
+        # Convert to list of dicts for DataFrame creation
+        data = [row._asdict() for row in result.all()]
+        
+        if not data:
+            return []
+
+        # 2. Load into Pandas DataFrame
+        df = pd.DataFrame(data)
+
+        df_resumen = df.groupby('cod_symbol').agg(
+            max_orden_fifo=('orden_fifo', 'max'),
+            min_orden_fifo=('orden_fifo', 'min'),
+            cantidad = ('saldo', 'sum'),
+            min_imp_unitario=('imp_unitario', 'min'),
+            max_imp_unitario=('imp_unitario', 'max'),
+            mean_imp_unitario=('imp_unitario', 'mean')
+        ).reset_index()
+        
+        df_resumen = df_resumen.merge(
+            df[['cod_symbol', 'orden_fifo', 'imp_unitario', 'fch_transaccion']],
+            left_on=['cod_symbol', 'min_orden_fifo'],
+            right_on=['cod_symbol', 'orden_fifo'],
+            how='left'
+        ).drop(columns=['orden_fifo'])
+
+        df_resumen = df_resumen.rename(columns={'fch_transaccion': 'fch_primera_posicion', 'imp_unitario':'imp_posicion_incial'})
+
+        records = df_resumen.to_dict('records')
+
+        return records

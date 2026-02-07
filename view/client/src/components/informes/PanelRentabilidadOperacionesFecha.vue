@@ -6,14 +6,14 @@
             </q-card-section>
             <q-separator/>
             <q-card-section class="text-h3 text-center">
-                {{ item.imp_rentabilidad }}
+                <span :class="item.imp_rentabilidad>0?'text-green':'text-red'">{{ item.imp_rentabilidad }}</span>
             </q-card-section>
         </q-card>
         <MessageBox :config="msgbox"/>
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 import {postconfig} from '@/common/request.js';
 
 export default {
@@ -33,7 +33,9 @@ export default {
     methods:{
         get_rentabilidades_x_periodo:function(){
             this.$http.post(
-                '/operacion/OperacionManager/get_rentabilidades_x_periodo',{},
+                '/operacion/OperacionManager/get_rentabilidades_x_periodo',{
+                    id_cuenta:localStorage.getItem("id_cuenta")
+                },
                 postconfig()
             ).then(httpresp => {
                 this.msgbox = {

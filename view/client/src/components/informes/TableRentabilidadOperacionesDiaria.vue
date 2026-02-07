@@ -15,7 +15,7 @@
 </template>
 <script>
 import {postconfig} from '@/common/request.js';
-import MessageBox from '@/components/MessageBox.vue';
+import MessageBox from '../dialogs/MessageBox.vue';
 
 export default {
     name:"TableRentabilidadOperacionesDiaria",
@@ -51,7 +51,9 @@ export default {
     methods:{
         get_rentabilidad_ult30dias:function(){
             this.$http.post(
-                "/operacion/OperacionManager/get_rentabilidad_ult30dias",{},postconfig()
+                "/operacion/OperacionManager/get_rentabilidad_diaria",{
+                    id_cuenta: localStorage.getItem("id_cuenta")
+                },postconfig()
             ).then(httpresp => {
                 this.msgbox = {
                     httpresp: httpresp,

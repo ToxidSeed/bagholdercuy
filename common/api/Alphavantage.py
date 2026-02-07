@@ -1,7 +1,6 @@
 from app import app, db
 import requests
 from datetime import datetime, date
-from config.general import ALPHAVANTAGE_KEY, ALPHAVANTAGE_ENDPOINT
 
 
 class Alphavantage:
@@ -12,9 +11,9 @@ class Alphavantage:
 
     def fx_daily(self, params={}):
         params["function"] = "FX_DAILY"
-        params["apikey"] = ALPHAVANTAGE_KEY
+        params["apikey"] = app.config.get("ALPHAVANTAGE_KEY")
 
-        response = requests.get(ALPHAVANTAGE_ENDPOINT, params=params)
+        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"), params=params)
         data = response.json()
         return data
 
@@ -25,10 +24,10 @@ class Alphavantage:
 
         function = "TIME_SERIES_DAILY"
         params = {
-            "function":function,            
-            "symbol":symbol,
-            "outputsize":outputsize,
-            "apikey":ALPHAVANTAGE_KEY
+            "function": function,
+            "symbol": symbol,
+            "outputsize": outputsize,
+            "apikey": app.config["ALPHAVANTAGE_KEY"]
         }        
 
         response = requests.get(self.default_endpoint, params=params)
@@ -134,7 +133,7 @@ class Alphavantage:
             "symbol":symbol,            
             "apikey":ALPHAVANTAGE_KEY
         }
-        response = requests.get(ALPHAVANTAGE_ENDPOINT,params)
+        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"),params)
         data = response.json()
         series = data["Weekly Adjusted Time Series"]
         return series
@@ -149,7 +148,7 @@ class Alphavantage:
             "apikey":ALPHAVANTAGE_KEY
         }
 
-        response = requests.get(ALPHAVANTAGE_ENDPOINT,params)
+        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"), params)
         data = response.json()
         series = data["Monthly Adjusted Time Series"]
         return series

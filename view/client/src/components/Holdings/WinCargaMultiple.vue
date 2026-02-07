@@ -10,7 +10,8 @@
                     <q-file
                         v-model="fichero"
                         label="Seleccionar fichero"
-                        use-chips                        
+                        use-chips                
+                        color="blue-10"        
                     >                
                         <template v-slot:prepend>
                         <q-icon name="attach_file" />
@@ -28,11 +29,11 @@
                 </q-inner-loading>     
             </q-card>
         </q-dialog>
-        <MessageBox :config="msgbox"/>
+        
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+
 import {get_postconfig} from '@/common/request.js';
 export default {
     name:"WinCargaMultiple",
@@ -42,7 +43,7 @@ export default {
         }
     },
     components:{
-        MessageBox
+        
     },
     watch:{
         open:function(newval){
@@ -69,8 +70,9 @@ export default {
 
             form_data.append("fichero", this.fichero)
             form_data.append("flg_procesar_ordenes", this.flg_procesar_ordenes)
+            form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
             this.$http.post(
-                '/OrdenManager/CargadorMultipleManager/ejecutar',form_data,postconfig
+                '/orden/CargadorMultipleManager/ejecutar',form_data,postconfig
             ).then(httpresp => {
                 this.msgbox = {
                     httpresp:httpresp

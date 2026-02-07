@@ -10,11 +10,11 @@ class SerieSemanalLoader():
         self.semana = None
         self.fch_semana_inicio = None     
 
-    def procesar(self,symbol, anyo = None, semana = None):                
+    def procesar(self, symbol, anyo=None, semana=None):
         self.symbol = symbol
         self.anyo = anyo
         self.semana = semana
-        
+
         if anyo is not None and semana is not None:
             self.fch_semana_inicio = date.fromisocalendar(anyo, semana, 1)
         
@@ -46,18 +46,19 @@ class SerieSemanalLoader():
         serie_cierre = SerieDiariaReader.get_serie(symbol, preserie_semana.close_date)                        
 
         nueva_serie_semanal = SerieSemanalModel(
-            symbol = preserie_semana.symbol,
+            symbol = preserie_semana.cod_symbol,
+            cod_semana=int(f"{preserie_semana.anyo}{str(preserie_semana.semana).zfill(2)}"),
             fch_semana = preserie_semana.fch_semana,
             anyo = preserie_semana.anyo,
             semana = preserie_semana.semana,
             imp_apertura = serie_apertura.imp_apertura,
-            imp_maximo = preserie_semana.high,
-            imp_minimo = preserie_semana.low,
+            imp_maximo = preserie_semana.imp_maximo,
+            imp_minimo = preserie_semana.imp_minimo,
             imp_cierre = serie_cierre.imp_cierre,
-            imp_apertura_ajus = serie_apertura.imp_apertura_ajus,
-            imp_maximo_ajus = preserie_semana.adj_high,
-            imp_minimo_ajus = preserie_semana.adj_low,
-            imp_cierre_ajus = serie_cierre.imp_cierre_ajus
+            imp_apertura_ajus = serie_apertura.imp_apertura,
+            imp_maximo_ajus = preserie_semana.imp_maximo,
+            imp_minimo_ajus = preserie_semana.imp_minimo,
+            imp_cierre_ajus = serie_cierre.imp_cierre
         )
 
         db.session.add(nueva_serie_semanal)

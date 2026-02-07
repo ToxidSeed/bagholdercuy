@@ -13,7 +13,7 @@
 import {postconfig} from '@/common/request.js';
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
-//import MessageBox from '@/components/MessageBox.vue';
+//import MessageBox from '../../dialogs/MessageBox.vue';
 //import {postconfig} from '@/common/request.js';
 
 export default {
@@ -51,12 +51,25 @@ export default {
             series.name = "Rentabilidad";
             series.columns.template.fillOpacity = .8;
 
+            series.columns.template.adapter.add("fill", function(fill, target){
+                console.log(fill)
+                //console.log(target)
+                //console.log(target.dataItem)                
+                if (target.dataItem.values.valueY.value < 0){
+                    return "red"
+                }else{
+                    return "green"                    
+                }
+            })
+
             //
             this.get_rentabilidad_ult30dias()
         },
         get_rentabilidad_ult30dias:function(){
             this.$http.post(
-                "/operacion/OperacionManager/get_rentabilidad_ult30dias",{},postconfig()
+                "/operacion/OperacionManager/get_rentabilidad_diaria",{
+                    id_cuenta: localStorage.getItem("id_cuenta")
+                },postconfig()
             ).then(httpresp => {
                 this.msgbox = {
                     httpresp: httpresp,

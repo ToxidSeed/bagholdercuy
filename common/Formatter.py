@@ -6,7 +6,7 @@ class Formatter:
         self.custom = custom
         self.exclude_fields = []
 
-    def process_list(self,inlist=[]):
+    def process_list(self, inlist=[]):
         outlist = []
         for elem in inlist:
             #outelem = to_dict(elem)
@@ -17,8 +17,11 @@ class Formatter:
     def format(self,indata=None):                
         if type(indata).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
             return self.process_list(inlist=indata)
+        if self.is_namedtuple(indata):
+            return self.process_namedtuple(indata)
         if type(indata).__name__ == "date":    
-            return indata.isoformat()
+            #return indata.isoformat()
+            return indata.strftime("%Y-%m-%d")
         if type(indata).__name__ == "Decimal":
             return float(indata)
         if type(indata).__name__ == "time":
@@ -35,12 +38,32 @@ class Formatter:
         
         return indata
 
+    def is_namedtuple(self, node=None):
+        if isinstance(node, tuple) and hasattr(node, "_fields"):
+            return True
+        else:
+            return False
+
+    def process_namedtuple(self, node):
+        return node._asdict()
+
     def format_dict(self, element=None):
         for key, value in element.items():
             element[key] = self.format(value)
     
         element.update(self.get_custom_formats(element))
         return element
+
+    def format_pandas_dataframe(self, df):
+        lista_index = list(df.index)
+
+        records = df.to_dict(orient="records")
+        for rowindex, elem in enumerate(records, start=0):
+            elem["index"] = lista_index[rowindex]
+
+        return records
+
+
 
     def get_custom_formats(self, element=None):
         custom_fields = {}

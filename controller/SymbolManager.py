@@ -14,12 +14,15 @@ from common.AppException import AppException
 from common.Response import Response
 from common.api.iexcloud import iexcloud
 import common.logger as logger
-
+from sqlalchemy.sql import func
+from sqlalchemy import or_
+from parser.symbol import SymbolFinderParser, SymbolParser
 from processor.symbol import SymbolRemover
-from config.negocio import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from config.constants import TIPO_ACTIVO_EQUITY, TIPO_ACTIVO_ETF, TIPO_ACTIVO_OPT
+from controller.base import Base
 
 
-class SymbolManager:
+class SymbolManager(Base):
     def __init__(self):
         self.symbol = None
 
@@ -37,10 +40,21 @@ class SymbolManager:
             db.session.rollback()
             return Response().from_exception(e)
 
+    def get_symbol_x_codigo(self, args={}):
+        try:
+            reader = SymbolReader()
+            parser = SymbolParser()
+
+            params = parser.parse_args_get_symbol_x_codigo(args=args)
+            result = reader.get(params.get("cod_symbol"))
+            return Response().from_raw_data(result)
+        except Exception as e:
+            return Response().from_exception(e)
+
 
     def __append(self,symbol_obj):
         db.session.add(symbol_obj)
-
+    
     def __update(self, args={}):
         symbol_to_update = SymbolModel.query.filter(
             SymbolModel.id == args["symbol_id"]
@@ -56,7 +70,7 @@ class SymbolManager:
         symbol_to_update.asset_type = args["asset_type"]
 
     def __is_new(self,args={}):
-        if args["symbol_id"] in ["","#","0",None,0]:
+        if args["symbol_id"] in ["", "#", "0", None, 0]:
             return True
         else:
             return False
@@ -97,19 +111,26 @@ class SymbolManager:
         )
         return symbol_obj
 
+
 class SymbolFinder(Base):    
 
+    def get(self, args={}):
+        symbol_finder_parser = SymbolFinderParser()
+        params = symbol_finder_parser.parse_args_get(args=args)
+        record = SymbolReader().get(id_symbol=params.id_symbol)
+        return Response().from_raw_data(record)
+
     def get_list(self, args={}):
-        records = SymbolReader.get_list()
-        return Response().from_raw_data(data)
+        args = SymbolFinderParser.parse_args_get_list(args=args)
+        records = SymbolReader.get_list(args=args)
+        return Response().from_raw_data(records)
 
     def buscar_por_texto(self, args={}):
         
-        texto = "%{0}%".format(args["texto"])
+        texto = "{0}%".format(args["texto"])
         data = SymbolModel.query.filter(
-            SymbolModel.symbol.ilike(texto)
-        ).order_by(
-            SymbolModel.fec_audit.desc(),
+            or_(SymbolModel.symbol.ilike(texto), SymbolModel.name.ilike(texto))            
+        ).order_by(            
             SymbolModel.symbol.asc()
         ).limit(100).all()
         return Response().from_raw_data(data)

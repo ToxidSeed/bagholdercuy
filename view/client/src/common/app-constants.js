@@ -1,0 +1,9 @@
+export const TIPO_VARIACION_TITULO = {
+    COD_IMPORTE: 1,
+    COD_PORCENTAJE: 2
+}
+
+export const TIPO_VARIACION_EJERCICIO = {
+    COD_FIJO: 1,
+    COD_VARIACION_SUBYACENTE: 2
+}

@@ -1,5 +1,6 @@
 <template>
     <div>        
+        <q-separator/>
         <q-table
             title="Opciones"
             :data="data"
@@ -9,27 +10,29 @@
             separator="vertical"
             dense            
             :pagination="pagination"
+            flat
         >        
             <template v-slot:top>
                 <q-toolbar  class="text-blue-10">
-                    <q-btn flat round dense icon="menu"></q-btn>
+                    <!--<q-btn flat round dense icon="menu"></q-btn>-->
                     <q-toolbar-title>Opciones</q-toolbar-title>
                     <q-btn  flat dense icon="filter_alt" outline class="text-capitalize" @click="WinFiltrosPosicionOpciones.open = true">Filtros</q-btn>
                 </q-toolbar>
                 <!--<div class="text-h6">Opciones</div>-->
             </template>
         </q-table>
-        <MessageBox :config="msgbox"/>
+        <q-separator/>
+        
         <WinFiltrosPosicionOpciones v-model="WinFiltrosPosicionOpciones.open"
         v-on:filtrar-posiciones-opcion="filtrar"
         />
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue';
+
 import WinFiltrosPosicionOpciones from '@/components/Holdings/WinFiltrosPosicionOpciones.vue';
 import {postconfig} from '@/common/request.js';
-import date from 'date-and-time'
+//import date from 'date-and-time'
 
 export default {
     name:"TablePosicionesOpcion",
@@ -40,7 +43,7 @@ export default {
         }
     },
     components:{
-        MessageBox,
+
         WinFiltrosPosicionOpciones
     },    
     data: () => {
@@ -51,10 +54,10 @@ export default {
             },
             columns:[
                 {                    
-                    label:"Opcion",
+                    label:"Contrato",
                     align:"left",
-                    field:"cod_opcion",
-                    name:"cod_opcion",
+                    field:"symbol",
+                    name:"symbol",
                     style:"width:100px;"      
                 },{                    
                     label:"Subyacente",
@@ -80,15 +83,15 @@ export default {
                     align:"right",
                     field:"imp_ejercicio",
                     name:"imp_ejercicio",                    
-                    style:"width:20px;"     ,
+                    style:"width:20px;"     /*,
                     classes: row => (
                         (row.cod_tipo_opcion == 'C' && row.ctd_saldo_posicion >= 0 && row.imp_valor_subyacente >= row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'C' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente < row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion >= 0 && row.imp_valor_subyacente < row.imp_ejercicio) || 
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente > row.imp_ejercicio)
                         ?'bg-green text-white':'bg-red text-white'
-                    ) 
-                },{
+                    ) */
+                }/*,{
                     label:"Rentable en ejercicio",
                     align:"right",
                     field:"imp_rentable",
@@ -102,7 +105,7 @@ export default {
                         (row.cod_tipo_opcion == 'P' && row.ctd_saldo_posicion < 0 && row.imp_valor_subyacente > row.imp_rentable)
                         ?'bg-green text-white':'bg-red text-white'
                     ) 
-                },{
+                }*/,{
                     label:"En cartera desde",
                     align:"right",
                     field:"fch_primera_posicion",
@@ -111,8 +114,8 @@ export default {
                 },{
                     label:"Cantidad",
                     align:"right",
-                    field:"ctd_saldo_posicion",
-                    name:"ctd_saldo_posicion",
+                    field:"cantidad",
+                    name:"cantidad",
                     style:"width:60px;"      
                 },{
                     label:"imp. valor inicial posicion",
@@ -124,29 +127,29 @@ export default {
                 },{
                     label:"Imp. valor minimo",
                     align:"right",
-                    field:"imp_min_accion",
-                    name:"imp_min_accion",
+                    field:"imp_minimo",
+                    name:"imp_minimo",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor promedio",
                     align:"right",
-                    field:"imp_prom_accion",
-                    name:"imp_prom_accion",
+                    field:"imp_promedio",
+                    name:"imp_promedio",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor maximo",
                     align:"right",
-                    field:"imp_max_accion",
-                    name:"imp_max_accion",
+                    field:"imp_maximo",
+                    name:"imp_maximo",
                     style:"width:100px;"      
-                },{
+                }/*,{
                     label:"Valor subyacente",
                     align:"right",
                     field:"imp_valor_subyacente",
                     name:"imp_valor_subyacente",       
                     headerStyle:"white-space:normal !important;",             
                     style:"width:50px;"                          
-                },{
+                }*/,{
                     label:"",
                     align:"left",
                     field:"",
@@ -193,14 +196,8 @@ export default {
         },
         get_posiciones_opcion:function(){            
             this.$http.post(
-                '/holdings/PosicionOpcionReporter/get_posiciones_opcion',{
-                    cod_subyacente: this.filtros.cod_subyacente,
-                    cod_opcion: this.filtros.cod_opcion,
-                    anyo_expiracion: this.filtros.anyo_expiracion,
-                    mes_expiracion: this.filtros.mes_expiracion,
-                    dia_expiracion: this.filtros.dia_expiracion,
-                    flg_call: this.filtros.flg_call,
-                    flg_put: this.filtros.flg_put
+                '/posicion/PosicionController/get_posiciones_contratos_opciones',{
+                    id_cuenta:localStorage.getItem("id_cuenta")
                 },
                 postconfig()
             ).then(httpresp => {
@@ -211,29 +208,35 @@ export default {
                 let appdata = httpresp.data
                 this.data = []
 
-                for (let elem of appdata.data){                    
+                for (let elem of appdata.data){    
+                    elem.imp_minimo = elem.imp_minimo.toFixed(2)                
+                    elem.imp_maximo = elem.imp_maximo.toFixed(2)
+                    elem.imp_promedio = elem.imp_promedio.toFixed(2)
+                    /*
                     this.cotizacion[elem.cod_subyacente] = null                    
                     let row = Object.assign({}, elem);
-                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYYMMDD","DD/MM/YYYY")
+                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
                     row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
                     row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
                     row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
                     row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
                     row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
                     row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
-                    row["imp_valor_subyacente"] = 0                    
-                    row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
-                    row["imp_ganancia_perdida"] = elem["imp_ganancia_perdida"].toFixed(2)         
+                    row["imp_valor_subyacente"] = 0
+                    */
+
+                    /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
+                    row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
                     if (elem.cod_tipo_opcion == "C"){
                         row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
                     }else{
                         row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }
+                    }*/
                     
-                    this.data.push(row) 
+                    this.data.push(elem) 
                 }
                     
-                this.iniciar_intervalo_cotizaciones()
+                //this.iniciar_intervalo_cotizaciones()
             })
         },
         iniciar_intervalo_cotizaciones: function(){            

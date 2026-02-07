@@ -27,7 +27,7 @@
     </div>
 </template>
 <script>
-import MessageBox from '@/components/MessageBox.vue'
+import MessageBox from '../dialogs/MessageBox.vue'
 import HelperFechasOrden from '@/components/helpers/HelperFechasOrden.vue'
 
 import date from 'date-and-time'

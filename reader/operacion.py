@@ -1,145 +1,222 @@
-from app import db
-import sqlalchemy.sql.functions as func
-from sqlalchemy.sql import extract
-from sqlalchemy import and_
+from model.operacion import OperacionModel
+from model.StockSymbol import StockSymbol as StockSymbolModel
+from model.OptionContract import OptionContractModel
 
-from model.posicion import PosicionModel
-from model.calendariodiario import CalendarioDiarioModel
-from reader.calendariosemanal import CalendarioSemanalReader
+from app import db
+from sqlalchemy.sql.functions import func
 
 class OperacionReader:
 
-    """def get_max_num_operacion(usuario_id, symbol, fch_referencia):
-        num_operacion = None
-
-        result = db.session.query(
-            func.max(StockTrade.num_operacion).label("num_operacion")
-        ).\
-        filter(
-            StockTrade.usuario_id == usuario_id,
-            StockTrade.trade_date == fch_referencia,
-            StockTrade.symbol == symbol
-        ).first()           
-
-        if result is None:
-            num_operacion = result.num_operacion 
-
-        return num_operacion"""
-
-    def get_rentabilidad_diaria(usuario_id, fch_desde=None, fch_hasta=None):
-
-        query = db.session.query(   
-            PosicionModel.usuario_id,
-            CalendarioDiarioModel.fch_dia.label("fch_transaccion"),
-            func.sum(PosicionModel.imp_gp_realizada).label("imp_rentabilidad")
-        ).select_from(
-            CalendarioDiarioModel
-        ).outerjoin(
-            PosicionModel, and_(
-                CalendarioDiarioModel.fch_dia == PosicionModel.fch_transaccion,
-                PosicionModel.usuario_id == usuario_id
-                )            
-        ).where(            
-            CalendarioDiarioModel.fch_dia >= fch_desde
-        ).group_by(
-            PosicionModel.usuario_id,
-            CalendarioDiarioModel.fch_dia
-        ).order_by(
-            CalendarioDiarioModel.fch_dia.desc()
+    def get_max_num_orden(id_cuenta, fch_operacion, id_symbol, id_contrato_opcion=None):
+        query = db.select(
+            func.max(OperacionModel.num_orden_operacion).label('num_orden_operacion')
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion
         )
 
-        if fch_hasta is not None:
-            query = query.where( 
-                CalendarioDiarioModel.fch_dia <= fch_hasta
+        result = db.session.execute(query)
+        record = result.first()
+
+        if record is None:
+            return 0
+        
+        if record.num_orden_operacion is None:
+            return 0
+        
+        return record.num_orden_operacion
+
+    @staticmethod
+    def get(id_operacion):
+        query = db.select(
+            OperacionModel
+        ).where(
+            OperacionModel.id_operacion == id_operacion
+        )
+
+        result = db.session.execute(query)
+        record = result.scalars().first()
+        return record
+        
+    def get_operacion_key_2(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, num_operacion):
+        query = db.select(
+            OperacionModel
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion,
+            OperacionModel.num_orden_operacion == num_operacion
+        )
+
+        result = db.session.execute(query)
+        return result.scalars().first()
+    
+    def get_ultima_operacion_x_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion):
+        max_num_operacion = self.get_max_num_operacion(id_cuenta, id_symbol, id_contrato_opcion, fch_operacion)
+        operacion = self.get_operacion_key_2(id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, max_num_operacion)
+        return operacion
+    
+    def get_ultima_operacion_hasta_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, incluir_fecha=True):
+        query = db.select(
+            func.max(OperacionModel.fch_operacion).label("fch_operacion"),
+            func.max(OperacionModel.num_operacion).label("num_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion
+        )
+
+        if incluir_fecha is True:
+            query = query.where(
+                OperacionModel.fch_operacion <= fch_operacion
+            )
+        else:
+            query = query.where(
+                OperacionModel.fch_operacion < fch_operacion
             )
 
-        result = db.session.execute(query)                
+        result = db.session.execute(query)
+        record_aux = result.first()
+        if record_aux is None:
+            return None
 
+        operacion = self.get_operacion_key_2(id_cuenta, id_symbol, id_contrato_opcion, record_aux.fch_operacion, record_aux.num_operacion)
+        return operacion    
+    
+    def get_max_num_operacion(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion):
+        query = db.select(
+            func.max(OperacionModel.num_operacion).label("max_num_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion == fch_operacion,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion,
+        )
+
+        result = db.session.execute(query)                
+        record = result.scalars().first()
+        if record is None:
+            return None
+        
+        if record.max_num_operacion is None:
+            return None
+        
+        return record.max_num_operacion
+
+    def get_ultima_fecha_operacion(id_cuenta, id_symbol, id_contrato_opcion):
+        query = db.select(
+            func.max(OperacionModel.fch_operacion).label("fch_operacion")
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion
+        )
+
+        result = db.session.execute(query)
+        record = result.first()
+
+        if record is None:
+            return None
+        
+        if record.fch_operacion is None:
+            return None
+        
+        return record.fch_operacion
+
+    def get_operaciones(id_cuenta, id_symbol=None, flg_opciones=False, id_contrato_opcion=None, orden_resultados="asc"):
+
+        query = db.select(
+            OperacionModel.id_operacion,
+            OperacionModel.id_cuenta,
+            OperacionModel.fch_operacion,
+            OperacionModel.num_orden,
+            OperacionModel.id_tipo_operacion,
+            OperacionModel.id_symbol,
+            OperacionModel.id_contrato_opcion,
+            OperacionModel.cantidad,
+            OperacionModel.ctd_posicion,
+            OperacionModel.dsc_glosa_operacion,
+            OperacionModel.fch_registro,
+            StockSymbolModel.symbol.label("cod_symbol"),
+            OptionContractModel.symbol.label("cod_contrato_opcion")
+        ).select_from(
+            OperacionModel
+        ).join(
+            StockSymbolModel, OperacionModel.id_symbol == StockSymbolModel.id
+        ).outerjoin(
+            OptionContractModel, OperacionModel.id_contrato_opcion == OptionContractModel.id
+        ).where(
+            OperacionModel.id_cuenta == id_cuenta
+        )
+
+        if id_symbol is not None:
+            query = query.where(
+                OperacionModel.id_symbol == id_symbol
+            )
+
+        if flg_opciones is False:
+            query = query.where(
+                OperacionModel.id_contrato_opcion == None
+            )
+
+        if flg_opciones is True and id_contrato_opcion is not None:
+            query = query.where(
+                OperacionModel.id_contrato_opcion == id_contrato_opcion
+            )                  
+
+        if orden_resultados == "asc":
+            query = query.order_by(
+                OperacionModel.id_cuenta,
+                OperacionModel.fch_operacion.asc(),
+                OperacionModel.num_orden.asc()
+            )
+        if orden_resultados == "desc":
+            query = query.order_by(
+                OperacionModel.id_cuenta,
+                OperacionModel.fch_operacion.desc(),
+                OperacionModel.num_orden.desc()
+            )
+        
+        result = db.session.execute(query)
         records = result.all()
         return records
 
-    def get_rentabilidad_x_semana(usuario_id, fch_ini_semana, fch_fin_semana):
-        stmt = db.select(
-            func.sum(PosicionModel.imp_gp_realizada).label("imp_rentabilidad")
+    def get_operaciones_x_posicion_desde_fecha(self, id_cuenta, id_symbol, id_contrato_opcion, fch_operacion, incluir_fecha=True):
+        query = db.select(
+            OperacionModel
         ).where(
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.fch_transaccion >= fch_ini_semana,
-            PosicionModel.fch_transaccion <= fch_fin_semana
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.id_symbol == id_symbol,
+            OperacionModel.id_contrato_opcion == id_contrato_opcion            
         )
 
-        result = db.session.execute(stmt)
-        imp_rentabilidad = result.scalars().first()
+        if incluir_fecha is True:
+            query = query.where(
+                OperacionModel.fch_operacion >= fch_operacion
+            )
+        else:
+            query = query.where(
+                OperacionModel.fch_operacion > fch_operacion
+            )
+        
+        result = db.session.execute(query)
+        return result.scalars().all()
 
-        anyo, semana, dia = fch_fin_semana.isocalendar()
-
-        return (anyo, semana, imp_rentabilidad)
-
-    def get_rentabilidad_x_mes(usuario_id, anyo, mes):
-        stmt = db.select(
-            func.sum(PosicionModel.imp_gp_realizada).label("imp_rentabilidad")
+    def get_siguiente_fch_operacion(self, id_cuenta, fch_operacion):
+        query = db.select(
+            OperacionModel.id_cuenta,
+            func.min(OperacionModel.fch_operacion).label("fch_operacion")
         ).where(
-            PosicionModel.usuario_id == usuario_id,
-            extract("year",PosicionModel.fch_transaccion) == anyo,
-            extract("month",PosicionModel.fch_transaccion) == mes
-        )
-
-        result = db.session.execute(stmt)
-        return (anyo, mes, result.scalars().first())
-
-    def get_rentabilidad_x_anyo(usuario_id, anyo):
-        stmt = db.select(
-            func.sum(PosicionModel.imp_gp_realizada).label("imp_rentabilidad")
-        ).where(
-            PosicionModel.usuario_id == usuario_id,
-            extract("year", PosicionModel.fch_transaccion) == anyo
-        )
-
-        result = db.session.execute(stmt)
-        return (anyo, result.scalars().first())
-
-    def get_rentabilidad_ultdia(usuario_id=1):
-
-        fch_ult_transaccion = OperacionReader.get_ultdia_transaccion(usuario_id=usuario_id)
-
-        stmt = db.select(
-            PosicionModel.fch_transaccion,
-            func.sum(PosicionModel.imp_gp_realizada).label("imp_rentabilidad")
-        ).where(
-            PosicionModel.usuario_id == usuario_id,
-            PosicionModel.fch_transaccion == fch_ult_transaccion
+            OperacionModel.id_cuenta == id_cuenta,
+            OperacionModel.fch_operacion > fch_operacion
         ).group_by(
-            PosicionModel.fch_transaccion
+            OperacionModel.id_cuenta,
+            OperacionModel.fch_operacion
         )
 
-        result = db.session.execute(stmt)
-        return result.first()
-
-    def get_rentabilidad_ultsemana(usuario_id):
-
-        fch_ult_transaccion = OperacionReader.get_ultdia_transaccion(usuario_id=usuario_id)
-        semana = CalendarioSemanalReader.get_semana_x_fecha(fch_referencia=fch_ult_transaccion)
-        return OperacionReader.get_rentabilidad_x_semana(usuario_id=usuario_id, fch_ini_semana=semana.fch_lunes, fch_fin_semana=semana.fch_viernes)
-
-    def get_rentabilidad_ultmes(usuario_id):
-        fch_ult_transaccion = OperacionReader.get_ultdia_transaccion(usuario_id=usuario_id)
-        anyo_ult_transaccion = fch_ult_transaccion.year
-        mes_ult_transaccion = fch_ult_transaccion.month
-        return OperacionReader.get_rentabilidad_x_mes(usuario_id=usuario_id, anyo=anyo_ult_transaccion, mes=mes_ult_transaccion)
-
-    def get_rentabilidad_ultanyo(usuario_id):
-        fch_ult_transaccion = OperacionReader.get_ultdia_transaccion(usuario_id=usuario_id)
-        anyo_ult_transaccion = fch_ult_transaccion.year
-        return OperacionReader.get_rentabilidad_x_anyo(usuario_id=usuario_id, anyo=anyo_ult_transaccion)        
-
-    def get_ultdia_transaccion(usuario_id):
-
-        stmt = db.session.query(
-            func.max(PosicionModel.fch_transaccion).label("fch_transaccion")
-        ).where(
-            PosicionModel.usuario_id == usuario_id
-        )
-
-        result = db.session.execute(stmt)
-        return result.scalars().first()
-
-
+        result = db.session.execute(query)
+        record = result.first()
+        return record

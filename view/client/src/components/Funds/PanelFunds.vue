@@ -6,10 +6,12 @@
             style="height:100hr"
             >            
                 <template v-slot:before>
+                    <q-separator/>
                     <router-view                     
                     v-on:procesar-fin="procesar_fin_handler"
                     v-on:fch_transaccion-change="actualizar_tabla_fondos"
                     ></router-view>
+                    <q-separator/>
                 </template>
                 <template v-slot:after >
                     <!--<div>
@@ -19,7 +21,9 @@
                         <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Recalcular" :to="{name:'funds-recalcular'}"/>
                         <q-btn no-caps class="q-ml-xs q-mb-xs" color="blue-10" label="Reorganizar" :to="{name:'funds-reorganizar'}"/>                        
                     </div>-->
+                    <q-separator/>
                     <TableTransaccionesFondosFecha ref="TableTransaccionesFondosFecha" v-bind:in_filter="filter" v-bind:init="true"/>
+                    <q-separator/>
                 </template>
             </q-splitter>        
     </div>
