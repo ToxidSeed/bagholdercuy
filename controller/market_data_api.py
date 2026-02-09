@@ -11,14 +11,12 @@ from datetime import date, datetime
 from app import app, db
 from model.StockData import StockData
 from model.StockSymbol import StockSymbol
-#from common.api.MarketAPI import MarketAPI
-from common.api.Quote import Quote
 from common.Response import Response
-import common.converter as converter
-import common.Markets as Markets
 from datetime import datetime, date
+from api.marketdata import MarketDataAPI
+from controller.base import Base
 
-class DataManager:
+class MarketDataApiController(Base):
 
     ASSET_TYPE_STOCK = "Stock"
     ASSET_TYPE_ETF = "ETF"
@@ -28,6 +26,30 @@ class DataManager:
         self.status = StatusMessage()        
         pass
 
+    def get_stock_prices(self, args={}):
+        cod_symbol_list = args.get("cod_symbol_list", [])
+        results = MarketDataAPI.stock_prices(cod_symbol_list)
+
+        if results and results.get("s") == "ok":
+            results = {
+                symbol: {
+                    "symbol": symbol,
+                    "mid": mid,
+                    "change": change,
+                    "changepct": changepct,
+                    "updated": updated
+                }
+                for symbol, mid, change, changepct, updated in zip(
+                    results.get("symbol", []),
+                    results.get("mid", []),
+                    results.get("change", []),
+                    results.get("changepct", []),
+                    results.get("updated", [])
+                )
+            }
+
+        return Response().from_raw_data(results)
+    
     def get_last_quote(self, symbol=""):
         if symbol=="":
             self.status.error(msg="No se puede obtener el último precio porque no se ha indicado ningún símbolo")

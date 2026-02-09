@@ -187,7 +187,7 @@ export default {
         }
     },
     mounted:function(){
-        this.get_posiciones_opcion()
+        //this.get_posiciones_opcion()
     },
     methods:{     
         filtrar:function(filtros){
@@ -208,32 +208,34 @@ export default {
                 let appdata = httpresp.data
                 this.data = []
 
-                for (let elem of appdata.data){    
-                    elem.imp_minimo = elem.imp_minimo.toFixed(2)                
-                    elem.imp_maximo = elem.imp_maximo.toFixed(2)
-                    elem.imp_promedio = elem.imp_promedio.toFixed(2)
-                    /*
-                    this.cotizacion[elem.cod_subyacente] = null                    
-                    let row = Object.assign({}, elem);
-                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
-                    row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
-                    row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
-                    row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
-                    row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
-                    row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
-                    row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
-                    row["imp_valor_subyacente"] = 0
-                    */
-
-                    /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
-                    row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
-                    if (elem.cod_tipo_opcion == "C"){
-                        row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }else{
-                        row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }*/
-                    
-                    this.data.push(elem) 
+                if (appdata.data) {
+                    for (let elem of appdata.data){    
+                        elem.imp_minimo = elem.imp_minimo.toFixed(2)                
+                        elem.imp_maximo = elem.imp_maximo.toFixed(2)
+                        elem.imp_promedio = elem.imp_promedio.toFixed(2)
+                        /*
+                        this.cotizacion[elem.cod_subyacente] = null                    
+                        let row = Object.assign({}, elem);
+                        row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
+                        row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
+                        row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
+                        row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
+                        row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
+                        row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
+                        row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
+                        row["imp_valor_subyacente"] = 0
+                        */
+    
+                        /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
+                        row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
+                        if (elem.cod_tipo_opcion == "C"){
+                            row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
+                        }else{
+                            row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
+                        }*/
+                        
+                        this.data.push(elem) 
+                    }
                 }
                     
                 //this.iniciar_intervalo_cotizaciones()

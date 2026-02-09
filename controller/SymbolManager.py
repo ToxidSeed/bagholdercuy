@@ -12,7 +12,7 @@ from reader.symbol import SymbolReader
 
 from common.AppException import AppException
 from common.Response import Response
-from common.api.iexcloud import iexcloud
+
 import common.logger as logger
 from sqlalchemy.sql import func
 from sqlalchemy import or_

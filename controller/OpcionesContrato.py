@@ -7,7 +7,6 @@ from model.StockSymbol import StockSymbol
 import common.converter as converter
 from common.AppException import AppException
 from common.Response import Response
-from common.api.iexcloud import iexcloud
 from common.api.marketdata import MarketData
 from reader.contratoopcion import ContratoOpcionReader
 from parser.opcionescontrato import OpcionesContratoParser, SymbolLoaderParser
