@@ -1,12 +1,12 @@
 from app import db
 from model.transaccion import TransaccionModel
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 from model.calendariodiario import CalendarioDiarioModel
 from model.StockSymbol import StockSymbol as StockSymbolModel
 
 from reader.calendariosemanal import CalendarioSemanalReader
 
-import sqlalchemy.sql.functions as func
+from sqlalchemy import func
 from sqlalchemy.sql import extract
 from sqlalchemy.orm import join
 from sqlalchemy import and_
@@ -16,7 +16,50 @@ from config.constants import TIPO_ACTIVO_OPT
 
 class TransaccionReader:
 
-    def get_transacciones_con_saldo(usuario_id, cod_symbol=None, cod_opcion=None):        
+    def get_fechas_con_transacciones(id_cuenta, cod_symbol, fch_ini=None, fch_fin=None):
+        stmt = db.select(
+            TransaccionModel.fch_transaccion,
+            TransaccionModel.cod_symbol,
+            func.year(TransaccionModel.fch_transaccion).label("anyo"),
+            func.month(TransaccionModel.fch_transaccion).label("mes"),
+            func.count(TransaccionModel.id_transaccion).label("num_transacciones")
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.cod_symbol == cod_symbol
+        )
+
+        if fch_ini is not None:
+            stmt = stmt.where(TransaccionModel.fch_transaccion >= fch_ini)
+        
+        if fch_fin is not None:
+            stmt = stmt.where(TransaccionModel.fch_transaccion <= fch_fin)
+
+
+        stmt = stmt.group_by(TransaccionModel.cod_symbol, TransaccionModel.fch_transaccion)
+
+        result = db.session.execute(stmt)       
+
+        records = result.all()
+        return records
+
+
+    def get_transacciones_x_fecha(id_cuenta, cod_symbol, fch_transaccion):
+        stmt = db.select(
+            TransaccionModel
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.cod_symbol == cod_symbol,
+            TransaccionModel.fch_transaccion == fch_transaccion
+        ).order_by(
+            TransaccionModel.orden_fifo.asc()
+        )
+
+        result = db.session.execute(stmt)       
+
+        records = result.scalars().all()
+        return records
+
+    def get_transacciones_con_saldo(usuario_id, cod_symbol=None, cod_opcion=None):
 
         stmt = db.select(
             TransaccionModel
@@ -47,6 +90,22 @@ class TransaccionReader:
         ).order_by(
             TransaccionModel.fch_transaccion.asc(),
             TransaccionModel.num_orden_transaccion.asc()
+        )
+
+        result = db.session.execute(stmt)       
+
+        records = result.scalars().all()
+        return records
+
+    def get_transacciones_x_symbol(id_cuenta, cod_symbol):
+        stmt = db.select(
+            TransaccionModel
+        ).where(
+            TransaccionModel.id_cuenta == id_cuenta,
+            TransaccionModel.cod_symbol == cod_symbol
+        ).order_by(
+            TransaccionModel.fch_transaccion.asc(),
+            TransaccionModel.orden_fifo.asc()
         )
 
         result = db.session.execute(stmt)       
@@ -340,7 +399,7 @@ class TransaccionReader:
             TransaccionModel.id_cuenta,
             TransaccionModel.id_symbol,
             TransaccionModel.id_contrato_opcion,
-            OptionContractModel.symbol,
+            ContratoOpcionModel.cod_symbol,
             func.min(TransaccionModel.fch_transaccion).label('fch_primera_posicion'),
             func.sum(TransaccionModel.ctd_saldo_transaccion).label("ctd_saldo_posicion"),
             func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion*100).label("imp_posicion_incial"),
@@ -351,8 +410,8 @@ class TransaccionReader:
         ).select_from(
             TransaccionModel
         ).join(
-            OptionContractModel, and_(
-                TransaccionModel.id_contrato_opcion == OptionContractModel.id
+            ContratoOpcionModel, and_(
+                TransaccionModel.id_contrato_opcion == ContratoOpcionModel.id_contrato_opcion
             )
         ).filter(
             TransaccionModel.ctd_saldo_transaccion != 0,            
@@ -362,7 +421,7 @@ class TransaccionReader:
             TransaccionModel.id_cuenta,
             TransaccionModel.id_symbol,
             TransaccionModel.id_contrato_opcion,
-            OptionContractModel.symbol
+            ContratoOpcionModel.cod_symbol
         )
 
         result = db.session.execute(stmt)

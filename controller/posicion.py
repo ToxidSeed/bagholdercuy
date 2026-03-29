@@ -20,7 +20,7 @@ class PosicionController(Base):
     def get_posiciones_contratos_opciones(self, args={}):
         args = PosicionParser.parse_args_get_posiciones_contratos_opciones(args=args)
         id_cuenta = args.get("id_cuenta")
-        records = PosicionReader.get_pos_abiertas_agrup_x_contrato_opcion(id_cuenta=id_cuenta)
+        records = PosicionReader.get_saldos_opciones_por_cuenta(id_cuenta=id_cuenta)
 
 
         records_output = []

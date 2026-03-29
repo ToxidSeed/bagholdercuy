@@ -9,8 +9,7 @@
         <q-toolbar class="q-pa-none">
             <q-btn class="text-capitalize" flat dense color="blue-10" icon="publish" @click="WinCargaMultiple.open=true">Carga operaciones compra/venta</q-btn>
             <q-btn class="text-capitalize" flat dense color="blue-10" icon="move_down" @click="WinFiltrarOperaciones.open=true">Carga de transferencias</q-btn>
-        </q-toolbar>
-        
+        </q-toolbar>        
         <TableListaOperaciones
             v-on:ins_row="ins_row_handler"
         />

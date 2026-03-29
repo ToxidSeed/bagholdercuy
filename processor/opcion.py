@@ -1,4 +1,4 @@
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 from reader.contratoopcion import ContratoOpcionReader
 from reader.symbol import SymbolReader
 
@@ -12,8 +12,8 @@ from app import app
 from common.AppException import AppException
 
 class OpcionProcessor:
-    def guardar(self, opcion:OptionContractModel):
-        self.__validar_symbol(opcion.symbol)
+    def guardar(self, opcion:ContratoOpcionModel):
+        self.__validar_symbol(opcion.cod_symbol)
         db.session.add(opcion)
 
     def __validar_symbol(self, cod_symbol):
@@ -54,20 +54,20 @@ class OpcionLoader:
 
     def __crear_opcion(self, record):
         cod_opcion_in = record[0]
-        opcion = OptionContractModel()
-        opcion.currency = self.cod_moneda
-        opcion.contract_size = self.ctd_multiplicador           
+        opcion = ContratoOpcionModel()
+        opcion.cod_moneda = self.cod_moneda
+        opcion.tam_contrato = self.ctd_multiplicador           
                 
         cod_opcion, cod_subyacente, fch_exp, sentido, imp_ejercicio = self.__descomponer_cod_opcion(cod_opcion_in)        
         
-        opcion.underlying = cod_subyacente
-        opcion.expiration_date = fch_exp
-        opcion.strike = imp_ejercicio
-        opcion.side = sentido
-        opcion.symbol = cod_opcion
+        opcion.cod_symbol_subyacente = cod_subyacente
+        opcion.fch_vencimiento = fch_exp
+        opcion.imp_strike = imp_ejercicio
+        opcion.tipo_opcion = sentido.upper()
+        opcion.cod_symbol = cod_opcion
         opcion.fch_audit = datetime.now()
-        opcion.moneda_id = self.cod_moneda
-        opcion.register_date = datetime.now().date()
+        opcion.cod_moneda = self.cod_moneda
+        opcion.fch_registro = datetime.now()
 
         db.session.add(opcion)        
 

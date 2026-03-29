@@ -14,6 +14,7 @@ class TransaccionModel(db.Model):
     id_transaccion_origen = db.Column(BinaryUUID, nullable=True)
     
     id_cuenta = db.Column(db.Integer, nullable=False)
+    id_contrato_opcion = db.Column(db.Integer, nullable=True)
     cod_symbol = db.Column(db.String(25), nullable=False)
     
     id_instrumento_financiero = db.Column(db.Integer, nullable=True)

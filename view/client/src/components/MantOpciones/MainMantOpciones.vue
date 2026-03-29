@@ -9,6 +9,11 @@
                                 <div>Carga desde <span class="text-blue-10 text-bold">iexcloud</span></div>
                             </q-item-section>                            
                         </q-item>
+                        <q-item clickable v-close-popup @click="WinMarketDataOpcionesLoader.open=true">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga desde <span class="text-blue-10 text-bold">marketdata</span></div>
+                            </q-item-section>                            
+                        </q-item>
                         <q-item clickable v-close-popup :to="{name:'opciones-loader-fichero'}">
                             <q-item-section class="text-subtitle1">
                                 <div>Carga desde <span class="text-blue-10 text-bold">archivo .csv</span></div>                                 
@@ -50,12 +55,18 @@
             v-model="WinFiltrarOpciones.open"        
             v-on:btn-aceptar-click="filtrar_lista_opciones"
         />
+        <WinMarketDataOpcionesLoader 
+            v-model="WinMarketDataOpcionesLoader.open"        
+            v-on:btn-aceptar-click="filtrar_lista_opciones"
+        />
     </div>
 </template>
 <script>
 //import PanelMantOpciones from "@/components/MantOpciones/PanelMantOpciones.vue"
 import TableListOpciones from "@/components/MantOpciones/TableListOpciones.vue"
 import WinFiltrarOpciones from "@/components/MantOpciones/WinFiltrarOpciones.vue"
+import WinMarketDataOpcionesLoader from "@/components/MantOpciones/WinMarketDataOpcionesLoader.vue"
+
 export default {
     name:"MainMantOpciones",
 
@@ -68,11 +79,15 @@ export default {
     components:{
         //PanelMantOpciones,
         TableListOpciones,
-        WinFiltrarOpciones
+        WinFiltrarOpciones,
+        WinMarketDataOpcionesLoader
     },
     data: () => {
         return {
             WinFiltrarOpciones:{
+                open:false
+            },
+            WinMarketDataOpcionesLoader:{
                 open:false
             },
             TableListOpciones:{

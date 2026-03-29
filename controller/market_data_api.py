@@ -1,7 +1,7 @@
 from tokenize import Ignore
 from common.Error import Error
 from common.StatusMessage import StatusMessage
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 from os import error, stat
 from re import S
 import requests, json, csv
@@ -323,32 +323,32 @@ class Symbol:
         #strike = args["strike"]
 
         calls_query = db.session.query(
-            OptionContractModel
+            ContratoOpcionModel
         ).filter(
-            OptionContractModel.side == 'call',
-            OptionContractModel.expiration_date >= date.today().isoformat(),
-            OptionContractModel.underlying == symbol
-        ).order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
+            ContratoOpcionModel.tipo_opcion == 'CALL',
+            ContratoOpcionModel.fch_vencimiento >= date.today().isoformat(),
+            ContratoOpcionModel.cod_symbol_subyacente == symbol
+        ).order_by(ContratoOpcionModel.fch_vencimiento, ContratoOpcionModel.imp_strike)
 
         if expiration_date != "":
-            calls_query = calls_query.filter(OptionContractModel.expiration_date == expiration_date)
+            calls_query = calls_query.filter(ContratoOpcionModel.fch_vencimiento == expiration_date)
         if strike != "":
-            calls_query = calls_query.filter(OptionContractModel.strike == strike)
+            calls_query = calls_query.filter(ContratoOpcionModel.imp_strike == strike)
 
         calls = calls_query.all()
 
         puts_query = db.session.query(
-            OptionContractModel
+            ContratoOpcionModel
         ).filter(
-            OptionContractModel.side == 'put',
-            OptionContractModel.expiration_date >= date.today().isoformat(),
-            OptionContractModel.underlying == symbol
-        ).order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
+            ContratoOpcionModel.tipo_opcion == 'PUT',
+            ContratoOpcionModel.fch_vencimiento >= date.today().isoformat(),
+            ContratoOpcionModel.cod_symbol_subyacente == symbol
+        ).order_by(ContratoOpcionModel.fch_vencimiento, ContratoOpcionModel.imp_strike)
         
         if expiration_date != "":
-            puts_query = puts_query.filter(OptionContractModel.expiration_date == expiration_date)
+            puts_query = puts_query.filter(ContratoOpcionModel.fch_vencimiento == expiration_date)
         if strike != "":
-            puts_query = puts_query.filter(OptionContractModel.strike == strike)
+            puts_query = puts_query.filter(ContratoOpcionModel.imp_strike == strike)
 
         puts = puts_query.all()
         

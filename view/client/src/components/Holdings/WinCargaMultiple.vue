@@ -1,7 +1,7 @@
 <template>
     <div>
         <q-dialog v-model="open">
-            <q-card style="width:400px;">
+            <q-card style="width:600px;">
                 <q-toolbar>
                     <q-toolbar-title class="text-blue-10">Carga Multiple</q-toolbar-title>
                 </q-toolbar>

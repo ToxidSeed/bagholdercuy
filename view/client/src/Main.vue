@@ -1,13 +1,12 @@
 <template>
 <q-layout view="hHh lpR fFf">
-
     <q-header elevated class="bg-white text-blue-10">
       <q-toolbar>
         <q-btn dense flat round icon="menu" @click="left = !left" />
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="/532625_cash_coins_hand_income_investment_icon.png">
+            <img src="/bagholder_logo_semiminalista.png">
           </q-avatar>
           BagHolder
         </q-toolbar-title>

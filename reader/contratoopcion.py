@@ -1,5 +1,5 @@
 from app import db
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 
 class ContratoOpcionReader:
     def __init__(self, buffer=False):
@@ -15,9 +15,9 @@ class ContratoOpcionReader:
 
         #consultamos eb base de datos
         stmt = db.select(
-            OptionContractModel
+            ContratoOpcionModel
         ).where(
-            OptionContractModel.symbol == cod_contrato_opcion
+            ContratoOpcionModel.cod_symbol == cod_contrato_opcion
         )
 
         result = db.session.execute(stmt)
@@ -29,25 +29,25 @@ class ContratoOpcionReader:
 
     def get_calls( cod_subyacente, fch_expiracion=None, imp_ejercicio=None):
         stmt = db.select(
-            OptionContractModel
+            ContratoOpcionModel
         ).where(
-            OptionContractModel.underlying == cod_subyacente,
-            OptionContractModel.side == "call"
+            ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente,
+            ContratoOpcionModel.tipo_opcion == "CALL"
         )
 
         if fch_expiracion is not None:
             stmt = stmt.where(
-                OptionContractModel.expiration_date == fch_expiracion
+                ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
 
         if imp_ejercicio is not None:
             stmt = stmt.where(
-                OptionContractModel.strike == imp_ejercicio
+                ContratoOpcionModel.imp_strike == imp_ejercicio
             )
 
         stmt = stmt.order_by(
-            OptionContractModel.expiration_date.asc(),
-            OptionContractModel.strike.asc()
+            ContratoOpcionModel.fch_vencimiento.asc(),
+            ContratoOpcionModel.imp_strike.asc()
         )
 
         result = db.session.execute(stmt)
@@ -57,25 +57,25 @@ class ContratoOpcionReader:
     @staticmethod
     def get_puts(cod_subyacente, fch_expiracion=None, imp_ejercicio=None):
         stmt = db.select(
-            OptionContractModel
+            ContratoOpcionModel
         ).where(
-            OptionContractModel.underlying == cod_subyacente,
-            OptionContractModel.side == "put"
+            ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente,
+            ContratoOpcionModel.tipo_opcion == "PUT"
         )
 
         if fch_expiracion is not None:
-            stmt.where(
-                OptionContractModel.expiration_date == fch_expiracion
+            stmt = stmt.where(
+                ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
 
         if imp_ejercicio is not None:
-            stmt.where(
-                OptionContractModel.strike == imp_ejercicio
+            stmt = stmt.where(
+                ContratoOpcionModel.imp_strike == imp_ejercicio
             )
 
         stmt = stmt.order_by(
-            OptionContractModel.expiration_date.asc(),
-            OptionContractModel.strike.asc()
+            ContratoOpcionModel.fch_vencimiento.asc(),
+            ContratoOpcionModel.imp_strike.asc()
         )
 
         result = db.session.execute(stmt)
@@ -85,19 +85,19 @@ class ContratoOpcionReader:
     @staticmethod
     def get_fechas_expiracion(cod_subyacente, cod_tipo_opcion=None, imp_ejercicio=None):
         stmt = db.select(
-            OptionContractModel.expiration_date
+            ContratoOpcionModel.fch_vencimiento
         ).where(
-            OptionContractModel.underlying == cod_subyacente
+            ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente
         )
 
-        if cod_tipo_opcion in ["call", "put"]:
+        if cod_tipo_opcion in ["CALL", "PUT", "call", "put"]:
             stmt = stmt.where(
-                OptionContractModel.side == cod_tipo_opcion
+                ContratoOpcionModel.tipo_opcion == cod_tipo_opcion.upper()
             )
 
         if imp_ejercicio is not None:
             stmt = stmt.where(
-                OptionContractModel.strike == imp_ejercicio
+                ContratoOpcionModel.imp_strike == imp_ejercicio
             )
 
         stmt = stmt.distinct()
@@ -109,20 +109,20 @@ class ContratoOpcionReader:
     @staticmethod
     def get_imp_ejercicios(cod_subyacente, cod_tipo_opcion=None, fch_expiracion=None):
         stmt = db.select(
-            OptionContractModel.strike
+            ContratoOpcionModel.imp_strike
         ).where(
-            OptionContractModel.underlying == cod_subyacente,
-            OptionContractModel.side == "put"
+            ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente,
+            ContratoOpcionModel.tipo_opcion == "PUT"
         )
 
-        if cod_tipo_opcion in ["call", "put"]:
+        if cod_tipo_opcion in ["CALL", "PUT", "call", "put"]:
             stmt.where(
-                OptionContractModel.side == cod_tipo_opcion
+                ContratoOpcionModel.tipo_opcion == cod_tipo_opcion.upper()
             )
 
         if fch_expiracion is not None:
             stmt.where(
-                OptionContractModel.expiration_date == fch_expiracion
+                ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
 
         result = db.session.execute(stmt)
@@ -133,39 +133,40 @@ class ContratoOpcionReader:
     def get_contratos(id_contrato_opcion=None, cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=None, limit=0):
 
         stmt = db.select(
-            OptionContractModel
+            ContratoOpcionModel
         )
 
         if id_contrato_opcion is not None:
             stmt = stmt.where(
-                OptionContractModel.id == id_contrato_opcion
+                ContratoOpcionModel.id_contrato_opcion == id_contrato_opcion
             )
 
         if cod_subyacente is not None:
             stmt = stmt.where(
-                OptionContractModel.underlying == cod_subyacente
+                ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente
             )
 
         if len(sentidos) > 0:
+            sentidos_upper = [s.upper() for s in sentidos]
             stmt = stmt.where(
-                OptionContractModel.side.in_(sentidos)
+                ContratoOpcionModel.tipo_opcion.in_(sentidos_upper)
             )
         
         if fch_expiracion is not None:
             stmt = stmt.where(
-                OptionContractModel.expiration_date == fch_expiracion
+                ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
         
         if imp_ejercicio is not None:
             stmt = stmt.where(
-                OptionContractModel.strike == imp_ejercicio
+                ContratoOpcionModel.imp_strike == imp_ejercicio
             )
 
         if limit > 0:
             stmt = stmt.limit(limit)
 
         stmt = stmt.order_by(
-            OptionContractModel.symbol.asc()
+            ContratoOpcionModel.cod_symbol.asc()
         )
 
         result = db.session.execute(stmt)
@@ -175,9 +176,9 @@ class ContratoOpcionReader:
     @staticmethod
     def get_contrato(cod_symbol):
         stmt = db.select(
-            OptionContractModel
+            ContratoOpcionModel
         ).where(
-            OptionContractModel.symbol == cod_symbol
+            ContratoOpcionModel.cod_symbol == cod_symbol
         )
 
         result = db.session.execute(stmt)

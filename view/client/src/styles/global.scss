@@ -1,0 +1,12 @@
+@import './quasar.variables.sass';
+
+.q-field__label {
+    top: 2px !important;
+    transform: none !important;
+    right: auto !important;
+    font-size: 12px !important
+}
+
+.q-tab__label {
+    font-weight: unset !important;
+}

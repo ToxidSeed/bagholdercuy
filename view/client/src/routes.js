@@ -86,6 +86,10 @@ import PageCiclos from './components/ciclos/PageCiclos.vue';
 import PanelCiclosDuracion from './components/ciclos/PanelCiclosDuracion.vue'
 import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
 
+//
+import IbkrImportarOperacionesPage from './components/operaciones/pages/ibkr/IbkrImportarOperacionesPage.vue'
+import GenerarTransaccionesPage from './components/operaciones/pages/ibkr/gen-transacciones/GenerarTransaccionesPage.vue'
+
 
 Vue.use(VueRouter);
 
@@ -166,6 +170,12 @@ const routes = [
         path: '/watchlist', component: PanelWatchlist
       }, {
         path: '/operacion', component: MainOperacion
+      }, {
+        path: '/carga-operaciones/ibkr', component: IbkrImportarOperacionesPage
+      }, {
+        path: '/generar-transacciones/ibkr',
+        name: 'generar-transacciones-ibkr',
+        component: GenerarTransaccionesPage
       }, {
         path: '/currency', component: MainPanelCurrency
       }, {

@@ -6,7 +6,7 @@ from datetime import datetime, date
 from controller.base import Base
 
 from model.StockSymbol import StockSymbol as SymbolModel
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 
 from reader.symbol import SymbolReader
 
@@ -153,8 +153,8 @@ class SymbolFinder(Base):
                 }
                 return Response().from_raw_data(rsp)
 
-            contrato = OptionContractModel.query.filter(
-                OptionContractModel.symbol == symbol
+            contrato = ContratoOpcionModel.query.filter(
+                ContratoOpcionModel.cod_symbol == symbol
             ).first() 
 
             if contrato is not None:

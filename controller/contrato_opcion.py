@@ -2,12 +2,12 @@ from cmath import exp
 from app import app, db
 
 from controller.base import Base
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 from model.StockSymbol import StockSymbol
 import common.converter as converter
 from common.AppException import AppException
 from common.Response import Response
-from common.api.marketdata import MarketData
+from api.marketdata import MarketDataAPI
 from reader.contratoopcion import ContratoOpcionReader
 from parser.opcionescontrato import OpcionesContratoParser, SymbolLoaderParser
 from domain.fecha import Fecha
@@ -16,7 +16,7 @@ from datetime import date, datetime
 import json, os
 from sqlalchemy.sql.functions import func
 
-class OpcionesContratoManager(Base):
+class ContratoOpcionController(Base):
     
     def get_options_chain(self, args={}):
         parser = OpcionesContratoParser()
@@ -28,13 +28,36 @@ class OpcionesContratoManager(Base):
 
         calls = ContratoOpcionReader.get_calls(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio)
         puts = ContratoOpcionReader.get_puts(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion, imp_ejercicio=imp_ejercicio)
-                
+
+        call_exp_dates = [call.fch_vencimiento for call in calls]
+        put_exp_dates = [put.fch_vencimiento for put in puts]
+
+        exp_dates = call_exp_dates + put_exp_dates
+        exp_dates = list(set(exp_dates))
+        exp_dates.sort()
+
+        call_strikes = [call.imp_strike for call in calls]
+        put_strikes = [put.imp_strike for put in puts]
+
+        strikes = call_strikes + put_strikes
+        strikes = list(set(strikes))
+        strikes.sort()
+
+        data = {
+            "calls": calls,
+            "puts": puts,
+            "exp_dates": exp_dates,
+            "strikes": strikes
+        }
+
+        """                
         data = {
             "calls": calls,
             "puts": puts,
             "exp_dates": ContratoOpcionReader.get_fechas_expiracion(cod_subyacente=cod_symbol, imp_ejercicio=imp_ejercicio),
             "strikes": ContratoOpcionReader.get_imp_ejercicios(cod_subyacente=cod_symbol, fch_expiracion=fch_expiracion)
         }
+        """
                 
         return Response().from_raw_data(data)
 
@@ -52,13 +75,13 @@ class OpcionesContratoManager(Base):
             contract = "%{}%".format(contract)
 
             query = query.filter(
-                OptionContractModel.symbol.ilike(contract)
+                ContratoOpcionModel.cod_symbol.ilike(contract)
             )       
 
             return query.all()
         """
 
-        #query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
+        #query = query.order_by(ContratoOpcionModel.fch_vencimiento, ContratoOpcionModel.imp_strike)
 
         return calls
     def get_puts(self, args={}):
@@ -70,7 +93,7 @@ class OpcionesContratoManager(Base):
                                                    imp_ejercicio=float(args.get("strike"))
                                                    )
 
-        #query = query.order_by(OptionContractModel.expiration_date, OptionContractModel.strike)
+        #query = query.order_by(ContratoOpcionModel.fch_vencimiento, ContratoOpcionModel.imp_strike)
 
         return puts
 
@@ -80,13 +103,13 @@ class OpcionesContratoManager(Base):
         strike=""
         
         query = db.session.query(
-            OptionContractModel.expiration_date
-        ).distinct(OptionContractModel.expiration_date)
+            ContratoOpcionModel.fch_vencimiento
+        ).distinct(ContratoOpcionModel.fch_vencimiento)
 
         query = query.filter(               
-            OptionContractModel.underlying == symbol
+            ContratoOpcionModel.cod_symbol_subyacente == symbol
         )
-        query = query.filter(OptionContractModel.expiration_date >= expiration_date)
+        query = query.filter(ContratoOpcionModel.fch_vencimiento >= expiration_date)
 
         results = query.all()
 
@@ -98,23 +121,23 @@ class OpcionesContratoManager(Base):
 
     def get_strikes(self, symbol="", exp_date=""):                
         query = db.session.query(
-            OptionContractModel.strike
-        ).distinct(OptionContractModel.strike)
+            ContratoOpcionModel.imp_strike
+        ).distinct(ContratoOpcionModel.imp_strike)
 
         query = query.filter(            
-            OptionContractModel.underlying == symbol
+            ContratoOpcionModel.cod_symbol_subyacente == symbol
         )        
 
         if exp_date == "":
             query = query.filter(            
-                OptionContractModel.expiration_date  >= date.today().isoformat()
+                ContratoOpcionModel.fch_vencimiento  >= date.today().isoformat()
             )   
         else:
             query = query.filter(            
-                OptionContractModel.expiration_date  == exp_date
+                ContratoOpcionModel.fch_vencimiento  == exp_date
             )
 
-        query = query.order_by(OptionContractModel.strike)
+        query = query.order_by(ContratoOpcionModel.imp_strike)
 
         results = query.all()
 
@@ -126,11 +149,11 @@ class OpcionesContratoManager(Base):
 
     def get_resumen_subyacentes(self, args={}):
         result = db.session.query(
-            OptionContractModel.underlying,
-            func.max(OptionContractModel.register_date).label("fch_registro"),
-            func.max(OptionContractModel.expiration_date).label("fch_vencimiento")
+            ContratoOpcionModel.cod_symbol_subyacente,
+            func.max(ContratoOpcionModel.fch_registro).label("fch_registro"),
+            func.max(ContratoOpcionModel.fch_vencimiento).label("fch_vencimiento")
         ).group_by(
-            OptionContractModel.underlying
+            ContratoOpcionModel.cod_symbol_subyacente
         ).all()        
 
         return Response().from_raw_data(result)
@@ -161,7 +184,7 @@ class OpcionesContratoManager(Base):
 
 
     def __collect_guardar(self, args={}):
-        opcion = OptionContractModel()
+        opcion = ContratoOpcionModel()
 
         cod_symbol = args.get("cod_symbol")
         sentido = args.get("sentido")
@@ -174,42 +197,39 @@ class OpcionesContratoManager(Base):
         if cod_symbol in [None, ""]:
             raise AppException(msg="No se ha enviado el symbol")
 
-        opcion.symbol = cod_symbol
-
-        if sentido in [None, ""]:
-            raise AppException(msg="No se ha indicado el 'sentido' del contrato")
-
-        if sentido not in ["call", "put"]:
+        opcion.cod_symbol = cod_symbol
+        
+        if sentido.upper() not in ["CALL", "PUT"]:
             raise AppException(msg="el sentido {0} no es valido".format(sentido))
 
-        opcion.side = sentido
+        opcion.tipo_opcion = sentido.upper()
 
         if cod_subyacente in [None, ""]:
             raise AppException(msg="No se ha enviado el 'cod_subyacente'")
         
-        opcion.underlying = cod_subyacente
+        opcion.cod_symbol_subyacente = cod_subyacente
 
         if fch_expiracion in [None, ""]:
             raise AppException(msg="No se ha enviado 'fch_expiracion'")
 
-        opcion.expiration_date = date.fromisoformat(fch_expiracion)
+        opcion.fch_vencimiento = date.fromisoformat(fch_expiracion)
 
         if imp_ejercicio in [None, "",0]:
             raise AppException(msg="No se ha enviado 'imp_ejercicio'")
 
-        opcion.strike = float(imp_ejercicio)
+        opcion.imp_strike = float(imp_ejercicio)
 
         if ctd_tamano_contrato in [None, "", 0]:
             raise AppException(msg="No se ha indicado el tamaño del contrato")
 
-        opcion.contract_size = int(ctd_tamano_contrato)
+        opcion.tam_contrato = int(ctd_tamano_contrato)
 
         if cod_moneda in [None, ""]:
             raise AppException(msg="No se ha indicado la moneda")
 
-        opcion.moneda_id = cod_moneda
+        opcion.cod_moneda = cod_moneda
         opcion.fch_audit = datetime.now()
-        opcion.register_date = date.today()
+        opcion.fch_registro = datetime.now()
 
         return opcion
     
@@ -232,8 +252,8 @@ class SymbolLoader(Base):
         return sym         
 
     def get_contrato(self, symbol=""):
-        contrato = OptionContractModel.query.filter(
-            OptionContractModel.symbol == symbol
+        contrato = ContratoOpcionModel.query.filter(
+            ContratoOpcionModel.cod_symbol == symbol
         ).first()
 
         return contrato
@@ -253,17 +273,17 @@ class SymbolLoader(Base):
             contrato = ContratoOpcionReader.get_contrato(cod_symbol=params.get("cod_symbol"))
             if contrato is None:
                 #adding the details
-                oc = OptionContractModel(     
+                oc = ContratoOpcionModel(     
                     #moneda_id = symbolobj.moneda_id,
-                    contract_size=100,
+                    tam_contrato=100,
                     #currency = elem["currency"],
-                    #description = elem["description"],
-                    expiration_date=datetime.utcfromtimestamp(elem["expiration"]),
-                    side=elem["side"],
-                    strike=elem["strike"],
-                    symbol=elem["optionSymbol"],
-                    underlying=elem["underlying"],
-                    register_date=date.today(),
+                    #descripcion = elem["description"],
+                    fch_vencimiento=datetime.utcfromtimestamp(elem["expiration"]),
+                    tipo_opcion=elem["side"].upper(),
+                    imp_strike=elem["strike"],
+                    cod_symbol=elem["optionSymbol"],
+                    cod_symbol_subyacente=elem["underlying"],
+                    fch_registro=datetime.now(),
                     fch_audit=datetime.now()
                 )
                 db.session.add(oc)

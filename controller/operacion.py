@@ -1,3 +1,4 @@
+from service.ibkr_transacciones_service import IbkrTransaccionesService
 from re import S
 from app import app, db
 from config.constants import TIPO_OPERACION_TRANSFERENCIA
@@ -10,19 +11,23 @@ from common.Error import Error
 
 #from model.StockTrade import StockTrade
 from domain.semana import CodigoSemana
+from domain.contratoopcion import ContratoOpcionHumanReadable
+
 from model.StockSymbol import StockSymbol
-from model.orden import OrdenModel
 from model.transaccion import TransaccionModel
 from model.TipoModel import TipoModel
+from model.importacion import ImportacionModel, OrigenImportacion, TipoDataset, EstadoImportacion
+from model.ibkr_operacion_importada import IbkrOperacionImportadaModel, CodigoOperacionIBKR, CategoriaActivo
 from reader.transaccion import TransaccionReader
 from reader.calendariodiario import CalendarioDiarioReader
 from reader.operacion import OperacionReader
 from reader.contratoopcion import ContratoOpcionReader
 from reader.cuenta import CuentaReader
-from parser.operacion import OperacionParser
-from parser.operacion import CargadorTransferenciasParser
-from processor.operacion import OperacionProcessor, RegistroMultipleOperacionesManager
-from processor.posicion import PosicionProcessor as PosicionManager
+from reader.importacion import ImportacionReader
+#from parser.operacion import OperacionParser
+#from parser.operacion import CargadorTransferenciasParser
+#from processor.operacion import OperacionProcessor, RegistroMultipleOperacionesManager
+#from processor.posicion import PosicionProcessor as PosicionManager
 
 from datetime import datetime, date, time, timedelta
 from sqlalchemy import desc
@@ -31,6 +36,18 @@ import sqlalchemy.sql.functions as func
 from sqlalchemy.sql import extract
 from controller.base import Base
 import csv
+import hashlib
+from io import StringIO
+from datetime import datetime
+
+from reader.ibkr_operacion_importada import IbkrOperacionImportadaReader
+from constants.tipo_transaccion import get_tipo_transaccion
+
+
+#init values
+tipo_transaccion = get_tipo_transaccion()
+
+
 
 
 class OperacionManager(Base):        
@@ -253,12 +270,125 @@ class CargadorTransferenciasController:
                 pass
 
             
+class IbkrLoaderController(Base):
+    def __init__(self):
+        pass
 
+    def get_ibkr_import_trades(self, args={}):
+        try:
+            trades = ImportacionReader().get_importaciones(cod_origen=OrigenImportacion.IBKR, tipo_dataset=TipoDataset.TRADES)
+            return Response().from_raw_data(trades)
+        except Exception as e:
+            return Response().from_exception(e)
 
+    def get_ibkr_import_trades_detail(self, args={}):
+        try:
+            id_importacion = args.get("id_importacion")
+            if not id_importacion:
+                raise AppException(msg="El parámetro 'id_importacion' es requerido")
+            operaciones = IbkrOperacionImportadaReader.get_por_importacion(id_importacion)
+            return Response().from_raw_data(operaciones)
+        except Exception as e:
+            return Response().from_exception(e)
+
+    def cargar_operaciones_ibkr(self, args={}):
+        try:                        
+            ibkr_fichero = args.get("files").get("archivo")
+            if not ibkr_fichero:
+                raise AppException(msg="No se ha proporcionado el archivo")
+                
+            file_content = ibkr_fichero.read().decode('utf-8')
+            file_hash = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
             
+            importacion = ImportacionModel(
+                cod_origen=OrigenImportacion.IBKR,
+                tipo_dataset=TipoDataset.TRADES,
+                nombre_archivo=ibkr_fichero.filename,
+                hash_archivo=file_hash,
+                estado=EstadoImportacion.PROCESADO,
+                fch_procesado=datetime.utcnow()
+            )
+            db.session.add(importacion)
+            db.session.flush()
+            
+            csv_reader = csv.reader(StringIO(file_content))
+            
+            total_registros = 0
+            registros_ok = 0
+            registros_error = 0
+            
+            def parse_numeric(val):
+                if val is None:
+                    return 0
+                val = val.replace(',', '').strip()
+                if not val:
+                    return 0
+                try:
+                    return float(val)
+                except ValueError:
+                    return 0
 
-
-
+            for row in csv_reader:
+                # Filtrar filas "Trades" y "Data" (minimo 16 columnas)
+                if len(row) >= 16 and row[0] == "Trades" and row[1] == "Data":
+                    total_registros += 1
+                    try:
+                        fecha_str = row[6].strip()
+                        if ',' in fecha_str:
+                            fch_hora_operacion = datetime.strptime(fecha_str, '%Y-%m-%d, %H:%M:%S')
+                        elif len(fecha_str) == 10:
+                            fch_hora_operacion = datetime.strptime(fecha_str, '%Y-%m-%d')
+                        elif len(fecha_str) >= 19:
+                            fch_hora_operacion = datetime.strptime(fecha_str[:19], '%Y-%m-%d %H:%M:%S')
+                        else:
+                            fch_hora_operacion = datetime.strptime(fecha_str, '%Y-%m-%d')
+                            
+                        operacion = IbkrOperacionImportadaModel(
+                            id_importacion=importacion.id_importacion,
+                            categoria_activo=row[3],
+                            cod_moneda=row[4],
+                            cod_symbol=row[5],
+                            fch_hora_operacion=fch_hora_operacion,
+                            cantidad=parse_numeric(row[7]),
+                            precio_trade=parse_numeric(row[8]),
+                            precio_cierre=parse_numeric(row[9]),
+                            importe_bruto=parse_numeric(row[10]),
+                            comision=parse_numeric(row[11]),
+                            base_costo=parse_numeric(row[12]),
+                            pl_realizado=parse_numeric(row[13]),
+                            pl_mtm=parse_numeric(row[14]),
+                            codigo=row[15]
+                        )
+                        db.session.add(operacion)
+                        registros_ok += 1
+                    except Exception as e:
+                        print(f"Error procesando registro IBKR: {e}")
+                        registros_error += 1
+            
+            importacion.total_registros = total_registros
+            importacion.registros_ok = registros_ok
+            importacion.registros_error = registros_error
+            
+            if registros_error > 0 and registros_ok == 0:
+                importacion.estado = EstadoImportacion.ERROR
+            
+            db.session.commit()
+            return Response(msg=f"Se han procesado {registros_ok} operaciones de IBKR. Errores: {registros_error}")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+            
+class GeneradorTransaccionController(Base):    
+    def generar(self, args={}):
+        try:
+            id_importacion = args.get("id_importacion")
+            operaciones_importadas = args.get("operaciones_importadas", [])
+            id_cuenta = args.get("id_cuenta")
+            IbkrTransaccionesService().generar_transacciones(operaciones_importadas, id_importacion, id_cuenta)
+            return Response(msg="Transacciones generadas correctamente")
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)    
     
 
     
