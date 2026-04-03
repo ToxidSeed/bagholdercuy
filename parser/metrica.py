@@ -49,7 +49,7 @@ class MetricaParser(BaseParser):
         return params
 
 
-    def parse_args_get_metricas_diarias_de_cierres_negativos(self, args={}):
+    def parse_args_get_metricas_diarias_de_cierres_negativos(self, args=None):
         self.params.set_params(args=args)
 
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
@@ -87,7 +87,7 @@ class MetricaParser(BaseParser):
 
         return params
 
-    def parse_args_get_metricas_semanales_de_cierres_positivos(self, args={}):
+    def parse_args_get_metricas_semanales_de_cierres_positivos(self, args=None):
         self.params.set_params(args=args)
 
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
@@ -121,7 +121,7 @@ class MetricaParser(BaseParser):
         }
         return params
 
-    def parse_args_get_metricas_semanales_de_cierres_negativos(self, args={}):
+    def parse_args_get_metricas_semanales_de_cierres_negativos(self, args=None):
         self.params.set_params(args=args)
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
@@ -154,7 +154,7 @@ class MetricaParser(BaseParser):
         }
         return params
 
-    def parse_args_get_metricas_mensuales_de_cierres_positivos(self, args={}):
+    def parse_args_get_metricas_mensuales_de_cierres_positivos(self, args=None):
         self.params.set_params(args=args)
 
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
@@ -191,21 +191,21 @@ class MetricaParser(BaseParser):
         }
         return params
 
-    def parse_args_get_metricas_mensuales_de_cierres_negativos(self, args={}):
+    def parse_args_get_metricas_mensuales_de_cierres_negativos(self, args=None):
         self.params.set_params(args=args)
 
         param_cod_symbol = self.params.parse("cod_symbol", requerido=True)
         param_cod_tipo_periodo = self.params.parse("cod_tipo_periodo", requerido=True)
 
-        param_valor_inicial_periodo = self.params.parse("valor_inicial_periodo", requerido=True)
-        param_valor_final_periodo = self.params.parse("valor_final_periodo", requerido=True)
+        param_valor_inicial_periodo = self.params.parse("fch_desde", requerido=True)
+        param_valor_final_periodo = self.params.parse("fch_hasta", requerido=True)
 
         cod_mes_inicial = None
         cod_mes_final = None
 
         if param_cod_tipo_periodo.valor.upper() == DIAS:
-            cod_mes_inicial = CodigoMes.parse_string_client(param_valor_inicial_periodo.valor).value
-            cod_mes_final = CodigoMes.parse_string_client(param_valor_final_periodo.valor).value
+            cod_mes_inicial = Mes.from_isoformat(param_valor_inicial_periodo.valor).codigo()
+            cod_mes_final = Mes.from_isoformat(param_valor_final_periodo.valor).codigo()
 
         if param_cod_tipo_periodo.valor.upper() == SEMANAS:
             fch_semana_inicial = CodigoSemana(param_valor_inicial_periodo.valor).to_fecha_inicio_semana()
@@ -230,7 +230,7 @@ class MetricaParser(BaseParser):
 
 
 
-    def parse_args_get_variaciones_x_symbol(self, args={}):
+    def parse_args_get_variaciones_x_symbol(self, args=None):
         parser = BaseParser(args=args)
         params = {
             "cod_symbol": parser.get("cod_symbol", requerido=True),
@@ -239,7 +239,7 @@ class MetricaParser(BaseParser):
         }
         return params
 
-    def parse_args_get_metricas_semanal(self, args={}):
+    def parse_args_get_metricas_semanal(self, args=None):
         parser = BaseParser(args=args)
         params = {
             "cod_symbol": parser.get("cod_symbol", requerido=True)

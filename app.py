@@ -56,7 +56,9 @@ class EntryAPI(Resource):
             return jsonify(response)
 
 class Loader:
-    def __init__(self, module_name, class_name, method_name, data={}):
+    def __init__(self, module_name, class_name, method_name, data=None):
+        if data is None:
+            data = {}
         mod =  __import__("controller."+module_name, fromlist=[class_name])
         obj_reference = getattr(mod, class_name)
         if obj_reference.AUTH_REQUIRED == False:

@@ -12,7 +12,7 @@ from common.Formatter import Formatter
 
 
 class MetricaController(Base):
-    def get_metricas_diarias_de_cierres_positivos(self, args={}):
+    def get_metricas_diarias_de_cierres_positivos(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_diarias_de_cierres_positivos(args=args)
 
@@ -32,14 +32,13 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=records)
         return response
 
-    def get_metricas_diarias_de_cierres_negativos(self, args={}):
+    def get_metricas_diarias_de_cierres_negativos(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_diarias_de_cierres_negativos(args=args)
         reader = VariacionDiariaReader()
         df = reader.get_variaciones_x_symbol(cod_symbol=params.get("cod_symbol"), fch_desde=params.get("fch_desde"),
                                              fch_hasta=params.get("fch_hasta"), pandas=True)
         df_cierre_negativo = df[(df.imp_variacion_cierre < 0.00)]
-
         df_cierre_negativo["imp_var_min_max"] = df_cierre_negativo["imp_maximo"] - df_cierre_negativo["imp_minimo"]
         df_cierre_negativo["imp_var_min_cierre"] = df_cierre_negativo["imp_cierre"] - df_cierre_negativo["imp_minimo"]
 
@@ -53,7 +52,7 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=records)
         return response
 
-    def get_metricas_semanales_de_cierres_positivos(self, args={}):
+    def get_metricas_semanales_de_cierres_positivos(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_semanales_de_cierres_positivos(args=args)
         reader = VariacionSemanalReader()
@@ -74,7 +73,7 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=registros)
         return response
 
-    def get_metricas_semanales_de_cierres_negativos(self, args={}):
+    def get_metricas_semanales_de_cierres_negativos(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_semanales_de_cierres_negativos(args=args)
         reader = VariacionSemanalReader()
@@ -97,7 +96,7 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=registros)
         return response
 
-    def get_metricas_mensuales_de_cierres_positivos(self, args={}):
+    def get_metricas_mensuales_de_cierres_positivos(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_metricas_mensuales_de_cierres_positivos(args=args)
 
@@ -128,9 +127,9 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=registros)
         return response
 
-    def get_metricas_mensuales_de_cierres_negativos(self, args={}):
+    def get_metricas_mensuales_de_cierres_negativos(self, args=None):
         parser = MetricaParser()
-        params = parser.parse_args_get_metricas_mensuales_de_cierres_positivos(args=args)
+        params = parser.parse_args_get_metricas_mensuales_de_cierres_negativos(args=args)
 
         variacion_reader = VariacionMensualReader()
         df = variacion_reader.get_variaciones_x_symbol(
@@ -166,7 +165,7 @@ class MetricaController(Base):
         response.from_raw_data(rawdata=registros)
         return response
 
-    def get_variaciones_x_symbol(self, args={}):
+    def get_variaciones_x_symbol(self, args=None):
         parser = MetricaParser()
         params = parser.parse_args_get_variaciones_x_symbol(args=args)
         reader = VariacionDiariaReader()

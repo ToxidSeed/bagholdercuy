@@ -10,7 +10,7 @@ from app import db, app
 from common.AppException import AppException
 from common.Response import Response
 from common.Formatter import Formatter
-from common.api.iexcloud import iexcloud, RangoHelper
+#from api.iexcloud import iexcloud, RangoHelper
 from config.constants import SERIES_PROF_CARGA_ULT1ANYO
 from config.constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_YTD, \
     SERIES_PROF_CARGA_ULT3MESES, SERIES_PROF_CARGA_ULT6MESES

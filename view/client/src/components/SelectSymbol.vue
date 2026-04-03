@@ -1,7 +1,7 @@
 <template>
     <q-select ref="selsymbol" :label="label" stack-label v-model="symbol" color="blue-10" dense outlined
         :use-input="useInput" clearable input-debounce="1000" @filter="filterFn" @input="sel_symbol"
-        :options="symbol_list" :readonly="readonly" class="text-overline">
+        @clear="clear_symbol" :options="symbol_list" :readonly="readonly" class="text-overline">
         <template v-slot:selected>
             <div class="q-pt-xs" v-if="symbol && symbol.value"><span class="text-blue-10 text-bold">{{ symbol.value
             }}</span> - {{ symbol.label }}</div>
@@ -49,6 +49,9 @@ export default {
         }
     },
     methods: {
+        clear_symbol: function () {
+            this.$emit('clear-symbol')
+        },
         sel_symbol: function (selected) {
             if (selected == null) {
                 this.useInput = true

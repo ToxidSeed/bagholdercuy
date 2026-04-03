@@ -3,7 +3,9 @@ from datetime import datetime, date
 from enum import Enum
 
 class Formatter:
-    def __init__(self, custom={}):
+    def __init__(self, custom=None):
+        if custom is None:
+            custom = {}
         self.custom = custom
         self.exclude_fields = []
 

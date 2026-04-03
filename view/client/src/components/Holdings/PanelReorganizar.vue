@@ -6,28 +6,30 @@
             </q-toolbar-title>
         </q-toolbar>
         <q-card flat>
-            <q-toolbar>
-                <div class="q-gutter-xs">
-                    <q-btn label="Reorganizar" color="primary" dense no-caps icon="flip_to_front" />
-                </div>
-            </q-toolbar>
-            <q-separator />
             <q-bar class="bg-white">
-                <q-btn label="BUSCAR TRANSACCIONES" flat icon="search" color="blue-10" class="text-capitalize"
-                    @click="btnBuscarTransaccionesClick" />
+                <q-btn label="REORGANIZAR" color="primary" no-caps icon="flip_to_front" />
+                <q-btn label="BUSCAR ACTIVOS CON TRANSACCIONES" flat color="primary" no-caps icon="search" />
             </q-bar>
             <q-separator />
-            <q-tabs v-model="tab" class="text-grey shadow-2" align="left" dense no-caps inline-label
+            <q-card-section class="row q-col-gutter-xs">
+                <SelectSymbol class="col-4" :label="buscarActivosLabel" v-on:select-symbol="sel_symbol"
+                    @clear-symbol="clear_symbol" v-if="tab == 'otros_activos'" />
+                <q-input label="Código de opción" v-model="cod_symbol_contrato" outlined color="blue-10" dense
+                    class="col-2">
+                    <template v-slot:after>
+                        <q-btn round dense color="primary" flat icon="search" @click="win_opciones.visible = true" />
+                    </template>
+                </q-input>
+            </q-card-section>
+            <q-tabs v-show="false" v-model="tab" class="text-grey shadow-2" align="left" dense no-caps inline-label
                 active-color="primary">
                 <q-tab name="otros_activos" label="OTROS ACTIVOS" />
                 <q-tab name="opciones" label="OPCIONES" />
             </q-tabs>
-            <q-tab-panels v-model="tab">
+            <q-tab-panels v-model="tab" v-show="false">
                 <q-tab-panel name="otros_activos">
                     <div class="row q-col-gutter-xs">
-                        <SelectSymbol class="col-4" label="Symbol" v-on:select-symbol="sel_symbol"
-                            v-if="tab == 'otros_activos'" />
-                        <HelperPeriodo class="col-4" />
+                        <HelperPeriodo class="col-5" />
                     </div>
                 </q-tab-panel>
                 <q-tab-panel name="opciones">
@@ -65,7 +67,7 @@
             Transacciones Encontradas
         </q-card-section>
         <TableTransaccionesDia :data="data" />
-        <winBuscadorOpciones v-model="win_opciones.visible" v-on:option-select="selContratoOpcion" />
+        <winBuscadorOpciones v-model="win_opciones.visible" :symbol="symbol" v-on:option-select="selContratoOpcion" />
     </div>
 </template>
 <script>
@@ -83,6 +85,31 @@ export default {
         SelectSymbol,
         HelperPeriodo,
         winBuscadorOpciones
+    },
+    computed: {
+        buscarActivosLabel() {
+            if (this.cod_symbol_contrato.length == 0 && this.cod_symbol.length == 0) {
+                return "Buscar Activos"
+            } else if (this.cod_symbol.length > 0 && this.cod_symbol_contrato.length == 0) {
+                return "Activo Seleccionado"
+            } else {
+                return "Subyacente"
+            }
+        },
+        symbol() {
+            return {
+                "value": this.cod_symbol,
+                "label": this.nom_symbol
+            }
+        }
+    },
+    watch: {
+        cod_symbol: function (val) {
+            console.log(val)
+            if (val.length > 0) {
+                this.cod_symbol_contrato = ""
+            }
+        }
     },
     data: () => {
         return {
@@ -103,16 +130,23 @@ export default {
         }
     },
     methods: {
+        clear_symbol: function () {
+            this.cod_symbol_contrato = ""
+        },
         sel_symbol: function (item) {
             this.cod_symbol = item.value
             this.nom_symbol = item.label
+
+            // Cuando se seleccione el symbol, buscar las transacciones
+            this.btnBuscarTransaccionesClick({ cod_symbol: this.cod_symbol })
         },
         sel_subyacente: function (item) {
             this.symbol_subyacente = item
         },
         btnBuscarTransaccionesClick: function () {
             let cod_symbol = ""
-            cod_symbol = this.tab == 'opciones' ? this.cod_symbol_contrato : this.cod_symbol
+            //cod_symbol = this.tab == 'opciones' ? this.cod_symbol_contrato : this.cod_symbol
+            cod_symbol = this.cod_symbol_contrato ? this.cod_symbol_contrato : this.cod_symbol
             this.get_transacciones_x_symbol({ cod_symbol: cod_symbol })
         },
         get_transacciones_x_symbol: function (params) {
@@ -140,6 +174,7 @@ export default {
             this.symbol_subyacente = item.subyacente
             this.fch_expiracion = item.fch_vencimiento
             this.imp_strike = item.imp_strike
+            this.get_transacciones_x_symbol({ cod_symbol: this.cod_symbol_contrato })
         }
     }
 }

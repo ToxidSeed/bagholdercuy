@@ -116,7 +116,9 @@ class Params:
 
 
 class BaseParser:
-    def __init__(self, args={}):
+    def __init__(self, args=None):
+        if args is None:
+            args = {}
         self.args = args
         self.params = Params(args=args)
 
