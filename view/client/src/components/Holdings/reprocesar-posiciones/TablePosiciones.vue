@@ -7,7 +7,7 @@
                     <q-input class="col-4" outlined dense debounce="300" v-model="filter" stack-label
                         label="Filtrar Resultados">
                         <template v-slot:append>
-                            <q-icon name="search" />
+                            <q-icon name="searchfind" />
                         </template>
                     </q-input>
                 </div>
