@@ -49,7 +49,7 @@ class OrdenController(Base):
             id_instrumento_financiero = params.id_instrumento_financiero,            
             id_contrato_opcion = params.id_contrato_opcion,
             id_tipo_transaccion = params.id_tipo_transaccion,
-            fch_transaccion = params.fch_transaccion,
+            fch_hr_transaccion = params.fch_hr_transaccion,
             cantidad = params.cantidad,
             imp_unitario = params.imp_accion,
             imp_transaccion = params.imp_accion * params.cantidad,

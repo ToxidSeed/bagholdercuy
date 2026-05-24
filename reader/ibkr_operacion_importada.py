@@ -17,12 +17,19 @@ class IbkrOperacionImportadaReader:
         return result.scalars().first()
 
     @staticmethod
-    def get_por_importacion(id_importacion):
+    def get_por_importacion(id_importacion, cod_symbol=None):
         query = db.select(
             IbkrOperacionImportadaModel
         ).where(
             IbkrOperacionImportadaModel.id_importacion == id_importacion
-        ).order_by(
+        )
+
+        if cod_symbol:
+            query = query.where(
+                IbkrOperacionImportadaModel.cod_symbol == cod_symbol
+            )
+        
+        query = query.order_by(
             IbkrOperacionImportadaModel.fch_hora_operacion.asc()
         )
 

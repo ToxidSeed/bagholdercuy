@@ -12,10 +12,10 @@ class Operacion {
         return axios.post(url, data, config)
     }
 
-    get_ibkr_import_trades_detail(id_importacion) {
+    get_ibkr_import_trades_detail(id_importacion, cod_symbol) {
         let url = OPERACION.IBKR_LOAD_DETAIL
         let config = postconfig()
-        return axios.post(url, { id_importacion }, config)
+        return axios.post(url, { id_importacion, cod_symbol }, config)
     }
 
     generar_transacciones(operaciones_importadas, id_importacion, id_cuenta) {

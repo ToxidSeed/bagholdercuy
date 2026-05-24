@@ -74,8 +74,8 @@ export default {
             },{
                 label:"Fecha",
                 align:"left",
-                field:"fch_transaccion",
-                name:"fch_transaccion",
+                field:"fch_hr_transaccion",
+                name:"fch_hr_transaccion",
                 style:"width:100px;"
             },{
                 label:"N. Transacciones",
@@ -131,7 +131,7 @@ export default {
                 appresp.data.forEach(element => {                    
                     rownum += 1
                     element.rownum = rownum
-                    element.fch_transaccion = date.transform(element.fch_transaccion, 'YYYY-MM-DD','DD/MM/YYYY')
+                    element.fch_hr_transaccion = date.transform(element.fch_hr_transaccion, 'YYYY-MM-DD','DD/MM/YYYY')
                     this.data.push(element)
                 })
             })

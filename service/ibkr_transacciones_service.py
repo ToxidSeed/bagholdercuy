@@ -7,23 +7,36 @@ from constants.tipo_transaccion import get_tipo_transaccion
 from constants.instrumento_financiero import get_instrumento_financiero
 import datetime
 import uuid
+from constants.indicador_apcierre import indicador_apcierre
+from constants.evento_origen import evento_origen
+
+from constants.ibkr import (
+    CONST_IBKR_EVENTO_DEFAULT, 
+    LIST_INDICADORES_AP_CIERRE, 
+    LIST_EVENTOS_ORIGEN_IBKR,
+    MAP_IBKR_TO_GENERIC_EVENT
+)
 
 class IbkrTransaccionesService:
-    def __init__(self):
-        pass
+    def categorizar_codes(self, codigo_operacion: str):
+        indicador_apcierre_code = None
+        evento_origen_code = None
+
+        codes = codigo_operacion.split(";")
+        for code in codes:
+            if code in LIST_INDICADORES_AP_CIERRE:
+                indicador_apcierre_code = code
+            elif code in LIST_EVENTOS_ORIGEN_IBKR:
+                evento_origen_code = code
+            else:
+                raise ValueError(f"No se pudo mapear el codigo de operacion: {code}")
+
+        if evento_origen_code is None:
+            evento_origen_code = CONST_IBKR_EVENTO_DEFAULT
+        
+        return indicador_apcierre_code, evento_origen_code
 
     def generar_transacciones(self, operaciones_importadas=None, id_importacion=None, id_cuenta=None):
-        """
-        Parametros de entrada:
-            operaciones_importadas: List[id_importacion: int]
-            id_importacion: int
-            id_cuenta: int
-        Proceso:
-            1. Por cada operacion_importada se debe generar una transaccion (TransaccionModel)
-            2. Una vez creada la transaccion actualizar la operacion importada con el id de la transaccion
-            3. por cada id_importacion, obtener los otros datos desde IbkrImportacionModel
-            4. 
-        """
         if not id_cuenta:
             raise ValueError("El parametro id_cuenta es requerido")
 
@@ -51,6 +64,14 @@ class IbkrTransaccionesService:
         for op in operaciones_importadas_objs:
             if op.procesado:
                 continue
+                    
+            indicador_apcierre_code, raw_evento_origen_code = self.categorizar_codes(op.codigo)
+            evento_origen_code = MAP_IBKR_TO_GENERIC_EVENT.get(raw_evento_origen_code)
+            if evento_origen_code is None:
+                raise ValueError(f"No se pudo mapear el evento de origen: {raw_evento_origen_code}")
+            
+            id_indicador_apcierre = indicador_apcierre.get(indicador_apcierre_code).id_indicador_apcierre
+            id_evento_origen = evento_origen.get(evento_origen_code).id_evento_origen
 
             if op.cantidad > 0:
                 id_tipo_transaccion = tipo_transaccion.C
@@ -70,11 +91,14 @@ class IbkrTransaccionesService:
                 cod_symbol=cod_symbol,
                 id_tipo_transaccion=id_tipo_transaccion,
                 id_instrumento_financiero=equivalencias_categoria_instrumento[op.categoria_activo],
-                fch_transaccion=op.fch_hora_operacion.date() if op.fch_hora_operacion else datetime.date.today(),
+                fch_hr_transaccion=op.fch_hora_operacion if op.fch_hora_operacion else datetime.now(),
+                id_indicador_apcierre=id_indicador_apcierre,
+                id_evento_origen=id_evento_origen ,
                 orden_fifo=0,
                 cantidad=op.cantidad,
                 imp_unitario=op.precio_trade if op.precio_trade is not None else 0,
                 imp_transaccion=op.importe_bruto if op.importe_bruto is not None else 0,
+
             )
             db.session.add(transaccion)
             db.session.flush()

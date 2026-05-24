@@ -65,10 +65,16 @@ class VariacionMensualBuilder(Base):
 
 class VariacionDiariaBuilder(Base):
 
-    def build(self, args={}):
+    def build(self, args=None):
+
+        if args is None:
+            args = {}
 
         symbol = args.get('symbol')        
 
+        fch_desde = args.get('fch_desde')
+        fch_hasta = args.get('fch_hasta')        
+        
         if symbol is None or symbol == "":
             raise AppException(msg="No se ha ingresado el 'symbol")
 
@@ -91,15 +97,40 @@ class VariacionDiariaBuilder(Base):
             VariacionDiariaModel.imp_variacion_minimo
         ).where(
             VariacionDiariaModel.symbol == symbol
-        ).order_by(
+        )
+
+        if fch_desde:
+            stmt = stmt.where(
+                VariacionDiariaModel.fch_serie >= fch_desde
+            )
+
+        if fch_hasta:
+            stmt = stmt.where(
+                VariacionDiariaModel.fch_serie <= fch_hasta
+            )        
+
+        stmt = stmt.order_by(
             VariacionDiariaModel.fch_serie.desc()
-        ).limit(365)
+        )
+
+        
 
         result = db.session.execute(stmt)
         records = result.all()
-        return Response().from_raw_data(records)
+        
+        from model.StockSymbol import StockSymbol
+        symbol_item = db.session.execute(db.select(StockSymbol).filter(StockSymbol.symbol == symbol)).scalar_one_or_none()
+        symbol_text = symbol_item.name if symbol_item else symbol
+
+        resp = Response()
+        resp.add_extradata("meta", {
+            "symbol_value": symbol,
+            "symbol_text": symbol_text
+        })
+        return resp.from_raw_data(records)
 
 class VariacionSemanalEvolucion(Base):
+    AUTH_REQUIRED=False
 
     def build(self, args={}):
 
@@ -120,7 +151,7 @@ class VariacionSemanalEvolucion(Base):
         #calendario = CalendarioDiarioReader.get_fechas_x_semana(anyo, semana)
 
         stmt = db.select(
-            SerieDiariaModel.symbol,
+            SerieDiariaModel.cod_symbol,
             CalendarioDiarioModel.fch_dia.label('fch_serie'),
             SerieDiariaModel.imp_apertura,
             SerieDiariaModel.imp_maximo,
@@ -132,7 +163,7 @@ class VariacionSemanalEvolucion(Base):
             SerieDiariaModel,
             and_(
                 CalendarioDiarioModel.fch_dia == SerieDiariaModel.fch_serie,
-                SerieDiariaModel.symbol == symbol
+                SerieDiariaModel.cod_symbol == symbol
             )
         ).where(            
             CalendarioDiarioModel.flg_fin_semana == 'N',

@@ -57,7 +57,7 @@
 
                 <div class="col-6">
                     <q-table dense title="CALLS" color="primary" :data="calls" :columns="call_columns" row-key="name"
-                        :pagination="pagination" separator="vertical"
+                        :pagination="pagination" separator="vertical" flat
                         :visible-columns="['symbol', 'strike', 'expiration']">
                         <template v-slot:body="props">
                             <q-tr :props="props" @dblclick="sel_contract(props.row)" class="cursor-pointer"
@@ -95,7 +95,7 @@
                 </div>
                 <div class="col-6 q-pl-sm">
                     <q-table dense title="PUTS" :data="puts" :columns="put_columns" row-key="name"
-                        :pagination="pagination" separator="vertical"
+                        :pagination="pagination" separator="vertical" flat
                         :visible-columns="['symbol', 'strike', 'expiration']">
                         <template v-slot:body="props">
                             <q-tr :props="props" @dblclick="sel_contract(props.row)" class="cursor-pointer">

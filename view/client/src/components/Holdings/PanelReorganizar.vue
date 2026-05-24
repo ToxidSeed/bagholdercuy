@@ -7,8 +7,9 @@
         </q-toolbar>
         <q-card flat>
             <q-bar class="bg-white">
-                <q-btn label="REORGANIZAR" color="primary" no-caps icon="flip_to_front" />
-                <q-btn label="BUSCAR ACTIVOS CON TRANSACCIONES" flat color="primary" no-caps icon="search" />
+                <q-btn label="REORGANIZAR" color="primary" no-caps icon="refresh" />
+                <q-btn label="BUSCAR ACTIVOS CON TRANSACCIONES" flat color="primary" no-caps icon="search"
+                    @click="win_buscar_transacciones.visible = true" />
             </q-bar>
             <q-separator />
             <q-card-section class="row q-col-gutter-xs">
@@ -68,6 +69,8 @@
         </q-card-section>
         <TableTransaccionesDia :data="data" />
         <winBuscadorOpciones v-model="win_opciones.visible" :symbol="symbol" v-on:option-select="selContratoOpcion" />
+        <winBuscarTransacciones v-model="win_buscar_transacciones.visible"
+            @symbol-selected="sel_win_buscar_transacciones" />
     </div>
 </template>
 <script>
@@ -78,13 +81,15 @@ import SelectSymbol from '@/components/SelectSymbol.vue';
 import HelperPeriodo from '@/components/common/HelperPeriodo.vue'
 import { TRANSACCION } from '@/api/endpoints.js'
 import winBuscadorOpciones from '@/components/common/winBuscadorOpciones/winBuscadorOpciones.vue'
+import winBuscarTransacciones from '@/components/Holdings/winBuscarTransacciones/winBuscarTransacciones.vue'
 export default {
     name: "PanelReorganizar",
     components: {
         TableTransaccionesDia,
         SelectSymbol,
         HelperPeriodo,
-        winBuscadorOpciones
+        winBuscadorOpciones,
+        winBuscarTransacciones
     },
     computed: {
         buscarActivosLabel() {
@@ -125,6 +130,9 @@ export default {
             data: [],
             tab: "otros_activos",
             win_opciones: {
+                visible: false
+            },
+            win_buscar_transacciones: {
                 visible: false
             }
         }
@@ -175,6 +183,10 @@ export default {
             this.fch_expiracion = item.fch_vencimiento
             this.imp_strike = item.imp_strike
             this.get_transacciones_x_symbol({ cod_symbol: this.cod_symbol_contrato })
+        },
+        sel_win_buscar_transacciones: function (row) {
+            this.cod_symbol = row.cod_symbol
+            this.btnBuscarTransaccionesClick({ cod_symbol: this.cod_symbol })
         }
     }
 }

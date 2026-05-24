@@ -42,7 +42,7 @@ class Ingreso(MovFondosHandler):
 
         new_mov = MovimientoFondosModel(
             trans_id = ingreso.id,
-            fch_transaccion= ingreso.fch_transaccion,
+            fch_hr_transaccion= ingreso.fch_hr_transaccion,
             num_transaccion=ingreso.num_transaccion,
             tipo_trans_id = ingreso.tipo_trans_id,
             tipo_mov_id = TIPO_MOV_INGRESO,
@@ -98,7 +98,7 @@ class Salida(MovFondosHandler):
             MovimientoFondosModel.imp_saldo_mov > 0.00,
             MovimientoFondosModel.usuario_id == self.transaccion.usuario_id,
             MovimientoFondosModel.mon_mov_id == self.transaccion.mon_trans_id
-        ).order_by(MovimientoFondosModel.fch_transaccion.asc(), MovimientoFondosModel.num_transaccion.asc())\
+        ).order_by(MovimientoFondosModel.fch_hr_transaccion.asc(), MovimientoFondosModel.num_transaccion.asc())\
         .all()
 
         return funds
@@ -137,7 +137,7 @@ class Salida(MovFondosHandler):
         mov_salida = MovimientoFondosModel(
             trans_id = self.transaccion.id,
             num_transaccion = self.transaccion.num_transaccion,
-            fch_transaccion = self.transaccion.fch_transaccion,
+            fch_hr_transaccion = self.transaccion.fch_hr_transaccion,
             ref_mov_id = mov_origen.id,
             tipo_trans_id = self.transaccion.tipo_trans_id,
             tipo_mov_id=TIPO_MOV_SALIDA,

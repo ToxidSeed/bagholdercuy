@@ -13,6 +13,20 @@
                     </div>
                 </q-toolbar>
             </template>
+            <template v-slot:body-cell-cod_symbol="props">
+                <q-td :props="props">
+                    {{ props.value }}
+                    <q-popup-proxy context-menu>
+                        <q-list dense bordered class="bg-white text-black">
+                            <q-item v-for="(formato, index) in mostrar_formatos_alternativos(props.row)" :key="index"
+                                v-show="formato" class="q-pl-none" clickable v-ripple v-close-popup
+                                @click="copiar_portapapeles(formato)">
+                                <q-item-section>{{ formato }}</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-popup-proxy>
+                </q-td>
+            </template>
         </q-table>
         <MessageBox ref="msgbox" />
         <!--
@@ -27,6 +41,8 @@ import MessageBox from '../dialogs/MessageBox.vue'
 import date from 'date-and-time'
 import { CLIENT_DATE_FORMAT, ISO_DATE_FORMAT } from '@/common/constants.js'
 import { get_postconfig } from '@/common/request.js'
+import { ContratoOpcion } from '@/common/contrato-opcion.js'
+import { copyToClipboard } from 'quasar'
 
 export default {
     name: "TableTransaccionesDia",
@@ -60,6 +76,12 @@ export default {
                     name: "id_transaccion",
                     style: 'width:60px;'
                 }, {
+                    label: "Fecha/hora Transaccion",
+                    align: "left",
+                    field: "fch_hr_transaccion",
+                    name: "fch_hr_transaccion",
+                    style: 'width:60px;'
+                }, {
                     label: "FIFO Seq",
                     align: "left",
                     field: "orden_fifo",
@@ -70,22 +92,47 @@ export default {
                     align: "left",
                     field: "cod_symbol",
                     name: "cod_symbol",
+                    classes: "bg-yellow",
+                    style: 'width:60px;'
+                }, {
+                    label: "A/C",
+                    align: "left",
+                    field: row => row.indicador_apcierre ? row.indicador_apcierre.cod_indicador : '',
+                    name: "cod_indicador",
+                    style: 'width:60px;'
+                }, {
+                    label: "Inst. Fin.",
+                    align: "left",
+                    field: row => row.instrumento_financiero ? row.instrumento_financiero.cod_instrumento_financiero : '',
+                    name: "cod_instrumento_financiero",
+                    style: 'width:60px;'
+                }, {
+                    label: "Tipo",
+                    align: "left",
+                    field: row => row.tipo_transaccion ? row.tipo_transaccion.cod_tipo_transaccion : '',
+                    name: "cod_tipo_transaccion",
+                    style: 'width:60px;'
+                }, {
+                    label: "Ev. Orig.",
+                    align: "left",
+                    field: row => row.evento_origen ? row.evento_origen.cod_evento : '',
+                    name: "cod_evento",
                     style: 'width:60px;'
                 }, {
                     label: "Cantidad",
-                    align: "left",
+                    align: "right",
                     field: "cantidad",
                     name: "cantidad",
                     style: 'width: 60px'
                 }, {
                     label: "Imp. Unitario",
-                    align: "left",
+                    align: "right",
                     field: "imp_unitario",
                     name: "imp_unitario",
                     style: 'width:60px;'
                 }, {
                     label: "Imp. Transaccion",
-                    align: "left",
+                    align: "right   ",
                     field: "imp_transaccion",
                     name: "imp_transaccion",
                     style: 'width:60px;'
@@ -185,7 +232,31 @@ export default {
                     return 0
                 }
             })
+        },
+        mostrar_formatos_alternativos: function (row) {
+            try {
+                let contrato_opcion = new ContratoOpcion(row.cod_symbol)
+                let human_readable = contrato_opcion.toHumanReadable()
+                //let occ_extendido = contrato_opcion.toOCCExtendido()
+                return [human_readable]
+            } catch (error) {
+                // Return empty if symbol is valid stock but not a valid option contract
+                return []
+            }
+        },
+        copiar_portapapeles: function (texto) {
+            copyToClipboard(texto)
         }
     }
 }
 </script>
+
+<style scoped>
+::v-deep .q-table th {
+    background-color: #eeeeee !important;
+    color: #4a5568 !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    font-size: 12px !important;
+}
+</style>

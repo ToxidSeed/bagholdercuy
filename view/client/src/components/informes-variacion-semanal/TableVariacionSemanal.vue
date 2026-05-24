@@ -1,23 +1,18 @@
 <template>
-    <q-table
-        :data="store.table_variacion_semanal.state.data"
-        :columns="columns"        
-        row-key="fch_serie"
-        title="Variación Cierre"
-        dense
-        :pagination="pagination"       
-        separator="vertical" 
-        flat         
-        square
-    >
+    <q-table :data="store.table_variacion_semanal.state.data" :columns="columns" row-key="fch_serie"
+        title="Variación Cierre" dense :pagination="pagination" separator="vertical" flat square>
         <template v-slot:top>
             <div v-if="titulo_personalizado_visible">
-                <span class="text-blue-10 text-h6 q-pr-xs">{{ store.table_variacion_semanal.state.filtros.cod_symbol }}</span>
+                <span class="text-blue-10 text-h6 q-pr-xs">{{ store.table_variacion_semanal.state.filtros.cod_symbol
+                }}</span>
                 <span class="text-body1">{{ store.table_variacion_semanal.state.nom_symbol }}</span>
             </div>
             <div v-if="titulo_personalizado_visible == false">
                 <span class="text-body1 text-orange-10">Seleccionar instrumento financiero</span>
-            </div>            
+            </div>
+            <q-btn icon="content_copy" @click="copiarAlPortapapeles" flat dense round color="primary" class="q-ml-sm">
+                <q-tooltip>Copiar al portapapeles</q-tooltip>
+            </q-btn>
         </template>
         <template v-slot:header>
             <q-tr>
@@ -31,11 +26,11 @@
                 <q-th class="text-left" style="width:50px;">Año</q-th>
                 <q-th class="text-left" style="width:50px;">Fecha</q-th>
                 <q-th class="text-left" style="width:50px;">Semana</q-th>
-                <q-th class="text-right" style="width:50px;">Imp. Cierre anterior</q-th>                                
-                <q-th class="text-right" style="width:50px;">Imp. Apertura</q-th>                                
+                <q-th class="text-right" style="width:50px;">Imp. Cierre anterior</q-th>
+                <q-th class="text-right" style="width:50px;">Imp. Apertura</q-th>
                 <q-th class="text-right" style="width:50px;">Imp. Maximo</q-th>
                 <q-th class="text-right" style="width:50px;">Imp. Minimo</q-th>
-                <q-th class="text-right" style="width:50px;">Imp. Cierre</q-th>                
+                <q-th class="text-right" style="width:50px;">Imp. Cierre</q-th>
                 <q-th class="text-right" style="width:50px;">Var. Cierre</q-th>
                 <q-th class="text-right" style="width:50px;">Var. Máximo</q-th>
                 <q-th class="text-right" style="width:50px;">Var. Mínimo</q-th>
@@ -46,52 +41,58 @@
                 <q-th class="text-left"></q-th>
             </q-tr>
         </template>
-        <template v-slot:body="props">            
+        <template v-slot:body="props">
             <q-tr :props="props" @dblclick="abrir_evolucion_semanal(props.row)">
-                <q-td key="anyo"  class="text-left">
-                    {{props.row.anyo}}
+                <q-td key="anyo" class="text-left">
+                    {{ props.row.anyo }}
                 </q-td>
-                <q-td key="fecha"  class="text-left">
-                    {{props.row.fecha}}
+                <q-td key="fecha" class="text-left">
+                    {{ props.row.fecha }}
                 </q-td>
                 <q-td key="semana" class="text-left">
-                    {{props.row.semana}}
+                    {{ props.row.semana }}
                 </q-td>
                 <q-td key="imp_cierre_ant" class="text-right">
-                    {{props.row.imp_cierre_ant}}
-                </q-td>          
+                    {{ props.row.imp_cierre_ant }}
+                </q-td>
                 <q-td key="imp_apertura" class="text-right">
-                    {{props.row.imp_apertura}}
-                </q-td>                
+                    {{ props.row.imp_apertura }}
+                </q-td>
                 <q-td key="imp_maximo" class="text-right">
-                    {{props.row.imp_maximo}}
-                </q-td>                
+                    {{ props.row.imp_maximo }}
+                </q-td>
                 <q-td key="imp_minimo" class="text-right">
-                    {{props.row.imp_minimo}}
-                </q-td>                                
+                    {{ props.row.imp_minimo }}
+                </q-td>
                 <q-td key="imp_cierre" class="text-right">
-                    {{props.row.imp_cierre}}
-                </q-td>                                
-                <q-td key="imp_variacion_cierre"  v-bind:class="{'bg-red':props.row.imp_variacion_cierre < 0,'bg-green':props.row.imp_variacion_cierre >= 0,'text-right':true,'text-white':true}">
-                    {{props.row.imp_variacion_cierre}}
+                    {{ props.row.imp_cierre }}
                 </q-td>
-                <q-td key="imp_variacion_maximo"  v-bind:class="{'bg-orange':props.row.imp_variacion_maximo >= 0 && props.row.imp_variacion_maximo < 1,'bg-green':props.row.imp_variacion_maximo >= 1, 'bg-red':props.row.imp_variacion_maximo < 0,'text-right':true,'text-white':true}">
-                    {{props.row.imp_variacion_maximo}}
+                <q-td key="imp_variacion_cierre"
+                    v-bind:class="{ 'bg-red': props.row.imp_variacion_cierre < 0, 'bg-green': props.row.imp_variacion_cierre >= 0, 'text-right': true, 'text-white': true }">
+                    {{ props.row.imp_variacion_cierre }}
                 </q-td>
-                <q-td key="imp_variacion_minimo"  v-bind:class="{'bg-orange':props.row.imp_variacion_minimo > -1,'bg-red':props.row.imp_variacion_minimo <= -1,'text-right':true,'text-white':true}">
-                    {{props.row.imp_variacion_minimo}}
+                <q-td key="imp_variacion_maximo"
+                    v-bind:class="{ 'bg-orange': props.row.imp_variacion_maximo >= 0 && props.row.imp_variacion_maximo < 1, 'bg-green': props.row.imp_variacion_maximo >= 1, 'bg-red': props.row.imp_variacion_maximo < 0, 'text-right': true, 'text-white': true }">
+                    {{ props.row.imp_variacion_maximo }}
+                </q-td>
+                <q-td key="imp_variacion_minimo"
+                    v-bind:class="{ 'bg-orange': props.row.imp_variacion_minimo > -1, 'bg-red': props.row.imp_variacion_minimo <= -1, 'text-right': true, 'text-white': true }">
+                    {{ props.row.imp_variacion_minimo }}
                 </q-td>
                 <q-td></q-td>
-                <q-td key="pct_variacion_cierre"  v-bind:class="{'bg-red':props.row.pct_variacion_cierre < 0,'bg-green':props.row.pct_variacion_cierre >= 0,'text-right':true,'text-white':true}">
-                    {{props.row.pct_variacion_cierre}}
+                <q-td key="pct_variacion_cierre"
+                    v-bind:class="{ 'bg-red': props.row.pct_variacion_cierre < 0, 'bg-green': props.row.pct_variacion_cierre >= 0, 'text-right': true, 'text-white': true }">
+                    {{ props.row.pct_variacion_cierre }}
                 </q-td>
-                <q-td key="pct_variacion_maximo"  v-bind:class="{'bg-green':props.row.pct_variacion_maximo >= 0,'bg-red':props.row.pct_variacion_maximo < 0,'text-right':true,'text-white':true}">
-                    {{props.row.pct_variacion_maximo}}
+                <q-td key="pct_variacion_maximo"
+                    v-bind:class="{ 'bg-green': props.row.pct_variacion_maximo >= 0, 'bg-red': props.row.pct_variacion_maximo < 0, 'text-right': true, 'text-white': true }">
+                    {{ props.row.pct_variacion_maximo }}
                 </q-td>
-                <q-td key="pct_variacion_minimo"  v-bind:class="{'bg-green':props.row.pct_variacion_minimo >= 0,'bg-red':props.row.pct_variacion_minimo < 0,'text-right':true,'text-white':true}">
-                    {{props.row.pct_variacion_minimo}}
+                <q-td key="pct_variacion_minimo"
+                    v-bind:class="{ 'bg-green': props.row.pct_variacion_minimo >= 0, 'bg-red': props.row.pct_variacion_minimo < 0, 'text-right': true, 'text-white': true }">
+                    {{ props.row.pct_variacion_minimo }}
                 </q-td>
-                <q-td>                    
+                <q-td>
                 </q-td>
             </q-tr>
         </template>
@@ -105,63 +106,63 @@
 import store from './store'
 
 export default {
-    name:"TableVariacionSemanal",
-    props:{
-        indata:{
-            type:Array,
+    name: "TableVariacionSemanal",
+    props: {
+        indata: {
+            type: Array,
             default: () => []
         },
-        infiltros:{
-            type:Object,
-            default: () => {}
+        infiltros: {
+            type: Object,
+            default: () => { }
         },
-        symbol:{
-            type:String,
-            default:""
+        symbol: {
+            type: String,
+            default: ""
         },
         symbol_nombre: {
-            type:String,
-            default:""
+            type: String,
+            default: ""
         }
     },
-    computed:{
-        titulo_personalizado_visible:function(){            
-            if (store.table_variacion_semanal.state.filtros.cod_symbol !== ""){
+    computed: {
+        titulo_personalizado_visible: function () {
+            if (store.table_variacion_semanal.state.filtros.cod_symbol !== "") {
                 return true
-            }else{
+            } else {
                 return false
             }
         }
     },
-    watch:{        
-        $route:function(newroute){     
-            console.log("$route")       
+    watch: {
+        $route: function (newroute) {
+            console.log("$route")
             store.table_variacion_semanal.get_datos_variacion(newroute.query)
         }
     },
     data: () => {
-        return {            
-            pagination:{
-                rowsPerPage:24
+        return {
+            pagination: {
+                rowsPerPage: 24
             },
-            data:[],            
-            columns:[],
-            filtros:{
-                symbol:"",
-                symbol_nombre:""
+            data: [],
+            columns: [],
+            filtros: {
+                symbol: "",
+                symbol_nombre: ""
             },
             store: store
         }
     },
-    mounted:function(){
+    mounted: function () {
         //this.get_variacion_semanal()        
         this.init()
-        
+
     },
-    methods:{
-        init:function(){                                    
-            let filtros = this.$route.query     
-            
+    methods: {
+        init: function () {
+            let filtros = this.$route.query
+
             store.table_variacion_semanal.reset()
             store.table_variacion_semanal.set_filtros(
                 this.$route.query
@@ -169,7 +170,7 @@ export default {
 
             store.table_variacion_semanal.get_datos_variacion(filtros)
         },
-        abrir_evolucion_semanal:function(row){       
+        abrir_evolucion_semanal: function (row) {
             //console.log(row)     
             /*this.$router.push({name:'variacion-semanal-evolucion', params:{
                 infiltros:{
@@ -178,11 +179,42 @@ export default {
                     semana:row.semana
                 }
             }})*/
-            this.$router.push({name:'variacion-semanal-evolucion', query:{
-                cod_symbol:row.symbol,
-                anyo: row.anyo,
-                semana: row.semana
-            }})
+            this.$router.push({
+                name: 'variacion-semanal-evolucion', query: {
+                    cod_symbol: row.symbol,
+                    anyo: row.anyo,
+                    semana: row.semana
+                }
+            })
+        },
+        copiarAlPortapapeles: function () {
+            const dataToCopy = this.store.table_variacion_semanal.state.data;
+            if (!dataToCopy || dataToCopy.length === 0) return;
+            const header = [
+                "Año", "Fecha", "Semana", "Imp. Cierre anterior", "Imp. Apertura", "Imp. Maximo",
+                "Imp. Minimo", "Imp. Cierre", "Var. Cierre", "Var. Máximo", "Var. Mínimo",
+                "Pct. Cierre", "Pct. Máximo", "Pct. Mínimo"
+            ].join("\t");
+            const rows = dataToCopy.map(row => {
+                return [
+                    row.anyo, row.fecha, row.semana, row.imp_cierre_ant, row.imp_apertura,
+                    row.imp_maximo, row.imp_minimo, row.imp_cierre, row.imp_variacion_cierre,
+                    row.imp_variacion_maximo, row.imp_variacion_minimo, row.pct_variacion_cierre,
+                    row.pct_variacion_maximo, row.pct_variacion_minimo
+                ].join("\t");
+            }).join("\n");
+            const textToCopy = header + "\n" + rows;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                if (this.$q && this.$q.notify) {
+                    this.$q.notify({
+                        message: "Copiado al portapapeles",
+                        color: "positive",
+                        icon: "check"
+                    });
+                }
+            }).catch(err => {
+                console.error("Error al copiar: ", err);
+            });
         }
     }
 }

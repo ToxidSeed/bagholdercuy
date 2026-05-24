@@ -109,8 +109,8 @@ export default {
     },
     methods:{
         ult_transaccion: function(){            
-            let fch_transaccion = this.fec_retiro.value
-            if(this.fecha_incompleta(fch_transaccion)){                
+            let fch_hr_transaccion = this.fec_retiro.value
+            if(this.fecha_incompleta(fch_hr_transaccion)){                
                 this.fec_retiro.error = true
                 this.fec_retiro.msg = "Ingresar una fecha válida"
                 return;
@@ -120,7 +120,7 @@ export default {
             }
 
             this.$http.post('/FundsManager/FundsManager/ult_transaccion',{
-                fch_transaccion: fch_transaccion
+                fch_hr_transaccion: fch_hr_transaccion
             },config()).then(httpresp => {
                 this.$refs.msgbox.http_resp_on_error(httpresp)
                 let appresp = httpresp.data
@@ -145,7 +145,7 @@ export default {
             }
 
             let data = {
-                fch_transaccion: this.fec_retiro.value
+                fch_hr_transaccion: this.fec_retiro.value
             }
 
             this.$http.post('FundsManager/WithdrawResource/retirar',{

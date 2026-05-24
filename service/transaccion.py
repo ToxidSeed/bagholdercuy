@@ -17,42 +17,7 @@ class CompraGeneric:
     def __init__(self):
         pass
 
-    def registrar(self, transaccion: TransaccionModel):
-        """
-        Esta función tiene como proposito registrar en las tablas que corresponda cuando ocurre una transacción, teniendo en cuenta que una transacción puede ser cualquier cosa que este en la tabla tb_tipo_transaccion.        
-
-        Escenarios:
-            1. Si la transacción es de compra y en los saldos de transacciones anteriores no hay ningúna transacción que tenga saldo negativo, sucede lo siguiente:
-                * tb_transaccion: se inserta un nuevo registro con la transacción de compra.
-                * tb_transaccion_saldo: se inserta un nuevo registro con la transacción de compra.
-                
-            2. Si la transacción es de compra y en los saldos de transacciones anteriores hay una o mas transacciones que tenga saldo negativo, se actualiza el saldo de las transacciones anteriores.
-               Ejemplos:
-               - Si existe una venta previa de 10 unidades (saldo -10) y se compran 4 unidades, el saldo de esa venta se actualiza a -6. el efecto que tienen en las tres tablas son:
-                    * tb_transaccion: se inserta un nuevo registro con la transacción de compra.
-                    * tb_transaccion_saldo: se actualiza el saldo de la transacción de venta.
-                    * tb_movimiento_saldo: se inserta un nuevo registro con la aplicación de la compra.
-
-               - Si existe una venta previa de 10 unidades (saldo -10) y se compran 15 unidades, el saldo de esa venta se actualiza a 0 y se inserta un nuevo registro con las 5 unidades restantes. El efecto que tienen en las tres tablas son:
-                    * tb_transaccion: se inserta un nuevo registro con la transacción de compra (15 unidades).
-                    * tb_transaccion_saldo: se inserta un nuevo registro con las 5 unidades restantes.
-                    * tb_movimiento_saldo: se inserta un nuevo registro con la aplicación de la compra (10 unidades)
-
-               - Si existen 2 ventas previas, una de 10 unidades (saldo -10) y otra de 5 unidades (saldo -5), y se compran 15 unidades, el efecto que tienen en las 3 tablas son:
-                    * tb_transaccion: se inserta un nuevo registro con la transacción de compra (15 unidades).
-                    * tb_transaccion_saldo: las 2 transacciones de venta se actualizan con el saldo de 0.
-                    * tb_movimiento_saldo: Se inserta 2 registros con la aplicación de la compra (10 unidades y 5 unidades).
-
-               - Si existen 2 ventas previas, una de 10 unidades (saldo -10) y otra de 5 unidades (saldo -5), y se compran 11 unidades, el efecto que tienen en las 3 tablas son:
-                    * tb_transaccion: se inserta un nuevo registro con la transacción de compra (11 unidades).
-                    * tb_transaccion_saldo: A la primera transaccion se actualiza el saldo a 0, a la segunda transacción se actualiza el saldo a 4.
-                    * tb_movimiento_saldo: Se inserta 2 registros con la aplicación de la compra (10 unidades y 1 unidad).        
-
-                - Si existen 2 ventas previas, una de 10 unidades (saldo -10) y otra de 5 unidades (saldo -5), y se compran 18 unidades, el efecto que tienen en las 3 tablas son:
-                    * tb_transaccion: se inserta un nuevo registro con la transacción de compra (18 unidades).
-                    * tb_transaccion_saldo: A la primera transaccion se actualiza el saldo a 0, a la segunda transacción se actualiza el saldo a 0. Se inserta un nuevo registro con las 3 unidades restantes.
-                    * tb_movimiento_saldo: Se inserta 2 registros con la aplicación de la compra (10 unidades y 5 unidades).
-        """
+    def registrar(self, transaccion: TransaccionModel):        
         if transaccion.orden_fifo is None:
             transaccion.orden_fifo = TransaccionReader.get_next_orden_fifo(transaccion.id_cuenta, transaccion.cod_symbol)
             

@@ -5,7 +5,7 @@ class MovimientoFondosModel(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     trans_id = db.Column(db.Integer)
-    fch_transaccion = db.Column(db.Date)
+    fch_hr_transaccion = db.Column(db.Date)
     num_transaccion = db.Column(db.Integer)
     ref_mov_id = db.Column(db.Integer)
     tipo_trans_id = db.Column(db.String(1))

@@ -78,8 +78,8 @@ export default {
                 {
                     label: "Fch. Transaccion",
                     align: "left",
-                    name: "fch_transaccion",
-                    field: "fch_transaccion",
+                    name: "fch_hr_transaccion",
+                    field: "fch_hr_transaccion",
                     style: "width:100px;"
                 }, {
                     label: "Num. Transacciones",

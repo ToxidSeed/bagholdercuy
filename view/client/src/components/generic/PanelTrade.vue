@@ -29,7 +29,7 @@
                 </div>
                 <div class="row">
                     <div class="col-3 q-pl-xs">
-                        <q-input class="col-3" v-model="order.fch_transaccion" stack-label label="Fch. Transacción"
+                        <q-input class="col-3" v-model="order.fch_hr_transaccion" stack-label label="Fch. Transacción"
                             mask="##/##/####" fill-mask="">
                             <!--<q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
                             <q-date v-model="order.order_date" mask="YYYY-MM-DD" v-close-popup >                    
@@ -140,7 +140,7 @@ export default {
                 symbol_name: "",
                 cantidad: "",
                 importe: "",
-                fch_transaccion: "",
+                fch_hr_transaccion: "",
                 order_type: "",
                 asset_type: "",
                 subyacente: "",
@@ -198,7 +198,7 @@ export default {
         }
     },
     mounted: function () {
-        this.order.fch_transaccion = date.format(new Date(), CLIENT_DATE_FORMAT);
+        this.order.fch_hr_transaccion = date.format(new Date(), CLIENT_DATE_FORMAT);
 
         var symbol_witdh = this.$refs.symbol.$el.control.clientWidth
         this.style.symbol_width = "width:" + symbol_witdh + "px";
@@ -367,7 +367,7 @@ export default {
                 id_contrato_opcion: this.order.id_contrato_opcion,
                 cantidad: this.order.cantidad,
                 imp_accion: this.order.importe,
-                fch_transaccion: date.transform(this.order.fch_transaccion, CLIENT_DATE_FORMAT, ISO_DATE_FORMAT)
+                fch_hr_transaccion: date.transform(this.order.fch_hr_transaccion, CLIENT_DATE_FORMAT, ISO_DATE_FORMAT)
             },
                 postconfig()).then(httpresp => {
                     //this.$refs.msgbox.httpresp(httpresp)                                   

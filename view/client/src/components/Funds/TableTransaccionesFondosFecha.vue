@@ -22,7 +22,7 @@
                 </q-btn>                
                 <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha()"/>                
                 <q-toolbar-title>
-                    Transacciones de la fecha <span class="text-blue-10">{{filter.fch_transaccion}}</span>
+                    Transacciones de la fecha <span class="text-blue-10">{{filter.fch_hr_transaccion}}</span>
                 </q-toolbar-title>
                 <!--
                 <q-btn color="blue-10" icon="arrow_upward" flat dense @click="subir"/>
@@ -52,7 +52,7 @@ export default {
             type:Object,
             default: () => {
                 return {
-                    fch_transaccion:"",
+                    fch_hr_transaccion:"",
                     updtime: Date.now()
                 }   
             }            
@@ -65,7 +65,7 @@ export default {
     data: () => {
         return {      
             filter:{
-                fch_transaccion:""
+                fch_hr_transaccion:""
             },      
             columns:[{
                 label:"N. Transaccion",
@@ -114,14 +114,14 @@ export default {
             this.init_table()
         }
         
-        //this.get_transacciones_x_fecha(this.filter.fch_transaccion)        
+        //this.get_transacciones_x_fecha(this.filter.fch_hr_transaccion)        
         //console.log(this.filter)
     },
     watch:{        
         "in_filter.updtime":function(newval){    
             console.log('updtime'+newval)
 
-            this.filter.fch_transaccion = this.in_filter.fch_transaccion
+            this.filter.fch_hr_transaccion = this.in_filter.fch_hr_transaccion
             console.log(this.filter)
             this.get_transacciones_x_fecha()                       
         }
@@ -134,17 +134,17 @@ export default {
             if (this.in_filter.updtime == ""){
                 return;
             }                 
-            if (this.in_filter.fch_transaccion != ""){
-                this.filter.fch_transaccion = this.in_filter.fch_transaccion
+            if (this.in_filter.fch_hr_transaccion != ""){
+                this.filter.fch_hr_transaccion = this.in_filter.fch_hr_transaccion
             }
-            if (this.in_filter.fch_transaccion == "" || this.in_filter.fch_transaccion == undefined || this.in_filter.fch_transaccion == null){
-                this.filter.fch_transaccion = date.format(new Date(),CLIENT_DATE_FORMAT)
+            if (this.in_filter.fch_hr_transaccion == "" || this.in_filter.fch_hr_transaccion == undefined || this.in_filter.fch_hr_transaccion == null){
+                this.filter.fch_hr_transaccion = date.format(new Date(),CLIENT_DATE_FORMAT)
             }
 
             this.get_transacciones_x_fecha()            
         },
         get_transacciones_x_fecha:function(){                            
-            if (this.filter.fch_transaccion == null){
+            if (this.filter.fch_hr_transaccion == null){
                 return;
             }    
 
@@ -155,7 +155,7 @@ export default {
             //console.log(postconfig)
 
             this.$http.post('/fundsmanager/FundsManager/get_transacciones_x_fecha',{
-                fch_transaccion: this.filter.fch_transaccion
+                fch_hr_transaccion: this.filter.fch_hr_transaccion
             },postconfig()).then(httpresp => {                
                 this.$refs.msgbox.http_resp_on_error(httpresp)
                 let appresp = httpresp.data
@@ -184,7 +184,7 @@ export default {
                         elem.imp_transaccion = elem.imp_transaccion.toFixed(2)
                         this.data.push(elem)   
                     })
-                    this.filter.fch_transaccion = cdate.iso_to_client(appresp.extradata.max_fch_transaccion)
+                    this.filter.fch_hr_transaccion = cdate.iso_to_client(appresp.extradata.max_fch_hr_transaccion)
                 }
             })
         }

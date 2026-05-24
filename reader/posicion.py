@@ -16,13 +16,13 @@ class PosicionReader:
             TransaccionModel.cod_symbol,
             TransaccionModel.id_instrumento_financiero.label("cod_tipo_activo"),
             
-            func.min(TransaccionModel.fch_transaccion).label('holding_since'),
+            func.min(TransaccionModel.fch_hr_transaccion).label('holding_since'),
             func.sum(TransaccionModel.imp_unitario * TransaccionSaldoModel.ctd_saldo).label("sum_imp_accion"), # Weighted sum price * quantity
             
             func.sum(TransaccionSaldoModel.imp_saldo).label("sum_imp_operacion"), # Remaining invested amount
             
             func.sum(TransaccionSaldoModel.ctd_saldo).label("sum_shares_balance"),
-            func.min(TransaccionModel.fch_transaccion).label("min_trade_date"),
+            func.min(TransaccionModel.fch_hr_transaccion).label("min_trade_date"),
             # Placeholder for option/active specifics if needed. 
             # Legacy expected 'cod_opcion' for options. 
             # If type is OPT, cod_symbol is expected to be the option code.
@@ -47,7 +47,7 @@ class PosicionReader:
             TransaccionModel.cod_symbol,
             StockSymbol.name,
             TransaccionModel.orden_fifo,
-            TransaccionModel.fch_transaccion,
+            TransaccionModel.fch_hr_transaccion,
             TransaccionModel.imp_unitario,
             TransaccionModel.id_transaccion,
             TransaccionSaldoModel.ctd_saldo.label('saldo')
@@ -83,13 +83,13 @@ class PosicionReader:
         ).reset_index()
         
         df_resumen = df_resumen.merge(
-            df[['cod_symbol', 'orden_fifo', 'imp_unitario', 'fch_transaccion']],
+            df[['cod_symbol', 'orden_fifo', 'imp_unitario', 'fch_hr_transaccion']],
             left_on=['cod_symbol', 'min_orden_fifo'],
             right_on=['cod_symbol', 'orden_fifo'],
             how='left'
         ).drop(columns=['orden_fifo'])
 
-        df_resumen = df_resumen.rename(columns={'fch_transaccion': 'fch_primera_posicion', 'imp_unitario':'imp_posicion_incial'})
+        df_resumen = df_resumen.rename(columns={'fch_hr_transaccion': 'fch_primera_posicion', 'imp_unitario':'imp_posicion_incial'})
 
         records = df_resumen.to_dict('records')
 
@@ -103,7 +103,7 @@ class PosicionReader:
             ContratoOpcionModel.fch_vencimiento,
             ContratoOpcionModel.imp_strike,
             TransaccionModel.orden_fifo,
-            TransaccionModel.fch_transaccion,
+            TransaccionModel.fch_hr_transaccion,
             TransaccionModel.imp_unitario,
             TransaccionModel.id_transaccion,
             TransaccionSaldoModel.ctd_saldo.label('saldo')
@@ -141,13 +141,13 @@ class PosicionReader:
         ).reset_index()
         
         df_resumen = df_resumen.merge(
-            df[['cod_symbol', 'orden_fifo', 'imp_unitario', 'fch_transaccion']],
+            df[['cod_symbol', 'orden_fifo', 'imp_unitario', 'fch_hr_transaccion']],
             left_on=['cod_symbol', 'min_orden_fifo'],
             right_on=['cod_symbol', 'orden_fifo'],
             how='left'
         ).drop(columns=['orden_fifo'])
 
-        df_resumen = df_resumen.rename(columns={'fch_transaccion': 'fch_primera_posicion', 'imp_unitario':'imp_posicion_incial'})
+        df_resumen = df_resumen.rename(columns={'fch_hr_transaccion': 'fch_primera_posicion', 'imp_unitario':'imp_posicion_incial'})
 
         records = df_resumen.to_dict('records')
 

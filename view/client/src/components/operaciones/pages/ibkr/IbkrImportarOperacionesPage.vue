@@ -1,9 +1,9 @@
 <template>
-    <div> 
+    <div>
         <q-card flat>
             <q-card-section class="text-primary text-h5">
                 Importación de Operaciones
-            </q-card-section>            
+            </q-card-section>
         </q-card>
         <q-bar flat class="bg-white">
             <q-btn flat color="primary" icon="upload" @click="btn_cargar_click">Cargar</q-btn>
@@ -13,8 +13,8 @@
     </div>
 </template>
 <script>
-import TableIbkrOperaciones from './_components/TableIbkrOperaciones.vue';
-import WinCargarIbkrOperaciones from './_components/WinCargarIbkrOperaciones.vue';
+import TableIbkrOperaciones from './importar/TableIbkrOperaciones.vue';
+import WinCargarIbkrOperaciones from './importar/WinCargarIbkrOperaciones.vue';
 
 export default {
     name: "IbkrImportarOperacionesPage",
@@ -28,7 +28,7 @@ export default {
         }
     },
     methods: {
-        btn_cargar_click: function() {
+        btn_cargar_click: function () {
             this.openCargarOperaciones = true
         }
     }

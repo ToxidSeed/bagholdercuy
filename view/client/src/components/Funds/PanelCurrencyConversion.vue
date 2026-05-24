@@ -180,7 +180,7 @@ export default {
         },
         procesar:function(){
             let data = {
-                fch_transaccion: this.fch_cambio
+                fch_hr_transaccion: this.fch_cambio
             }
 
             this.$http.post(

@@ -9,7 +9,7 @@ class OrdenManagerEjecutarParams(BaseModel):
     id_tipo_transaccion: int
     cantidad: Decimal = Field(max_digits=15, decimal_places=2)
     imp_accion: Decimal = Field(max_digits=15, decimal_places=2)
-    fch_transaccion: date    
+    fch_hr_transaccion: date    
     id_contrato_opcion: int = Field(default=None)
 
 

@@ -18,6 +18,7 @@ import MainOperacion from '@/components/operaciones/MainOperacion.vue';
 import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
+import ReprocesarPosicionesPage from '@/components/Holdings/ReprocesarPosicionesPage.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
 import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
@@ -88,7 +89,7 @@ import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
 
 //
 import IbkrImportarOperacionesPage from './components/operaciones/pages/ibkr/IbkrImportarOperacionesPage.vue'
-import GenerarTransaccionesPage from './components/operaciones/pages/ibkr/gen-transacciones/GenerarTransaccionesPage.vue'
+import GenerarTransaccionesPage from './components/operaciones/pages/ibkr/GenerarTransaccionesPage.vue'
 
 
 Vue.use(VueRouter);
@@ -222,6 +223,8 @@ const routes = [
       },
       {
         path: "/reorganizarorden", component: PanelReorganizar
+      }, {
+        path: "/reprocesarposiciones", component: ReprocesarPosicionesPage
       }, {
         path: "/variacionmensual", component: PanelVariacionMensual
       }, {

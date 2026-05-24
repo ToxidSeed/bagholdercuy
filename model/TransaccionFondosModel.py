@@ -4,7 +4,7 @@ class TransaccionFondosModel(db.Model):
     __tablename__="tb_transaccion_fondos"
 
     id = db.Column(db.Integer,primary_key=True)
-    fch_transaccion = db.Column(db.Date)
+    fch_hr_transaccion = db.Column(db.Date)
     num_transaccion = db.Column(db.Integer)    
     tipo_trans_id = db.Column(db.Integer)    
     imp_transaccion = db.Column(db.Numeric(15,2))

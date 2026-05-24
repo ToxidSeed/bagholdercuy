@@ -25,6 +25,9 @@ class Formatter:
         elif type(indata).__name__ == "date":    
             #return indata.isoformat()
             return indata.strftime("%Y-%m-%d")
+        elif type(indata).__name__ == "datetime":    
+            #return indata.isoformat()
+            return indata.strftime("%Y-%m-%d %H:%M:%S")
         elif type(indata).__name__ == "Decimal":
             return float(indata)
         elif type(indata).__name__ == "time":

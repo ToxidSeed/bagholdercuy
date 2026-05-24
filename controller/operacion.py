@@ -131,7 +131,7 @@ class OperacionManager(Base):
 
         for elem in records:
             rows.append({
-                "fch_transaccion":elem.fch_transaccion,
+                "fch_hr_transaccion":elem.fch_hr_transaccion,
                 "imp_rentabilidad": 0 if elem.imp_rentabilidad is None else elem.imp_rentabilidad
             })
 
@@ -146,7 +146,7 @@ class OperacionManager(Base):
 
         if rent_ultdia is not None:
             records.append({
-                "periodo":"Dia - {0}".format(rent_ultdia.fch_transaccion.strftime("%d/%m/%Y")),
+                "periodo":"Dia - {0}".format(rent_ultdia.fch_hr_transaccion.strftime("%d/%m/%Y")),
                 "imp_rentabilidad": rent_ultdia.imp_rentabilidad
             })
         else:
@@ -271,8 +271,7 @@ class CargadorTransferenciasController:
 
             
 class IbkrLoaderController(Base):
-    def __init__(self):
-        pass
+    AUTH_REQUIRED = False
 
     def get_ibkr_import_trades(self, args={}):
         try:
@@ -284,9 +283,10 @@ class IbkrLoaderController(Base):
     def get_ibkr_import_trades_detail(self, args={}):
         try:
             id_importacion = args.get("id_importacion")
+            cod_symbol = args.get("cod_symbol")
             if not id_importacion:
                 raise AppException(msg="El parámetro 'id_importacion' es requerido")
-            operaciones = IbkrOperacionImportadaReader.get_por_importacion(id_importacion)
+            operaciones = IbkrOperacionImportadaReader.get_por_importacion(id_importacion, cod_symbol=cod_symbol)
             return Response().from_raw_data(operaciones)
         except Exception as e:
             return Response().from_exception(e)
@@ -378,7 +378,8 @@ class IbkrLoaderController(Base):
             db.session.rollback()
             return Response().from_exception(e)
             
-class GeneradorTransaccionController(Base):    
+class GeneradorTransaccionController(Base):   
+    AUTH_REQUIRED = False 
     def generar(self, args={}):
         try:
             id_importacion = args.get("id_importacion")

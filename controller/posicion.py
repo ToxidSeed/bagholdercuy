@@ -7,8 +7,12 @@ from common.Formatter import Formatter
 
 from parser.posicion import PosicionParser
 from schemas.posicion_schema import GetPosicionesAccionesParams
+from schemas.posicion import RecalcularPosicionesRequest
+from service.posicion import PosicionService
 
 from domain.contratoopcion import ContratoOpcion
+
+from app import db
 
 class PosicionController(Base):
     def get_posiciones_acciones(self, args={}):
@@ -35,5 +39,13 @@ class PosicionController(Base):
             records_output.append(posicion_dict)
         """
         return Response().from_raw_data(records)
-    
-    
+
+    def recalcular_posiciones(self, args=None):
+        try:
+            dto = RecalcularPosicionesRequest(**(args or {}))
+            PosicionService.recalcular_posiciones(dto)
+            db.session.commit()
+            return Response().success("Posiciones recalculadas correctamente")
+        except Exception as e:  
+            db.session.rollback()
+            raise AppException(str(e))
