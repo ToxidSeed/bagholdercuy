@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import TablePosiciones from './reprocesar-posiciones/TablePosiciones.vue'
+import TablePosiciones from './components/TablePosiciones.vue'
 
 export default {
     name: 'ReprocesarPosicionesPage',

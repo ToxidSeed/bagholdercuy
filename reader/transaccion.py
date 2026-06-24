@@ -536,6 +536,7 @@ class TransaccionReader:
         stmt = db.select(
             TransaccionModel.cod_symbol,
             func.max(TransaccionModel.fch_hr_transaccion).label("max_fch_hr_transaccion"),
+            func.min(TransaccionModel.fch_hr_transaccion).label("min_fch_hr_transaccion"),
             func.min(TransaccionModel.orden_fifo).label("min_orden_fifo"),
             func.count(1).label("ctd_transacciones")
         ).where(

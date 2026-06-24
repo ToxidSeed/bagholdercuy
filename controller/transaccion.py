@@ -16,7 +16,7 @@ class TransaccionController(Base):
     def get_transacciones_x_fecha(self, args=None):
         id_cuenta = args.get("id_cuenta")
         cod_symbol = args.get("cod_symbol")
-        fch_hr_transaccion = args.get("fch_hr_transaccion")
+        fch_hr_transaccion = args.get("fch_hr_transaccion") 
         results = TransaccionReader.get_transacciones_x_fecha(id_cuenta, cod_symbol, fch_hr_transaccion)
         return Response().from_raw_data(results)
 

@@ -18,7 +18,7 @@ import MainOperacion from '@/components/operaciones/MainOperacion.vue';
 import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
-import ReprocesarPosicionesPage from '@/components/Holdings/ReprocesarPosicionesPage.vue';
+import ReprocesarPosicionesPage from '@/components/Holdings/reprocesar-posiciones/ReprocesarPosicionesPage.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
 import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';

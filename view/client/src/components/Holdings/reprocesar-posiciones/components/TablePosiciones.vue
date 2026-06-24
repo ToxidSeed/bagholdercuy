@@ -3,13 +3,25 @@
         <q-table :data="data" :columns="columns" row-key="symbol" :filter="filter" separator="vertical" dense flat
             selection="multiple" :selected.sync="selected">
             <template v-slot:top>
+                <!--
                 <div class="row full-width items-center justify-center">
                     <q-input class="col-4" outlined dense debounce="300" v-model="filter" stack-label
                         label="Filtrar Resultados">
                         <template v-slot:append>
                             <q-icon name="searchfind" />
                         </template>
-                    </q-input>
+</q-input>
+</div>
+-->
+                <div class="row">
+                    <div class="col-11 text-subtitle1 text-primary">Transacciones</div>
+                    <div>
+                        <q-btn label="Filtros" icon="filter_list_off" color="primary" flat no-caps>
+                            <q-popup-proxy>
+                                <FiltrosPosicionesPanel style="width:700px;" />
+                            </q-popup-proxy>
+                        </q-btn>
+                    </div>
                 </div>
             </template>
         </q-table>
@@ -17,6 +29,7 @@
 </template>
 
 <script>
+import FiltrosPosicionesPanel from './FiltrosPosicionesPanel.vue'
 export default {
     name: "TablePosiciones",
     props: {
@@ -24,6 +37,9 @@ export default {
             type: Array,
             default: () => []
         }
+    },
+    components: {
+        FiltrosPosicionesPanel
     },
     data() {
         return {

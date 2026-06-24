@@ -15,4 +15,4 @@ export const TRANSACCION = {
     GET_TRANSACCIONES_X_FECHA: "transaccion/TransaccionController/get_transacciones_x_fecha",
     GET_TRANSACCIONES_X_SYMBOL: "transaccion/TransaccionController/get_transacciones_x_symbol",
     GET_MAX_FECHAS_AGROUPADAS_X_SYMBOL: "transaccion/TransaccionController/get_max_fechas_agroupadas_x_symbol"
-}
+}   

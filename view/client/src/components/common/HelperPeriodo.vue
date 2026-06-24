@@ -15,7 +15,6 @@
         </div>
     </div>
 </template>
-
 <script>
 import date from "date-and-time"
 export default {
