@@ -91,14 +91,14 @@ class IbkrTransaccionesService:
                 cod_symbol=cod_symbol,
                 id_tipo_transaccion=id_tipo_transaccion,
                 id_instrumento_financiero=equivalencias_categoria_instrumento[op.categoria_activo],
-                fch_hr_transaccion=op.fch_hora_operacion if op.fch_hora_operacion else datetime.now(),
+                fch_hr_transaccion=op.fch_hora_operacion if op.fch_hora_operacion else datetime.datetime.now(),
                 id_indicador_apcierre=id_indicador_apcierre,
-                id_evento_origen=id_evento_origen ,
-                orden_fifo=0,
+                id_evento_origen=id_evento_origen,
+                orden_fifo=1,
+                ind_requiere_revision=0,
                 cantidad=op.cantidad,
                 imp_unitario=op.precio_trade if op.precio_trade is not None else 0,
-                imp_transaccion=op.importe_bruto if op.importe_bruto is not None else 0,
-
+                imp_bruto=op.importe_bruto if op.importe_bruto is not None else 0,
             )
             db.session.add(transaccion)
             db.session.flush()
