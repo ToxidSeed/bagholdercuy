@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file, session
+from sys import prefix
+from flask import Flask, request, jsonify, send_file, session, Blueprint
 from flask_restful import Resource, Api
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -10,11 +11,11 @@ import sys, os
 import json
 import logging
 from datetime import date
-from common.logger import logger
 from dotenv import load_dotenv
-from config.config import Config
-
 load_dotenv()
+
+from common.logger import logger
+from config.config import Config
 
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
@@ -92,9 +93,20 @@ CORS(app,expose_headers=["Content-Disposition", "file_name"])
 
 db = SQLAlchemy(app)
 from boot.loader import init_constants
-init_constants()
-api = Api(app)
 
+with app.app_context():
+    init_constants()
+
+
+# Trabajando con resources
+from controller.transaccion import TransaccionAgrupadaSearch
+bagholder_bp = Blueprint('bagholder_bp', __name__, url_prefix=f"/{app.config['BAGHOLDER_APPNAME']}/api/v2")
+api_bagholder = Api(bagholder_bp)
+api_bagholder.add_resource(TransaccionAgrupadaSearch, "/transaccion/transaccion-agrupada-search")
+app.register_blueprint(bagholder_bp)
+
+#LEGACY
+api = Api(app)
 api.add_resource(EntryAPI, "/{}/<string:module_name>/<string:class_name>/<string:method_name>".format(app.config["BAGHOLDER_APPNAME"]))
 # api.add_resource(ConfirmRegistration, '/entablar/ConfirmRegistration',endpoint="confirm")
 api.add_resource(ImageLoader, "/{}/<string:image_loader>/".format(app.config["BAGHOLDER_APPNAME"]))

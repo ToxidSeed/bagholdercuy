@@ -1,6 +1,12 @@
+from flask import request
+from flask_restful import Resource
 from controller.base import Base
 from reader.transaccion import TransaccionReader
 from common.Response import Response
+from common.AppException import AppException
+from pydantic import ValidationError
+from schemas.transaccion import TransaccionAgrupadaSearchRequest
+from schemas.responses.transaccion import transacciones_agrupadas_schema            
 
 class TransaccionController(Base):
     AUTH_REQUIRED=False
@@ -31,4 +37,19 @@ class TransaccionController(Base):
         results = TransaccionReader.get_max_fechas_agroupadas_x_symbol(id_cuenta)
         return Response().from_raw_data(results)
     
-    
+class TransaccionAgrupadaSearch(Resource):
+    AUTH_REQUIRED = False
+
+    def post(self, args=None):
+        if args is None:
+            args = request.get_json() or {}
+        try:
+            params = TransaccionAgrupadaSearchRequest(**args)
+        except ValidationError as e:
+            errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+            raise AppException(msg="Errores de validación", errors=errors_list)
+
+        results = TransaccionReader.get_max_fechas_agroupadas_x_symbol(params.id_cuenta)
+        response = transacciones_agrupadas_schema.dump(results)
+        return response, 200
+        

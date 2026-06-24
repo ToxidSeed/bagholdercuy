@@ -35,7 +35,7 @@ Para garantizar la integridad de los datos financieros y la correcta conciliaci�
 | **`cantidad`** | **Variación del Inventario de Activos.** Representa el flujo neto de unidades del instrumento. <br> - **Valor Positivo (+):** Incrementa la posición (Compra para abrir *long* o Compra para cubrir *short*). <br> - **Valor Negativo (-):** Disminuye la posición (Venta para cerrar *long* o Venta para abrir *short*). |
 | **`imp_unitario`** | **Precio de Ejecución.** Es el valor de mercado por unidad al que se pactó la transacción. Se almacena siempre como valor absoluto positivo para mantener la trazabilidad de precios históricos. |
 | **`imp_bruto`** | **Monto Bruto de la Operación (Proceeds).** Define el impacto real en el flujo de efectivo (*cash flow*). <br> - **Lógica:** Se calcula como `(cantidad * imp_unitario) * -1`. <br> - **Signo Negativo (-):** Salida de efectivo (al comprar activos o cubrir cortos). <br> - **Signo Positivo (+):** Entrada de efectivo (al vender activos o abrir cortos). |
-| **`orden_fifo`** | **Secuenciador de Liquidación.** Cuando 2 o mas transacciones tienen la misma fecha y hora este secuencial es el que diferencia una de otra. |
+| **`orden_fifo`** | **Secuenciador de Liquidación.** Cuando 2 o mas transacciones tienen la misma fecha y hora este secuencial es el que diferencia una de otra, se debe inicializar con el valor 1 y se va incrementando de 1 en 1 segun el orden de llegada. |
 | **`ind_requiere_revision`** | **Indicador de Supervisión.** Bandera utilizada por el sistema para señalar transacciones que requieren validación humana antes de su procesamiento o contabilización final. |
 
 ### 4. Matriz de Signos y Flujo de Caja
