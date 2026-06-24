@@ -19,7 +19,7 @@ load_dotenv()
 class EntryAPI(Resource):
     def get(self, module_name, class_name, method_name):
         obj_loader = Loader(module_name, class_name, method_name, data=request.args)
-        response = send_file(filename_or_fp=obj_loader.response['file'])
+        response = send_file(obj_loader.response['file'])
         response.headers["file_name"] = obj_loader.response['file_name']
         return response
 
