@@ -1,7 +1,7 @@
 from model.configuracionalerta import ConfiguracionAlertaModel
 from model.alerta import AlertaModel
 from config.constants import TIPO_VARIACION_TITULO, TIPO_VARIACION_EJERCICIO
-from app import db
+from config.extensions import db
 from common.AppException import AppException
 from datetime import date
 

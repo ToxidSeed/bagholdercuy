@@ -4,7 +4,7 @@ from common.Response import Response
 from parser.comentaroalerta import ComentarioAlertaParser
 from reader.comentarioalerta import ComentarioAlertaReader
 from manager.comentarioalerta import ComentarioAlertaManager
-from app import db
+from config.extensions import db
 
 
 class ComentarioAlertaController(Base):

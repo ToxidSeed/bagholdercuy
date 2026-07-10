@@ -4,7 +4,7 @@ from model.transaccion import TransaccionModel
 from model.transaccion_saldo import TransaccionSaldoModel
 from constants.instrumento_financiero import get_instrumento_financiero
 from sqlalchemy import func
-from app import db
+from config.extensions import db
 import pandas as pd
 
 class PosicionReader:

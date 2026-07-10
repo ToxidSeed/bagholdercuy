@@ -3,7 +3,7 @@ from parser.cuenta import CuentaParser
 from reader.cuenta import CuentaReader
 from controller.base import Base
 from common.Response import Response
-from app import db
+from config.extensions import db
 
 class CuentaManager(Base):
     def registrar(self, args={}):

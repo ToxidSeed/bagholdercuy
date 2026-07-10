@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.indicador_apcierre import IndicadorApcierreModel
 
 class IndicadorApcierreReader:

@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from api.fmp import FinancialModelingGrepAPI
 from rich.pretty import pprint
 from datetime import date, datetime

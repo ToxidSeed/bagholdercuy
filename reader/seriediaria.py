@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.seriediaria import SerieDiariaModel
 from model.CalendarioSemanal import CalendarioSemanalModel
 

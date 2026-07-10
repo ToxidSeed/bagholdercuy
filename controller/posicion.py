@@ -12,7 +12,7 @@ from service.posicion import PosicionService
 
 from domain.contratoopcion import ContratoOpcion
 
-from app import db
+from config.extensions import db
 
 class PosicionController(Base):
     def get_posiciones_acciones(self, args={}):

@@ -6,7 +6,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
-from app import db, app
+from config.extensions import db, app
 from common.AppException import AppException
 from common.Response import Response
 from common.Formatter import Formatter

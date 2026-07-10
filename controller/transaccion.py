@@ -7,10 +7,13 @@ from common.AppException import AppException
 from pydantic import ValidationError
 from schemas.transaccion import TransaccionAgrupadaSearchRequest
 from schemas.responses.transaccion import transacciones_agrupadas_schema            
+from flask import Blueprint
+from flask_restful import Api
+
 
 class TransaccionController(Base):
-    AUTH_REQUIRED=False
-    
+    AUTH_REQUIRED = False
+
     def get_fechas_con_transacciones(self, args=None):
         id_cuenta = args.get("id_cuenta")
         cod_symbol = args.get("cod_symbol")
@@ -22,7 +25,7 @@ class TransaccionController(Base):
     def get_transacciones_x_fecha(self, args=None):
         id_cuenta = args.get("id_cuenta")
         cod_symbol = args.get("cod_symbol")
-        fch_hr_transaccion = args.get("fch_hr_transaccion") 
+        fch_hr_transaccion = args.get("fch_hr_transaccion")
         results = TransaccionReader.get_transacciones_x_fecha(id_cuenta, cod_symbol, fch_hr_transaccion)
         return Response().from_raw_data(results)
 
@@ -36,7 +39,8 @@ class TransaccionController(Base):
         id_cuenta = args.get("id_cuenta")
         results = TransaccionReader.get_max_fechas_agroupadas_x_symbol(id_cuenta)
         return Response().from_raw_data(results)
-    
+
+
 class TransaccionAgrupadaSearch(Resource):
     AUTH_REQUIRED = False
 
@@ -52,4 +56,12 @@ class TransaccionAgrupadaSearch(Resource):
         results = TransaccionReader.get_max_fechas_agroupadas_x_symbol(params.id_cuenta)
         response = transacciones_agrupadas_schema.dump(results)
         return response, 200
-        
+
+
+def init_module(app, url_prefix):
+    bp = Blueprint("transaccion_bp", __name__)
+    api = Api(bp)
+
+    api.add_resource(TransaccionAgrupadaSearch, "/transaccion-agrupada-search")
+
+    app.register_blueprint(bp, url_prefix=f"{url_prefix}/transaccion")

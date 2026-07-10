@@ -1,5 +1,5 @@
 from model.seriemensual import SerieMensualModel
-from app import db
+from config.extensions import db
 from sqlalchemy.sql import func
 
 class SerieMensualReader:

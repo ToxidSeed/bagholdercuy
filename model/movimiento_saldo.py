@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from datetime import datetime
 import uuid
 from .types import BinaryUUID

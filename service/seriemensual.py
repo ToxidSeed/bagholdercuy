@@ -7,7 +7,7 @@ from datetime import date
 import logging
 
 logger = logging.getLogger(__name__)
-from app import db
+from config.extensions import db
 
 class SerieMensualService:
     def generar_series(self, cod_symbol, fch_ini_procesamiento):

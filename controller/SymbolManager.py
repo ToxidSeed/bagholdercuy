@@ -1,5 +1,5 @@
 from distutils.log import error
-from app import db
+from config.extensions import db
 import inspect
 from datetime import datetime, date
 

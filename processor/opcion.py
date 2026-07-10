@@ -5,7 +5,7 @@ from reader.symbol import SymbolReader
 import csv
 from datetime import date, datetime
 
-from app import db
+from config.extensions import db
 from app import app
 
 

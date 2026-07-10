@@ -1,5 +1,5 @@
 from model.calendariodiario import CalendarioDiarioModel
-from app import db
+from config.extensions import db
 
 class CalendarioDiarioReader:
     def get(fch_dia):

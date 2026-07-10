@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 
 class ConversionMonedaModel(db.Model):
     __tablename__="tb_conversion_moneda"

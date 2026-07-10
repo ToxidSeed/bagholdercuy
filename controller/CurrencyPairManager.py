@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 #from model.CurrencyPairModel import CurrencyPairModel
 from model.MonedaParModel import MonedaParModel
 from common.Response import Response

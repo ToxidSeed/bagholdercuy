@@ -1,7 +1,7 @@
 from datetime import datetime, date, timedelta
 from model.CalendarioSemanal import CalendarioSemanalModel
 from common.Response import Response
-from app import db
+from config.extensions import db
 from controller.base import Base
 
 class CalendarioSemanalManager(Base):

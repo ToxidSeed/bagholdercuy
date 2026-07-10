@@ -1,6 +1,6 @@
 from model.MonedaParModel import MonedaParModel
 from model.MonedaModel import MonedaModel
-from app import db
+from config.extensions import db
 from common.AppException import AppException
 from datetime import datetime, date
 

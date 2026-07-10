@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.contrato_opcion import ContratoOpcionModel
 
 class ContratoOpcionReader:

@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 
 class BrokerModel(db.Model):
     __tablename__="tb_broker"

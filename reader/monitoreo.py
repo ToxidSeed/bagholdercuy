@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.monitoreo import MonitoreoModel
 from model.StockSymbol import StockSymbol as StockSymbolModel
 from model.configuracionalerta import  ConfiguracionAlertaModel

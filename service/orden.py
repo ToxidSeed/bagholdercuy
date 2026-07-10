@@ -22,7 +22,7 @@ import csv, os
 from datetime import date, datetime
 from sqlalchemy import delete
 
-from app import db
+from config.extensions import db
 
 
 class OrdenService:

@@ -1,5 +1,5 @@
 from model.cuenta import CuentaModel
-from app import db
+from config.extensions import db
 
 class CuentaReader:
 

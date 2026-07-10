@@ -5,7 +5,7 @@ from reader.cuenta import CuentaReader
 from parser.usuario import UsuarioParser
 from common.AppException import AppException
 from common.Response import Response
-from app import db
+from config.extensions import db
 from common.Formatter import Formatter
 
 class UsuarioManager(Base):

@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 from constants.instrumento_financiero import get_instrumento_financiero
 
+
 class OrdenManagerEjecutarParams(BaseModel):
     cod_symbol: str    
     id_instrumento_financiero: int

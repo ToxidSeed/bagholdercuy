@@ -3,7 +3,7 @@ from controller.base import Base
 from common.Response import Response
 from parser.broker import BrokerParser
 from processor.broker import BrokerProcessor
-from app import db
+from config.extensions import db
 
 class BrokerManager(Base):
 

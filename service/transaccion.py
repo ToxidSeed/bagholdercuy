@@ -5,7 +5,7 @@ from reader.transaccion import TransaccionReader
 from model.transaccion import TransaccionModel
 from model.transaccion_saldo import TransaccionSaldoModel
 from model.movimiento_saldo import MovimientoSaldoModel
-from app import db
+from config.extensions import db
 import uuid
 
 """

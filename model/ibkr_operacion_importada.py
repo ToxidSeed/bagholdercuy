@@ -7,7 +7,7 @@ from sqlalchemy.dialects.mysql import BIGINT
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from app import db
+from config.extensions import db
 from .types import BinaryUUID
 
 class CategoriaActivo(enum.Enum):

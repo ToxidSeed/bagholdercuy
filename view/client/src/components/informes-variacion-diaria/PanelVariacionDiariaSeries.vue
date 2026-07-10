@@ -87,7 +87,7 @@ export default {
 
             this.loading = true
             this.$http.post(
-                '/reportes/VariacionDiariaBuilder/build', {
+                '/api/v2/reportes/variacion-diaria', {
                 symbol: params.symbol_value,
                 fch_desde: params.fch_desde,
                 fch_hasta: params.fch_hasta

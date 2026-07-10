@@ -1,6 +1,6 @@
 from model.ibkr_operacion_importada import IbkrOperacionImportadaModel
 
-from app import db
+from config.extensions import db
 
 
 class IbkrOperacionImportadaReader:

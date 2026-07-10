@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 
 class StockSymbol(db.Model):
     __tablename__="tb_stock_symbol"

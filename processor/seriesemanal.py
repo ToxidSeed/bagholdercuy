@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from reader.seriediaria import SerieDiariaReader
 from datetime import date
 from model.seriesemanal import SerieSemanalModel

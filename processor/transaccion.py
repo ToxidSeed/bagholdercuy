@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.orden import OrdenModel
 from model.transaccion import TransaccionModel
 

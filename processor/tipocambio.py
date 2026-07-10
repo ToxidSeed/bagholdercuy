@@ -1,6 +1,6 @@
 from model.tipocambio import TipoCambioModel
 from common.AppException import AppException
-from app import db
+from config.extensions import db
 from settings import config
 
 class TipoCambioWriter:     

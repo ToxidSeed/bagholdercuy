@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.transaccion import TransaccionModel
 from model.contrato_opcion import ContratoOpcionModel
 from model.calendariodiario import CalendarioDiarioModel

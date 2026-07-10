@@ -1,6 +1,6 @@
 from model.usuario import UsuarioModel
 from reader.usuario import UsuarioReader
-from app import db
+from config.extensions import db
 
 class UsuarioProcessor:
     def insertar(self, usuario:UsuarioModel):    

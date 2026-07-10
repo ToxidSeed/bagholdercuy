@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 
 import sqlalchemy.sql.functions as func
 from model.orden import OrdenModel

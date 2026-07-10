@@ -9,7 +9,7 @@ from model.configuracionalerta import ConfiguracionAlertaModel
 from reader.configuracionalerta import ConfiguracionAlertaReader
 from datetime import date
 
-from app import db
+from config.extensions import db
 
 class ConfiguracionAlertaController(Base):
     def __init__(self):

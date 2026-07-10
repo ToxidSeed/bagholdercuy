@@ -1,5 +1,5 @@
 from model.broker import BrokerModel
-from app import db
+from config.extensions import db
 
 class BrokerReader:
     def get_brokers_activos():

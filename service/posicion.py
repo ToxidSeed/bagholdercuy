@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from schemas.posicion import RecalcularPosicionesRequest
 from reader.transaccion import TransaccionReader
 from model.transaccion_saldo import TransaccionSaldoModel

@@ -1,5 +1,6 @@
-from app import db
+from config.extensions import db
 from model.instrumento_financiero import InstrumentoFinancieroModel
+
 
 class InstrumentoFinancieroReader:
     @staticmethod

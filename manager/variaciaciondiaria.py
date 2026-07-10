@@ -1,6 +1,6 @@
 from model.variaciondiaria import VariacionDiariaModel
 from model.seriediaria import SerieDiariaModel
-from app import db
+from config.extensions import db
 from sqlalchemy import delete
 
 class VariacionDiariaManager:

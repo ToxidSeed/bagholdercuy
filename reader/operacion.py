@@ -2,7 +2,7 @@ from model.operacion import OperacionModel
 from model.StockSymbol import StockSymbol as StockSymbolModel
 from model.contrato_opcion import ContratoOpcionModel
 
-from app import db
+from config.extensions import db
 from sqlalchemy.sql.functions import func
 
 class OperacionReader:

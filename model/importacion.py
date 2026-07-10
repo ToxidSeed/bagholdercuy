@@ -8,7 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.mysql import BINARY
 from sqlalchemy.orm import relationship
-from app import db
+from config.extensions import db
 from .types import BinaryUUID
 
 

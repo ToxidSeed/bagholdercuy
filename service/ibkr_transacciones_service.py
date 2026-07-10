@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.transaccion import TransaccionModel
 from model.ibkr_operacion_importada import IbkrOperacionImportadaModel, CodigoOperacionIBKR, CategoriaActivo
 from reader.ibkr_operacion_importada import IbkrOperacionImportadaReader

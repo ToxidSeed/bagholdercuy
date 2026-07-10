@@ -11,7 +11,7 @@ from model.variacionsemanal import VariacionSemanalModel
 from model.variaciondiaria import VariacionDiariaModel
 from model.variacionmensual import VariacionMensualModel
 from datetime import date, datetime
-from app import db
+from config.extensions import db
 import pandas as pd
 from common.Formatter import Formatter
 from decimal import Decimal

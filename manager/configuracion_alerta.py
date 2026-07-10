@@ -3,7 +3,7 @@ from reader.configuracionalerta import ConfiguracionAlertaReader
 from reader.symbol import SymbolReader
 from common.AppException import AppException
 from collections import namedtuple
-from app import db
+from config.extensions import db
 from dataclasses import dataclass
 
 @dataclass

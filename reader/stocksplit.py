@@ -1,6 +1,6 @@
 from model.stocksplit import StockSplitModel
 
-from app import db
+from config.extensions import db
 
 class StockSplitReader:
 

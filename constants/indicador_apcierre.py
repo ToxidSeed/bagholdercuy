@@ -1,4 +1,3 @@
-from typing import NamedTuple
 from . import register_init
 
 _indicador_apcierre = None

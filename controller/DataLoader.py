@@ -2,7 +2,7 @@ from common.Error import Error
 from common.Response import Response
 from common.api.MarketAPI import MarketAPI
 from model.StockData import StockData
-from app import db
+from config.extensions import db
 from sqlalchemy.sql.expression import func
 from datetime import date
 

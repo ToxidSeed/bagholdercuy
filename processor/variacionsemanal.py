@@ -10,7 +10,7 @@ from domain.semana import Semana
 from sqlalchemy import func, and_
 from sqlalchemy.orm import join
 from datetime import timedelta, date
-from app import db
+from config.extensions import db
 
 from common.AppException import AppException
 

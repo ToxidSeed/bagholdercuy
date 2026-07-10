@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.usuario import UsuarioModel
 
 class UsuarioReader:

@@ -1,5 +1,5 @@
 from model.variacionsemanal import VariacionSemanalModel
-from app import db
+from config.extensions import db
 from sqlalchemy.sql import func
 import pandas as pd
 
