@@ -6,14 +6,21 @@ import logging
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
-from config.extensions import db, app
+from config.extensions import db
+from flask import current_app
 from common.AppException import AppException
 from common.Response import Response
 from common.Formatter import Formatter
-#from api.iexcloud import iexcloud, RangoHelper
+
+# from api.iexcloud import iexcloud, RangoHelper
 from config.constants import SERIES_PROF_CARGA_ULT1ANYO
-from config.constants import TIPO_FRECUENCIA_SERIE_DIARIA, SERIES_PROF_CARGA_MESACTUAL, SERIES_PROF_CARGA_YTD, \
-    SERIES_PROF_CARGA_ULT3MESES, SERIES_PROF_CARGA_ULT6MESES
+from config.constants import (
+    TIPO_FRECUENCIA_SERIE_DIARIA,
+    SERIES_PROF_CARGA_MESACTUAL,
+    SERIES_PROF_CARGA_YTD,
+    SERIES_PROF_CARGA_ULT3MESES,
+    SERIES_PROF_CARGA_ULT6MESES,
+)
 from controller.base import Base
 
 from parser.serie import SimulacionVariacionParser, SerieControllerParser
@@ -33,7 +40,14 @@ from service.variacionsemanal import VariacionSemanalService
 from service.seriemensual import SerieMensualService
 from service.variacionmensual import VariacionMensualService
 from service.resumenserie import ResumenSerieService
-from service.serie_service import VariacionSemanalLoader, SerieMensualLoader, VariacionMensualLoader, SerieDiariaLoader, VariacionDiariaLoader, SerieSemanalLoader
+from service.serie_service import (
+    VariacionSemanalLoader,
+    SerieMensualLoader,
+    VariacionMensualLoader,
+    SerieDiariaLoader,
+    VariacionDiariaLoader,
+    SerieSemanalLoader,
+)
 import structure.inputfiles as inputfiles
 import structure.series_structure as series_structure
 from domain.semana import CodigoSemana
@@ -56,19 +70,22 @@ DOMINGO = 7
 
 logger = logging.getLogger(__name__)
 
-WRITE_MODE_AGREGAR = app.config["WRITE_MODE_AGREGAR"]
-WRITE_MODE_REEMPLAZAR = app.config["WRITE_MODE_REEMPLAZAR"]
+WRITE_MODE_AGREGAR = current_app.config["WRITE_MODE_AGREGAR"]
+WRITE_MODE_REEMPLAZAR = current_app.config["WRITE_MODE_REEMPLAZAR"]
+
 
 class NASDAQSerieDiariaCsvHelper:
     def get_data(self, cod_symbol, file_storage, sort="asc"):
-        ruta_fichero = self.guardar_fichero_temporal(file_storage=file_storage, cod_symbol=cod_symbol)
+        ruta_fichero = self.guardar_fichero_temporal(
+            file_storage=file_storage, cod_symbol=cod_symbol
+        )
         records = self.leer_csv(ruta_fichero=ruta_fichero)
         return records
 
     def leer_csv(self, ruta_fichero):
         contenido = []
         with open(ruta_fichero, "r") as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',')
+            csvreader = csv.reader(csvfile, delimiter=",")
             col_fch_serie = 0
             col_cierre = 1
             col_volumen = 2
@@ -76,7 +93,7 @@ class NASDAQSerieDiariaCsvHelper:
             col_maximo = 4
             col_minimo = 5
 
-            #quitando la primera linea por que son las cabeceras
+            # quitando la primera linea por que son las cabeceras
             next(csvreader)
             for row in csvreader:
                 fch_serie = datetime.strptime(row[col_fch_serie], "%m/%d/%Y").date()
@@ -84,15 +101,21 @@ class NASDAQSerieDiariaCsvHelper:
                 imp_apertura = float(row[col_apertura][1:])
                 imp_maximo = float(row[col_maximo][1:])
                 imp_minimo = float(row[col_minimo][1:])
-                quote = (fch_serie, imp_cierre , int(row[col_volumen]), imp_apertura, imp_maximo, imp_minimo)
+                quote = (
+                    fch_serie,
+                    imp_cierre,
+                    int(row[col_volumen]),
+                    imp_apertura,
+                    imp_maximo,
+                    imp_minimo,
+                )
                 contenido.append(quote)
 
         contenido = sorted(contenido)
         return contenido
 
-
     def guardar_fichero_temporal(self, file_storage, cod_symbol):
-        tmp_dir = app.config.get("RUTA_TMP")
+        tmp_dir = current_app.config.get("RUTA_TMP")
         fch_actual_iso = date.today().isoformat()
         fichero_nombre = f"nasdaq_{cod_symbol}_{str(uuid.uuid1())}.csv"
         fichero_ruta = os.path.join(tmp_dir, fichero_nombre)
@@ -100,14 +123,10 @@ class NASDAQSerieDiariaCsvHelper:
         return fichero_ruta
 
 
-
 class SerieController(Base):
 
     def _crear_elemento_stats(self, key, label, objeto=None):
-        base_dict = {
-            "key": key,
-            "label": label
-        }
+        base_dict = {"key": key, "label": label}
 
         if objeto is None:
             base_dict["min"] = ""
@@ -120,12 +139,11 @@ class SerieController(Base):
 
         return base_dict
 
-    def get_lista_fechas_maximas_x_symbol(self, args={}):                
+    def get_lista_fechas_maximas_x_symbol(self, args={}):
         elements = []
         vr = VariacionDiariaReader()
         records = SerieDiariaReader().get_lista_fechas_maximas_x_symbol()
         for elem in records:
-
 
             fch_ultimo_dia_util = self._get_ultimo_dia_util()
             record = {
@@ -133,24 +151,40 @@ class SerieController(Base):
                 "min_fch_serie": elem.min_fch_serie,
                 "max_fch_serie": elem.max_fch_serie,
                 "num_series": elem.num_series,
-                "num_dias_desde_ultima_serie": (fch_ultimo_dia_util - elem.max_fch_serie).days,                
-                "serie_diaria_integridad":{
-                    "dsc_estado":"Correcto",
-                    "dsc_estado_split":"ok",
-                    "dsc_est_num_dias_separacion":"ok"
-                },                                
+                "num_dias_desde_ultima_serie": (
+                    fch_ultimo_dia_util - elem.max_fch_serie
+                ).days,
+                "serie_diaria_integridad": {
+                    "dsc_estado": "Correcto",
+                    "dsc_estado_split": "ok",
+                    "dsc_est_num_dias_separacion": "ok",
+                },
                 "est_var_diaria": "Correcto",
                 "est_serie_semanal": "Correcto",
                 "est_var_semanal": "Correcto",
                 "est_serie_mensual": "Correcto",
-                "est_var_mensual": "Correcto"
+                "est_var_mensual": "Correcto",
             }
 
-            estados = [record.get(key) for key in ['est_serie_diaria','est_var_diaria','est_serie_semanal','est_var_semanal','est_serie_mensual','est_var_mensual']]
-            record["estado"] = self._determinar_estado(estados=estados, fch_ult_dia_util=fch_ultimo_dia_util, fch_ult_serie=elem.max_fch_serie)
+            estados = [
+                record.get(key)
+                for key in [
+                    "est_serie_diaria",
+                    "est_var_diaria",
+                    "est_serie_semanal",
+                    "est_var_semanal",
+                    "est_serie_mensual",
+                    "est_var_mensual",
+                ]
+            ]
+            record["estado"] = self._determinar_estado(
+                estados=estados,
+                fch_ult_dia_util=fch_ultimo_dia_util,
+                fch_ult_serie=elem.max_fch_serie,
+            )
 
             elements.append(record)
-        
+
         return Response().from_raw_data(elements)
 
     def _get_ultimo_dia_util(self):
@@ -169,20 +203,25 @@ class SerieController(Base):
 
         integridad = info.__dict__
         integridad["dsc_estado"] = "Correcto" if info.correcto is True else "Defectuoso"
-        integridad["dsc_estado_split"] = "ok" if info.split_correcto is True else "Error"
-        # integridad["dsc_est_num_dias_separacion"] = "ok" if info.num_dias_separacion_correcto is True else "Error"        
+        integridad["dsc_estado_split"] = (
+            "ok" if info.split_correcto is True else "Error"
+        )
+        # integridad["dsc_est_num_dias_separacion"] = "ok" if info.num_dias_separacion_correcto is True else "Error"
         integridad["dsc_est_num_dias_separacion"] = "ok"
         return integridad
 
-
-    def _determinar_estado_var_diaria(self, reader:VariacionDiariaReader, cod_symbol, num_series_diarias):
+    def _determinar_estado_var_diaria(
+        self, reader: VariacionDiariaReader, cod_symbol, num_series_diarias
+    ):
         stats = reader.get_estadisticas(cod_symbol=cod_symbol)
         if stats.cantidad == num_series_diarias:
             return "Correcto"
         else:
             return "Defectuoso"
 
-    def _determinar_estado_serie_semanal(self, cod_symbol, min_fch_serie, max_fch_serie):
+    def _determinar_estado_serie_semanal(
+        self, cod_symbol, min_fch_serie, max_fch_serie
+    ):
         stats = SerieSemanalReader.get_estadisticas(cod_symbol=cod_symbol)
         min_cod_semana = stats.min_cod_semana
         min_semana_serie = Semana.from_fecha(fecha=min_fch_serie).codigo()
@@ -195,7 +234,9 @@ class SerieController(Base):
         else:
             return "Defectuoso"
 
-    def _determinar_estado_variacion_semanal(self, cod_symbol, min_fch_serie, max_fch_serie):
+    def _determinar_estado_variacion_semanal(
+        self, cod_symbol, min_fch_serie, max_fch_serie
+    ):
         stats = VariacionSemanalReader.get_estadisticas(cod_symbol=cod_symbol)
         min_cod_semana = stats.min_cod_semana
         min_semana_serie = Semana.from_fecha(fecha=min_fch_serie).codigo()
@@ -208,7 +249,9 @@ class SerieController(Base):
         else:
             return "Defectuoso"
 
-    def _determinar_estado_series_mensuales(self, cod_symbol,  min_fch_serie, max_fch_serie):
+    def _determinar_estado_series_mensuales(
+        self, cod_symbol, min_fch_serie, max_fch_serie
+    ):
         stats = SerieMensualReader.get_estadisticas(cod_symbol=cod_symbol)
         if stats.min_fch_mes is None or stats.max_fch_mes is None:
             return "Defectuoso"
@@ -224,7 +267,9 @@ class SerieController(Base):
         else:
             return "Defectuoso"
 
-    def _determinar_estado_variaciones_mensuales(self, cod_symbol,  min_fch_serie, max_fch_serie):
+    def _determinar_estado_variaciones_mensuales(
+        self, cod_symbol, min_fch_serie, max_fch_serie
+    ):
         stats = VariacionMensualReader.get_estadisticas(cod_symbol=cod_symbol)
         if stats.min_fch_mes is None or stats.max_fch_mes is None:
             return "Defectuoso"
@@ -240,8 +285,7 @@ class SerieController(Base):
         else:
             return "Defectuoso"
 
-
-    def _determinar_estado(self, estados,  fch_ult_dia_util:date, fch_ult_serie:date):
+    def _determinar_estado(self, estados, fch_ult_dia_util: date, fch_ult_serie: date):
         if "Defectuoso" in estados:
             return "Defectuoso"
 
@@ -252,10 +296,11 @@ class SerieController(Base):
         try:
             parser = SerieControllerParser()
             params = parser.parse_args_get_series_diarias(args=args)
-            records = SerieDiariaReader.get_series_entre_fechas(symbol=params.get("cod_symbol"),
-                                                                fch_inicio=params.get("fch_desde"),
-                                                                fch_fin=params.get("fch_hasta")
-                                                      )
+            records = SerieDiariaReader.get_series_entre_fechas(
+                symbol=params.get("cod_symbol"),
+                fch_inicio=params.get("fch_desde"),
+                fch_fin=params.get("fch_hasta"),
+            )
             return Response().from_raw_data(records)
         except Exception as e:
             return Response().from_exception(e)
@@ -264,24 +309,28 @@ class SerieController(Base):
 class MultipleLoaderController(Base):
     def generar_series_diarias(self, cod_symbol, series, flg_importes_ajustados, mode):
         serie_diaria_service = SerieDiariaService()
-        fch_inicio_insercion = serie_diaria_service.insertar_multiples_series(cod_symbol, series, flg_importes_ajustados, mode)
+        fch_inicio_insercion = serie_diaria_service.insertar_multiples_series(
+            cod_symbol, series, flg_importes_ajustados, mode
+        )
         db.session.flush()
         return fch_inicio_insercion
 
     def generar_variaciones_diarias(self, cod_symbol, fch_inicio_procesamiento):
         variacion_diaria_service = VariacionDiariaService()
-        variacion_diaria_service.generar_variaciones(cod_symbol, fch_inicio_procesamiento)
+        variacion_diaria_service.generar_variaciones(
+            cod_symbol, fch_inicio_procesamiento
+        )
         db.session.flush()
 
     def generar_series_semanales(self, cod_symbol, fch_inicio_procesamiento):
         serie_semanal_service = SerieSemanalService()
         serie_semanal_service.generar_series(cod_symbol, fch_inicio_procesamiento)
         db.session.flush()
-        
+
     def generar_variaciones_semanales(self, cod_symbol, fch_inicio_procesamiento):
         variacion_semanal_service = VariacionSemanalService()
         variacion_semanal_service.generar_series(cod_symbol, fch_inicio_procesamiento)
-        db.session.flush()        
+        db.session.flush()
 
     def generar_series_mensuales(self, cod_symbol, fch_inicio_procesamiento):
         serie_mensual_service = SerieMensualService()
@@ -296,7 +345,7 @@ class MultipleLoaderController(Base):
         rss = ResumenSerieService()
         rss.guardar(cod_symbol)
 
-    def crear_series(self, series, cod_symbol, modo_carga):        
+    def crear_series(self, series, cod_symbol, modo_carga):
         if modo_carga == "Agregar":
             modo_carga = WRITE_MODE_AGREGAR
         elif modo_carga == "Reemplazar":
@@ -305,11 +354,13 @@ class MultipleLoaderController(Base):
             raise AppException("{modo_carga} no es un modo válido")
 
         # generando los distintos tipos de series
-        fch_inicio_procesamiento = self.generar_series_diarias(cod_symbol, series=series, flg_importes_ajustados=True, mode=modo_carga)        
+        fch_inicio_procesamiento = self.generar_series_diarias(
+            cod_symbol, series=series, flg_importes_ajustados=True, mode=modo_carga
+        )
 
         # generar las variaciones
-        self.generar_variaciones_diarias(cod_symbol, fch_inicio_procesamiento)        
-        self.generar_series_semanales(cod_symbol, fch_inicio_procesamiento)        
+        self.generar_variaciones_diarias(cod_symbol, fch_inicio_procesamiento)
+        self.generar_series_semanales(cod_symbol, fch_inicio_procesamiento)
         self.generar_variaciones_semanales(cod_symbol, fch_inicio_procesamiento)
         self.generar_series_mensuales(cod_symbol, fch_inicio_procesamiento)
         self.generar_variaciones_mensuales(cod_symbol, fch_inicio_procesamiento)
@@ -328,15 +379,19 @@ class NasdaqCsvLoader(MultipleLoaderController):
             modo_carga = form.get("modo_carga")
             self.__guardar_fichero_temporal(tmp_fichero, cod_symbol)
             contenido = self.parse_contenido_fichero()
-            self.crear_series(series=contenido, cod_symbol=cod_symbol, modo_carga=modo_carga)
+            self.crear_series(
+                series=contenido, cod_symbol=cod_symbol, modo_carga=modo_carga
+            )
             db.session.commit()
-            return Response(msg="Se ha procesado correctamente el fichero con los codigos de opcion")
+            return Response(
+                msg="Se ha procesado correctamente el fichero con los codigos de opcion"
+            )
         except Exception as e:
             db.session.rollback()
             return Response().from_exception(e)
 
     def __guardar_fichero_temporal(self, tmp_fichero, cod_symbol):
-        tmp_dir = app.config.get("RUTA_TMP")
+        tmp_dir = current_app.config.get("RUTA_TMP")
         fch_actual_iso = date.today().isoformat()
         fichero_nombre = f"nasdaq_{cod_symbol}_{str(uuid.uuid1())}.csv"
         self.fichero_ruta = os.path.join(tmp_dir, fichero_nombre)
@@ -345,7 +400,7 @@ class NasdaqCsvLoader(MultipleLoaderController):
     def parse_contenido_fichero(self):
         contenido = []
         with open(self.fichero_ruta, "r") as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=',')
+            csvreader = csv.reader(csvfile, delimiter=",")
             col_fch_serie = 0
             col_cierre = 1
             col_volumen = 2
@@ -353,27 +408,23 @@ class NasdaqCsvLoader(MultipleLoaderController):
             col_maximo = 4
             col_minimo = 5
 
-            #quitando la primera linea por que son las cabeceras
+            # quitando la primera linea por que son las cabeceras
             next(csvreader)
             for row in csvreader:
                 fch_serie = datetime.strptime(row[col_fch_serie], "%m/%d/%Y").date()
-                imp_cierre = float(row[col_cierre].replace("$",""))
-                imp_apertura = float(row[col_apertura].replace("$",""))
-                imp_maximo = float(row[col_maximo].replace("$",""))
-                imp_minimo = float(row[col_minimo].replace("$",""))
+                imp_cierre = float(row[col_cierre].replace("$", ""))
+                imp_apertura = float(row[col_apertura].replace("$", ""))
+                imp_maximo = float(row[col_maximo].replace("$", ""))
+                imp_minimo = float(row[col_minimo].replace("$", ""))
                 volumen = int(row[col_volumen])
                 serie = inputfiles.CsvNasdaq(
-                    fch_serie,
-                    imp_apertura,
-                    imp_maximo,
-                    imp_minimo,
-                    imp_cierre, 
-                    volumen
-                )                
+                    fch_serie, imp_apertura, imp_maximo, imp_minimo, imp_cierre, volumen
+                )
                 contenido.append(serie)
 
         contenido = sorted(contenido)
         return contenido
+
 
 class MarketStackLoaderController(MultipleLoaderController):
     def load(self, args=None):
@@ -383,10 +434,14 @@ class MarketStackLoaderController(MultipleLoaderController):
             fch_hasta = args.get("fch_hasta")
             modo_carga = args.get("modo_carga")
 
-            #get series
-            df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)            
-            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(cod_symbol, df_series, modo_carga)
-            fch_inicio_series = SerieDiariaLoader().load(cod_symbol, df_series, modo_carga)
+            # get series
+            df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(
+                cod_symbol, df_series, modo_carga
+            )
+            fch_inicio_series = SerieDiariaLoader().load(
+                cod_symbol, df_series, modo_carga
+            )
             VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
             SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
             VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
@@ -401,28 +456,33 @@ class MarketStackLoaderController(MultipleLoaderController):
 
     def get_api_series(self, cod_symbol, fch_desde, fch_hasta):
         series = MarketStackAPI.get_historical_data(cod_symbol, fch_desde, fch_hasta)
-        data = series.get('data')
+        data = series.get("data")
         df_series = pd.DataFrame(data)
         return df_series
 
     def parse_incoming_series(self, cod_symbol, df, modo_carga):
-        df = df.rename(columns={
-            'symbol':'cod_symbol',
-            'date':'fch_serie',
-            'open':'imp_apertura_sin_ajus',
-            'high':'imp_maximo_sin_ajus',
-            'low':'imp_minimo_sin_ajus',
-            'close':'imp_cierre_sin_ajus',
-            'adj_open':'imp_apertura',
-            'adj_high':'imp_maximo',
-            'adj_low':'imp_minimo',
-            'adj_close':'imp_cierre',
-        })
+        df = df.rename(
+            columns={
+                "symbol": "cod_symbol",
+                "date": "fch_serie",
+                "open": "imp_apertura_sin_ajus",
+                "high": "imp_maximo_sin_ajus",
+                "low": "imp_minimo_sin_ajus",
+                "close": "imp_cierre_sin_ajus",
+                "adj_open": "imp_apertura",
+                "adj_high": "imp_maximo",
+                "adj_low": "imp_minimo",
+                "adj_close": "imp_cierre",
+            }
+        )
 
-        df["fch_serie"] = pd.to_datetime(df["fch_serie"], format="%Y-%m-%dT%H:%M:%S%z").dt.date
+        df["fch_serie"] = pd.to_datetime(
+            df["fch_serie"], format="%Y-%m-%dT%H:%M:%S%z"
+        ).dt.date
         fch_max_serie = df["fch_serie"].max()
         fch_min_serie = df["fch_serie"].min()
         return df, fch_max_serie, fch_min_serie
+
 
 class MarketDataLoaderController(MultipleLoaderController):
     def load(self, args=None):
@@ -433,8 +493,12 @@ class MarketDataLoaderController(MultipleLoaderController):
             modo_carga = args.get("modo_carga")
 
             df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)
-            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(df_series)
-            fch_inicio_series = SerieDiariaLoader().load(cod_symbol, df_series, modo_carga)
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(
+                df_series
+            )
+            fch_inicio_series = SerieDiariaLoader().load(
+                cod_symbol, df_series, modo_carga
+            )
             VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
             SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
             VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
@@ -450,41 +514,45 @@ class MarketDataLoaderController(MultipleLoaderController):
     def get_api_series(self, cod_symbol, fch_desde, fch_hasta):
         series = MarketDataAPI.candles(cod_symbol, "1D", fch_desde, fch_hasta)
         data = {
-            't': series.get('t'),
-            'o': series.get('o'),
-            'h': series.get('h'),
-            'l': series.get('l'),
-            'c': series.get('c'),
-            'v': series.get('v')
+            "t": series.get("t"),
+            "o": series.get("o"),
+            "h": series.get("h"),
+            "l": series.get("l"),
+            "c": series.get("c"),
+            "v": series.get("v"),
         }
         df_series = pd.DataFrame(data)
-        df_series['cod_symbol'] = cod_symbol
+        df_series["cod_symbol"] = cod_symbol
         return df_series
 
     def parse_incoming_series(self, df_series):
-        df_series = df_series.rename(columns={
-            't': 'fch_serie',
-            'o': 'imp_apertura',
-            'h': 'imp_maximo',
-            'l': 'imp_minimo',
-            'c': 'imp_cierre',
-            'v': 'volumen'
-        })
-        
-        df_series["fch_serie"] = pd.to_datetime(df_series["fch_serie"], unit='s').dt.date
-        
+        df_series = df_series.rename(
+            columns={
+                "t": "fch_serie",
+                "o": "imp_apertura",
+                "h": "imp_maximo",
+                "l": "imp_minimo",
+                "c": "imp_cierre",
+                "v": "volumen",
+            }
+        )
+
+        df_series["fch_serie"] = pd.to_datetime(
+            df_series["fch_serie"], unit="s"
+        ).dt.date
+
         # Duplicating columns for adjusted/unadjusted as the source only provides one set
-        df_series['imp_apertura_sin_ajus'] = df_series['imp_apertura']
-        df_series['imp_maximo_sin_ajus'] = df_series['imp_maximo']
-        df_series['imp_minimo_sin_ajus'] = df_series['imp_minimo']
-        df_series['imp_cierre_sin_ajus'] = df_series['imp_cierre']
+        df_series["imp_apertura_sin_ajus"] = df_series["imp_apertura"]
+        df_series["imp_maximo_sin_ajus"] = df_series["imp_maximo"]
+        df_series["imp_minimo_sin_ajus"] = df_series["imp_minimo"]
+        df_series["imp_cierre_sin_ajus"] = df_series["imp_cierre"]
 
         fch_max_serie = df_series["fch_serie"].max()
         fch_min_serie = df_series["fch_serie"].min()
         return df_series, fch_max_serie, fch_min_serie
 
 
-class InvestingLoader(Base):        
+class InvestingLoader(Base):
     def load(self, args=None):
         try:
             tmp_fichero = args.get("files").get("fichero")
@@ -492,8 +560,10 @@ class InvestingLoader(Base):
             cod_symbol = form_data.get("cod_symbol")
             modo_carga = form_data.get("modo_carga")
 
-            df = pd.read_csv(tmp_fichero)            
-            df, fch_max_serie, fch_min_serie = self.load_series_diarias(cod_symbol, df, modo_carga)                                                                                        
+            df = pd.read_csv(tmp_fichero)
+            df, fch_max_serie, fch_min_serie = self.load_series_diarias(
+                cod_symbol, df, modo_carga
+            )
             VariacionDiariaLoader().load(cod_symbol, fch_min_serie, modo_carga)
             SerieSemanalLoader().load(cod_symbol, fch_min_serie, modo_carga)
             VariacionSemanalLoader().load(cod_symbol, fch_min_serie, modo_carga)
@@ -501,37 +571,39 @@ class InvestingLoader(Base):
             VariacionMensualLoader().load(cod_symbol, fch_min_serie, modo_carga)
             ResumenSerieService().guardar(cod_symbol)
             db.session.commit()
-            #db.session.rollback()
+            # db.session.rollback()
             return Response(msg="Se ha realizado la carga correctamente")
         except Exception as e:
             db.session.rollback()
-            return Response().from_exception(e)            
-        
+            return Response().from_exception(e)
+
     def load_series_diarias(self, cod_symbol, df, modo_carga):
-        df = df.rename(columns={
-           "Último":"imp_cierre",
-           "Fecha":"fch_serie",
-           "Apertura":"imp_apertura",
-           "Máximo":"imp_maximo",
-           "Mínimo":"imp_minimo"
-        })
+        df = df.rename(
+            columns={
+                "Último": "imp_cierre",
+                "Fecha": "fch_serie",
+                "Apertura": "imp_apertura",
+                "Máximo": "imp_maximo",
+                "Mínimo": "imp_minimo",
+            }
+        )
 
         df["cod_symbol"] = cod_symbol
         df["fch_serie"] = pd.to_datetime(df["fch_serie"], format="%d.%m.%Y").dt.date
-        df["imp_cierre"] = df["imp_cierre"].str.replace(",", ".").apply(Decimal)        
-        df["imp_apertura"] = df["imp_apertura"].str.replace(",", ".").apply(Decimal)        
-        df["imp_maximo"] = df["imp_maximo"].str.replace(",",".").apply(Decimal)        
-        df["imp_minimo"] = df["imp_minimo"].str.replace(",",".").apply(Decimal)        
+        df["imp_cierre"] = df["imp_cierre"].str.replace(",", ".").apply(Decimal)
+        df["imp_apertura"] = df["imp_apertura"].str.replace(",", ".").apply(Decimal)
+        df["imp_maximo"] = df["imp_maximo"].str.replace(",", ".").apply(Decimal)
+        df["imp_minimo"] = df["imp_minimo"].str.replace(",", ".").apply(Decimal)
         df["imp_apertura_sin_ajus"] = df["imp_apertura"]
         df["imp_maximo_sin_ajus"] = df["imp_maximo"]
         df["imp_minimo_sin_ajus"] = df["imp_minimo"]
         df["imp_cierre_sin_ajus"] = df["imp_cierre"]
-        
+
         SerieDiariaLoader().load(cod_symbol, df, modo_carga)
         fch_max_serie = df["fch_serie"].max()
         fch_min_serie = df["fch_serie"].min()
         return df, fch_max_serie, fch_min_serie
-            
+
 
 class SimulacionVariacionManager(Base):
     def __init__(self):
@@ -544,39 +616,56 @@ class SimulacionVariacionManager(Base):
         fch_final = args.get("fch_final")
         fechas_iniciales = args.get("fechas_iniciales")
 
-        serie_final = self.serie_diaria_reader.get_serie(symbol=cod_symbol, fch_serie=fch_final)
+        serie_final = self.serie_diaria_reader.get_serie(
+            symbol=cod_symbol, fch_serie=fch_final
+        )
 
         variaciones = []
 
-        for fch_inicial, value in fechas_iniciales.values():            
-            
-            serie_inicial = self.serie_diaria_reader.get_serie_anterior_a_fecha(cod_symbol=cod_symbol, fch_serie=fch_inicial)
-            valores_limites = self.variacion_diaria_reader.get_valores_limites_entre_fechas(cod_symbol=cod_symbol, fch_inicial=fch_inicial, fch_final=fch_final)
+        for fch_inicial, value in fechas_iniciales.values():
+
+            serie_inicial = self.serie_diaria_reader.get_serie_anterior_a_fecha(
+                cod_symbol=cod_symbol, fch_serie=fch_inicial
+            )
+            valores_limites = (
+                self.variacion_diaria_reader.get_valores_limites_entre_fechas(
+                    cod_symbol=cod_symbol, fch_inicial=fch_inicial, fch_final=fch_final
+                )
+            )
 
             try:
 
-                imp_apertura = serie_inicial.imp_apertura if serie_inicial is not None else 0
+                imp_apertura = (
+                    serie_inicial.imp_apertura if serie_inicial is not None else 0
+                )
 
                 record = {
-                    "cod_symbol":cod_symbol,
-                    "fch_final":fch_final.date().isoformat(),
-                    "num_dias_profundidad":f"-{value}",
-                    "fch_inicial":fch_inicial.date().isoformat(),
-                    "imp_apertura":imp_apertura,
-                    "imp_cierre":serie_final.imp_cierre,
-                    "imp_maximo":valores_limites.imp_maximo,
-                    "imp_minimo":valores_limites.imp_minimo,
-                    "imp_var_apertura_cierre": float(serie_final.imp_cierre) - float(serie_inicial.imp_apertura),
-                    "imp_var_minimo_maximo": float(valores_limites.imp_maximo) - float(valores_limites.imp_minimo),
-                    "imp_var_aper_maximo": float(valores_limites.imp_maximo) - float(serie_inicial.imp_apertura),
-                    "imp_var_cierre_maximo": float(serie_final.imp_cierre) - float(valores_limites.imp_maximo),
-                    "imp_var_aper_minimo": float(valores_limites.imp_minimo) - float(serie_inicial.imp_apertura),
-                    "imp_var_cierre_minimo": float(serie_final.imp_cierre) - float(valores_limites.imp_minimo)
-                } 
+                    "cod_symbol": cod_symbol,
+                    "fch_final": fch_final.date().isoformat(),
+                    "num_dias_profundidad": f"-{value}",
+                    "fch_inicial": fch_inicial.date().isoformat(),
+                    "imp_apertura": imp_apertura,
+                    "imp_cierre": serie_final.imp_cierre,
+                    "imp_maximo": valores_limites.imp_maximo,
+                    "imp_minimo": valores_limites.imp_minimo,
+                    "imp_var_apertura_cierre": float(serie_final.imp_cierre)
+                    - float(serie_inicial.imp_apertura),
+                    "imp_var_minimo_maximo": float(valores_limites.imp_maximo)
+                    - float(valores_limites.imp_minimo),
+                    "imp_var_aper_maximo": float(valores_limites.imp_maximo)
+                    - float(serie_inicial.imp_apertura),
+                    "imp_var_cierre_maximo": float(serie_final.imp_cierre)
+                    - float(valores_limites.imp_maximo),
+                    "imp_var_aper_minimo": float(valores_limites.imp_minimo)
+                    - float(serie_inicial.imp_apertura),
+                    "imp_var_cierre_minimo": float(serie_final.imp_cierre)
+                    - float(valores_limites.imp_minimo),
+                }
 
                 variaciones.append(record)
             except Exception as e:
-                raise AppException(msg=f"Error al procesar la fecha {fch_inicial}, dias: {str(value)}, error={str(e)}")            
+                raise AppException(
+                    msg=f"Error al procesar la fecha {fch_inicial}, dias: {str(value)}, error={str(e)}"
+                )
 
         return Response().from_raw_data(variaciones)
-

@@ -14,6 +14,10 @@
             <div v-if="symbol_value == ''">
                 <span class="text-body1 text-orange-10">Seleccionar instrumento financiero</span>
             </div>            
+            <q-btn icon="content_copy" @click="copiarAlPortapapeles" flat dense round color="primary"
+                class="q-ml-sm">
+                <q-tooltip>Copiar al portapapeles</q-tooltip>
+            </q-btn>
         </template>
         <template v-slot:header>
             <q-tr>
@@ -137,6 +141,34 @@ export default {
             if (this.indata.length > 0){
                 this.data = this.indata                
             }
+        },
+        copiarAlPortapapeles: function () {
+            if (!this.data || this.data.length === 0) return;
+            const header = [
+                "Año", "Mes", "Fecha", "Imp. Cierre anterior", "Imp. Apertura", "Imp. Maximo",
+                "Imp. Minimo", "Imp. Cierre", "Var. Cierre", "Var. Maximo", "Var. Minimo",
+                "Pct. Cierre", "Pct. Maximo", "Pct. Minimo"
+            ].join("\t");
+            const rows = this.data.map(row => {
+                return [
+                    row.anyo, row.mes, row.fch_ini_mes, row.imp_cierre_ant, row.imp_apertura,
+                    row.imp_maximo, row.imp_minimo, row.imp_cierre, row.imp_variacion_cierre,
+                    row.imp_variacion_maximo, row.imp_variacion_minimo, row.pct_variacion_cierre,
+                    row.pct_variacion_maximo, row.pct_variacion_minimo
+                ].join("\t");
+            }).join("\n");
+            const textToCopy = header + "\n" + rows;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                if (this.$q && this.$q.notify) {
+                    this.$q.notify({
+                        message: "Copiado al portapapeles",
+                        color: "positive",
+                        icon: "check"
+                    });
+                }
+            }).catch(err => {
+                console.error("Error al copiar: ", err);
+            });
         }
     }
 }

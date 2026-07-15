@@ -1,12 +1,14 @@
 import os
 
+
 def build_sqlalchemy_database_uri():
-    username = os.getenv('BAGHOLDER_MYSQL_USERNAME', 'alone')
-    password = os.getenv('BAGHOLDER_MYSQL_PASSWORD')
-    host = os.getenv('BAGHOLDER_MYSQL_HOST', 'localhost')
-    port = os.getenv('BAGHOLDER_MYSQL_PORT', '3306')
-    database = os.getenv('BAGHOLDER_MYSQL_DATABASE', 'bagholdercuy')
-    return f"mysql+mysqlconnector://{username}:{password}@{host}:{port}/{database}"
+    username = os.getenv("BAGHOLDER_MYSQL_USERNAME", "alone")
+    password = os.getenv("BAGHOLDER_MYSQL_PASSWORD")
+    host = os.getenv("BAGHOLDER_MYSQL_HOST", "localhost")
+    port = os.getenv("BAGHOLDER_MYSQL_PORT", "3306")
+    database = os.getenv("BAGHOLDER_MYSQL_DATABASE", "bagholdercuy")
+    return f"mysql+pymysql://{username}:{password}@{host}:{port}/{database}?charset=utf8mb4"
+
 
 class Config:
     SQLALCHEMY_DATABASE_URI = build_sqlalchemy_database_uri()
@@ -22,6 +24,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+
 
 class ProductionConfig(Config):
     DEBUG = True

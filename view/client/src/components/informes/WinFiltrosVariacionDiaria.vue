@@ -7,7 +7,7 @@
                 </q-toolbar-title>
                 <q-btn flat round dense icon="close" color="red" @click="btn_cerrar_click" />
             </q-toolbar>
-            <q-separator />
+            
             <q-card-section>
                 <div class="q-gutter-xs">
                     <SelectSymbol v-on:select-symbol="select_symbol_handler" />
@@ -19,10 +19,10 @@
                     </div>
                 </div>
             </q-card-section>
-            <q-separator spaced />
+            
             <q-card-actions align="right">
-                <q-btn label="Aceptar" color="blue-10" @click="btn_aceptar_click" v-close-popup />
-                <q-btn label="Cerrar" color="red-10" @click="btn_cerrar_click" />
+                <q-btn label="Aceptar" color="blue-10" @click="btn_aceptar_click" dense no-caps/>
+                <q-btn label="Cerrar" color="red-10" @click="btn_cerrar_click"  dense no-caps/>
             </q-card-actions>
         </q-card>
     </q-dialog>
