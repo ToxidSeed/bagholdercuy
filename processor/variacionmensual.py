@@ -1,7 +1,7 @@
 from datetime import date
 from model.variacionmensual import VariacionMensualModel
 from reader.seriemensual import SerieMensualReader
-from app import db
+from config.extensions import db
 from domain.mes import CodigoMes
 
 from datetime import timedelta

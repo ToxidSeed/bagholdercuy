@@ -9,7 +9,7 @@ from config.general import CLIENT_DATE_FORMAT
 from datetime import date, datetime
 from controller.base import Base
 
-from app import db
+from config.extensions import db
 
 class TipoCambioFinder(Base):    
 

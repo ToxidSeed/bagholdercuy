@@ -31,12 +31,12 @@ class HoldingsManager(Base):
             PosicionModel.cod_symbol,            
             PosicionModel.cod_opcion,
             PosicionModel.cod_tipo_activo,
-            func.min(PosicionModel.fch_transaccion).label('holding_since'),
+            func.min(PosicionModel.fch_hr_transaccion).label('holding_since'),
             func.sum(PosicionModel.imp_accion).label("sum_imp_accion"),
             func.sum(PosicionModel.imp_posicion).label("sum_imp_operacion"),
             func.sum(PosicionModel.imp_accion_origen).label("sum_imp_accion_origen"),
             func.sum(PosicionModel.ctd_saldo_posicion).label("sum_shares_balance"),
-            func.min(PosicionModel.fch_transaccion).label("min_trade_date")
+            func.min(PosicionModel.fch_hr_transaccion).label("min_trade_date")
         ).filter(
             PosicionModel.ctd_saldo_posicion != 0
         ).group_by(

@@ -20,12 +20,12 @@ class TransaccionHandler:
     def __init__(self, usuario):
         self.usuario = usuario
 
-    def get_sig_num_transaccion(usuario_id, fch_transaccion):
+    def get_sig_num_transaccion(usuario_id, fch_hr_transaccion):
         num_trans = 0
         query = db.session.query(
             func.coalesce(func.max(TransaccionFondosModel.num_transaccion),0).label("num_transaccion"),            
         ).filter(
-            TransaccionFondosModel.fch_transaccion == fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion == fch_hr_transaccion,
             TransaccionFondosModel.usuario_id == usuario_id
         )
 
@@ -54,10 +54,10 @@ class TransaccionHandler:
 
         return saldo
 
-    def ult_transaccion(usuario_id, fch_transaccion):
+    def ult_transaccion(usuario_id, fch_hr_transaccion):
         result = TransaccionFondosModel.query.filter(
             TransaccionFondosModel.usuario_id == usuario_id,
-            TransaccionFondosModel.fch_transaccion > fch_transaccion
+            TransaccionFondosModel.fch_hr_transaccion > fch_hr_transaccion
         ).first()
 
         if result is None:
@@ -77,15 +77,15 @@ class ReorganizarHandler:
         #reprocesar
         ReprocesadorFondosHandler(usuario=self.usuario).procesar()
 
-    def veri_integridad_fecha(self, fch_transaccion):
+    def veri_integridad_fecha(self, fch_hr_transaccion):
         grupos = db.session.query(
-            TransaccionFondosModel.fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion,
             TransaccionFondosModel.num_transaccion,
             func.count(1).label("cantidd")
         ).filter(
-            TransaccionFondosModel.fch_transaccion == fch_transaccion
+            TransaccionFondosModel.fch_hr_transaccion == fch_hr_transaccion
         ).group_by(
-            TransaccionFondosModel.fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion,
             TransaccionFondosModel.num_transaccion
         ).having(
             func.count(1) > 1
@@ -143,7 +143,7 @@ class ReprocesadorFondosHandler:
         )
         if self.tipo_reproceso == REPROCESO_PROF_FONDOS_FCH_CIERRE:
             query = query.filter(
-                TransaccionFondosModel.fch_transaccion >= fch_desde
+                TransaccionFondosModel.fch_hr_transaccion >= fch_desde
             )
 
         results = query.all()
@@ -156,7 +156,7 @@ class ReprocesadorFondosHandler:
 
         if self.tipo_reproceso == REPROCESO_PROF_FONDOS_FCH_CIERRE:
             query = query.filter(
-                MovimientoFondosModel.fch_transaccion >= fch_desde
+                MovimientoFondosModel.fch_hr_transaccion >= fch_desde
             )
         query.delete()
     
@@ -193,7 +193,7 @@ class DepositoHandler(TransaccionHandler):
 
     def add(self, new_deposit:TransaccionFondosModel=None):                          
         #seteando el número de la transacción
-        num_trans = TransaccionHandler.get_sig_num_transaccion(self.usuario.id, fch_transaccion=new_deposit.fch_transaccion)        
+        num_trans = TransaccionHandler.get_sig_num_transaccion(self.usuario.id, fch_hr_transaccion=new_deposit.fch_hr_transaccion)        
         new_deposit.num_transaccion = num_trans         
         #calculando los saldos  
         #saldocuenta = self.calc_saldos(new_deposit)
@@ -204,7 +204,7 @@ class DepositoHandler(TransaccionHandler):
         db.session.flush()
                 
         #Si no es la última transacción se reprocesa todos los movimientos
-        if TransaccionHandler.ult_transaccion(self.usuario.id, new_deposit.fch_transaccion) == False:
+        if TransaccionHandler.ult_transaccion(self.usuario.id, new_deposit.fch_hr_transaccion) == False:
             ReprocesadorFondosHandler(self.usuario).procesar()
         else:
             #generando los movimientos que generan un dsposito
@@ -246,11 +246,11 @@ class RetiroHandler(TransaccionHandler):
         self.usuario = UsuarioModel.get(retiro.usuario_id)
 
         #insertamos la transacción de retiro
-        retiro.num_transaccion = TransaccionHandler.get_sig_num_transaccion(retiro.usuario_id, fch_transaccion=retiro.fch_transaccion)        
+        retiro.num_transaccion = TransaccionHandler.get_sig_num_transaccion(retiro.usuario_id, fch_hr_transaccion=retiro.fch_hr_transaccion)        
         db.session.add(retiro)
 
         #Si no es la última transacción se reprocesa todos los movimientos
-        if TransaccionHandler.ult_transaccion(self.usuario.id, retiro.fch_transaccion) == False:
+        if TransaccionHandler.ult_transaccion(self.usuario.id, retiro.fch_hr_transaccion) == False:
             ReprocesadorFondosHandler(self.usuario).procesar()
         else:        
             #generamos los movimientos que requiere la salida
@@ -273,7 +273,7 @@ class ConversionMonedaHandler:
         db.session.add(conversion)
 
         #Si no es la última transacción se reprocesa todos los movimientos
-        if TransaccionHandler.ult_transaccion(self.usuario.id, transaccion.fch_transaccion) == False:
+        if TransaccionHandler.ult_transaccion(self.usuario.id, transaccion.fch_hr_transaccion) == False:
             ReprocesadorFondosHandler(self.usuario).procesar()
         else:                
             self.gen_movimientos(transaccion, conversion)
@@ -290,7 +290,7 @@ class ConversionMonedaHandler:
         info_adicional = "fch_conver:{0}, tc:{1}, oper:{2}, origen:{3} {4}, destino:{5} {6}".format(conversion.fch_conversion,conversion.imp_tc,conversion.operacion_id,conversion.imp_origen,conversion.mon_ori_id, conversion.imp_convertido,conversion.mon_dest_id)
 
         transaccion = TransaccionFondosModel(            
-            fch_transaccion = conversion.fch_conversion,  
+            fch_hr_transaccion = conversion.fch_conversion,  
             num_transaccion = TransaccionHandler.get_sig_num_transaccion(conversion.usuario_id, conversion.fch_conversion),
             tipo_trans_id=TIPO_TRANS_CONVERSION,         
             imp_transaccion=conversion.imp_origen,

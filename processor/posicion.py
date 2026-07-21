@@ -2,7 +2,7 @@ from model.posicion import PosicionModel
 from model.operacion import OperacionModel
 from datetime import date
 
-from app import db
+from config.extensions import db
 
 class PosicionProcessor:
     def cambiar_posicion(self, posicion:PosicionModel, operacion:OperacionModel):

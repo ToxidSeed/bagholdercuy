@@ -7,7 +7,7 @@ from domain.mes import Mes
 import logging
 
 logger = logging.getLogger(__name__)
-from app import db
+from config.extensions import db
 
 class VariacionMensualService:
     def generar_series(self, cod_symbol, fch_ini_procesamiento):

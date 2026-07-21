@@ -1,7 +1,7 @@
 import pytest
 from model.seriediaria import SerieDiariaModel
 from service.variaciondiaria import VariacionDiariaService
-from app import db
+from config.extensions import db
 from rich import inspect
 from datetime import date
 

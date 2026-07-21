@@ -53,16 +53,16 @@ class FundsManager(Base):
         return Response().from_raw_data(funds, formats=formats)
 
     def get_transacciones_x_fecha(self, args={}):
-        fch_transaccion = args["fch_transaccion"]
-        if fch_transaccion is None or fch_transaccion =="":
+        fch_hr_transaccion = args["fch_hr_transaccion"]
+        if fch_hr_transaccion is None or fch_hr_transaccion =="":
             raise AppException(msg="No se ha enviado la fecha de transacción") 
         
-        fch_transaccion = datetime.strptime(fch_transaccion, CLIENT_DATE_FORMAT)
+        fch_hr_transaccion = datetime.strptime(fch_hr_transaccion, CLIENT_DATE_FORMAT)
 
         results = db.session.query(
             TransaccionFondosModel
         ).filter(
-            TransaccionFondosModel.fch_transaccion == fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion == fch_hr_transaccion,
             TransaccionFondosModel.usuario_id == self.usuario.id
         ).all()
 
@@ -70,7 +70,7 @@ class FundsManager(Base):
 
     def get_ult_fecha_con_datos(self, args={}):
         max_fecha = db.session.query(
-            func.max(TransaccionFondosModel.fch_transaccion).label("max_fch_transaccion")
+            func.max(TransaccionFondosModel.fch_hr_transaccion).label("max_fch_hr_transaccion")
         ).filter(
             TransaccionFondosModel.usuario_id == self.usuario.id
         ).first()
@@ -78,19 +78,19 @@ class FundsManager(Base):
         if max_fecha is None:
             return []
 
-        if max_fecha.max_fch_transaccion is None:
+        if max_fecha.max_fch_hr_transaccion is None:
             return []                
 
         results = db.session.query(
             TransaccionFondosModel
         ).filter(
-            TransaccionFondosModel.fch_transaccion == max_fecha.max_fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion == max_fecha.max_fch_hr_transaccion,
             TransaccionFondosModel.usuario_id == self.usuario.id
         ).all()
 
         response = Response()
         response.from_raw_data(results)
-        response.add_extradata("max_fch_transaccion", max_fecha.max_fch_transaccion.isoformat())
+        response.add_extradata("max_fch_hr_transaccion", max_fecha.max_fch_hr_transaccion.isoformat())
 
         return response
 
@@ -100,7 +100,7 @@ class FundsManager(Base):
 
         query = db.session.query(
             TransaccionFondosModel.usuario_id,
-            TransaccionFondosModel.fch_transaccion,
+            TransaccionFondosModel.fch_hr_transaccion,
             func.count(1).label("num_transacciones")
         ).filter(
             TransaccionFondosModel.usuario_id  == self.usuario.id
@@ -109,19 +109,19 @@ class FundsManager(Base):
         if fch_desde is not None and fch_desde != "":
             fch_desde = datetime.strptime(fch_desde,CLIENT_DATE_FORMAT).date()
             query = query.filter(
-                TransaccionFondosModel.fch_transaccion >= fch_desde 
+                TransaccionFondosModel.fch_hr_transaccion >= fch_desde 
             )
         if fch_hasta is not None and fch_hasta != "":
             fch_hasta = datetime.strptime(fch_hasta,CLIENT_DATE_FORMAT).date()
             query = query.filter(
-                TransaccionFondosModel.fch_transaccion <= fch_hasta 
+                TransaccionFondosModel.fch_hr_transaccion <= fch_hasta 
             )
         
         results = query.group_by(
             TransaccionFondosModel.usuario_id,
-            TransaccionFondosModel.fch_transaccion
+            TransaccionFondosModel.fch_hr_transaccion
         ).order_by(
-            TransaccionFondosModel.fch_transaccion.desc()
+            TransaccionFondosModel.fch_hr_transaccion.desc()
         ).all()
 
         return Response().from_raw_data(results)
@@ -130,16 +130,16 @@ class FundsManager(Base):
     def ult_transaccion(self, args={}):
         response = Response()
 
-        fch_transaccion = args.get("fch_transaccion")
-        if fch_transaccion is None or fch_transaccion == "":
+        fch_hr_transaccion = args.get("fch_hr_transaccion")
+        if fch_hr_transaccion is None or fch_hr_transaccion == "":
             raise AppException(msg="No se ha indicado la fecha de transacción")
         else:
-            fch_transaccion = datetime.strptime(fch_transaccion, CLIENT_DATE_FORMAT).date()
+            fch_hr_transaccion = datetime.strptime(fch_hr_transaccion, CLIENT_DATE_FORMAT).date()
         
-        if TransaccionHandler.ult_transaccion(self.usuario.id, fch_transaccion) is True:            
+        if TransaccionHandler.ult_transaccion(self.usuario.id, fch_hr_transaccion) is True:            
             response.elem("ult_transaccion",True)
         else:
-            response.message("Existen transacciones posteriores a la fecha {0}, se van a reprocesar todas las transacciones".format(fch_transaccion))
+            response.message("Existen transacciones posteriores a la fecha {0}, se van a reprocesar todas las transacciones".format(fch_hr_transaccion))
             response.elem("ult_transaccion",False)
 
         return response
@@ -150,7 +150,7 @@ class Historial(Base):
             TransaccionFondosModel
         ).filter(
             TransaccionFondosModel.usuario_id == self.usuario.id
-        ).order_by(TransaccionFondosModel.fch_transaccion.desc(), TransaccionFondosModel.num_transaccion.desc())\
+        ).order_by(TransaccionFondosModel.fch_hr_transaccion.desc(), TransaccionFondosModel.num_transaccion.desc())\
         .all()
 
         return Response().from_raw_data(funds)   
@@ -275,7 +275,7 @@ class DepositResource(Base):
 
     def __collect(self, args={}):
         fund = TransaccionFondosModel()
-        fund.fch_transaccion = datetime.strptime(args['fec_deposito'],CLIENT_DATE_FORMAT).date()        
+        fund.fch_hr_transaccion = datetime.strptime(args['fec_deposito'],CLIENT_DATE_FORMAT).date()        
         fund.tipo_trans_id = TIPO_TRANS_DEPOSITO
         fund.imp_transaccion = float(args["importe"])
         fund.mon_trans_id = args["moneda_symbol"]
@@ -334,7 +334,7 @@ class WithdrawResource(Base):
         retiro = TransaccionFondosModel()
         retiro.mon_trans_id = args["moneda_symbol"]
         retiro.imp_transaccion = float(args["importe"])
-        retiro.fch_transaccion = datetime.strptime(args["fec_retiro"],CLIENT_DATE_FORMAT).date()
+        retiro.fch_hr_transaccion = datetime.strptime(args["fec_retiro"],CLIENT_DATE_FORMAT).date()
         retiro.tipo_trans_id = TIPO_TRANS_RETIRO
         retiro.fch_registro = datetime.now().date()
         retiro.fch_audit = datetime.now()
@@ -380,7 +380,7 @@ class Conversion(Base):
             return Response().from_exception(e)
 
     def __collect(self, args={}):        
-        fch_transaccion = datetime.strptime(args.get("fch_cambio"),CLIENT_DATE_FORMAT).date()
+        fch_hr_transaccion = datetime.strptime(args.get("fch_cambio"),CLIENT_DATE_FORMAT).date()
         fch_registro = date.today()
         operacion = args.get("operacion")
         imp_tc = float(args.get("importe_tc"))
@@ -398,7 +398,7 @@ class Conversion(Base):
         #creamos el objeto conversion
         nu_conversion = ConversionMonedaModel(
             id=None,
-            fch_conversion=fch_transaccion,
+            fch_conversion=fch_hr_transaccion,
             mon_ori_id = mon_base_id,
             mon_dest_id = mon_ref_id,
             imp_tc = imp_tc,

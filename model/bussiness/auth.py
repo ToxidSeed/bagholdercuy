@@ -1,16 +1,12 @@
 import jwt
-from app import app, db
-from flask import request
-from datetime import datetime
+from config.extensions import db, current_app
 from model.usuario import UsuarioModel
 from sqlalchemy import select
 
 
-class TokenHandler:    
-    def verificar(self, access_token):               
-        data = jwt.decode(access_token, app.config.get("AUTH_SECRET_KEY"), algorithms=["HS256"])
-        exp = data.get("exp")
-        dt = datetime.fromtimestamp(exp)
+class TokenHandler:
+    def verificar(self, access_token):
+        data = jwt.decode(access_token, current_app.config.get("AUTH_SECRET_KEY"), algorithms=["HS256"])
 
         query = select(
             UsuarioModel.id,
@@ -25,4 +21,3 @@ class TokenHandler:
         result = db.session.execute(query)
         user = result.one()
         return user
-        

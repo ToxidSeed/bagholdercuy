@@ -3,7 +3,7 @@ from model.monitoreo import MonitoreoModel
 from reader.monitoreo import MonitoreoReader
 from reader.symbol import SymbolReader
 
-from app import db
+from config.extensions import db
 from datetime import date
 from common.AppException import AppException
 

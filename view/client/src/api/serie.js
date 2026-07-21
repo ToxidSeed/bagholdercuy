@@ -1,12 +1,12 @@
-import {postconfig} from "@/common/request.js"
+import { postconfig } from "@/common/request.js"
 import axios from "axios"
 import store from "@/store/store"
 import { HttpError } from "../common/custom-error"
-import {SERIE} from './endpoints'
+import { SERIE } from './endpoints'
 
-class Serie{
+class Serie {
 
-    get_estadisticas = async function(params){
+    get_estadisticas = async function (params) {
         const httpresp = axios.post("/SerieManager/SerieController/get_estadisticas",
             params,
             postconfig()
@@ -15,40 +15,44 @@ class Serie{
         return httpresp
     }
 
-    actualizar_serie = async function(data){        
-        let httpresp = await axios.post("/SerieManager/SerieManagerLoader/actualizar_serie",{
+    actualizar_serie = async function (data) {
+        let httpresp = await axios.post("/SerieManager/SerieManagerLoader/actualizar_serie", {
             cod_symbol: data.cod_symbol
-        }, postconfig())        
+        }, postconfig())
 
-        if (httpresp.data.success == false){
+        if (httpresp.data.success == false) {
             throw new HttpError(httpresp.data.message, httpresp)
         }
         //store.dispatch("incluir_httpresp_si_apperror", httpresp)
-        return httpresp.data                
+        return httpresp.data
     }
 
-    reparar = async function(data){
-        let httpresp = await axios.post("/SerieManager/ReparadorSeriesController/reparar",{
+    reparar = async function (data) {
+        let httpresp = await axios.post("/SerieManager/ReparadorSeriesController/reparar", {
             cod_symbol: data.cod_symbol
-        }, postconfig())        
+        }, postconfig())
         return httpresp
     }
 
-    get_lista_fechas_maximas_x_symbol = async function(){
-        try{
-            let httpresp = await axios.post("/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol",{                
-            },postconfig())
+    get_lista_fechas_maximas_x_symbol = async function () {
+        try {
+            let httpresp = await axios.post("/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol", {
+            }, postconfig())
             store.dispatch("incluir_httpresp_si_apperror", httpresp)
             return httpresp.data.data
-        }catch(err){
+        } catch (err) {
             console.log(err)
         }
     }
 
-    load_marketstack_series = function(params){        
+    load_marketstack_series = function (params) {
         return axios.post(SERIE.MARKETSTACK_LOAD, params, postconfig())
     }
-        
+
+    load_marketdata_series = function (params) {
+        return axios.post(SERIE.MARKETDATA_LOAD, params, postconfig())
+    }
+
 }
 
 export default Serie

@@ -8213,7 +8213,7 @@ DROP TABLE IF EXISTS `tb_mov_fondos`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tb_mov_fondos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fch_transaccion` date NOT NULL,
+  `fch_hr_transaccion` date NOT NULL,
   `num_transaccion` int(11) NOT NULL,
   `trans_id` int(11) NOT NULL,
   `ref_mov_id` int(11) DEFAULT NULL,
@@ -28416,7 +28416,7 @@ DROP TABLE IF EXISTS `tb_transaccion_fondos`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tb_transaccion_fondos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `fch_transaccion` date NOT NULL,
+  `fch_hr_transaccion` date NOT NULL,
   `num_transaccion` int(11) NOT NULL,
   `tipo_trans_id` char(1) COLLATE utf8mb4_unicode_ci NOT NULL,
   `imp_transaccion` decimal(15,2) NOT NULL,

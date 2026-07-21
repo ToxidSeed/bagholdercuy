@@ -1,6 +1,6 @@
 from model.broker import BrokerModel
 from reader.broker import BrokerReader
-from app import db
+from config.extensions import db
 
 class BrokerProcessor:
     def guardar(self, broker:BrokerModel):

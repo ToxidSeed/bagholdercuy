@@ -38,7 +38,7 @@ export default {
             this.chart.padding(15, 15, 15, 15);            
 
             var categoryX = this.chart.xAxes.push(new am4charts.CategoryAxis());
-            categoryX.dataFields.category = "fch_transaccion"
+            categoryX.dataFields.category = "fch_hr_transaccion"
             
             //necesario definir ValueAxis
             var valueAxis = this.chart.yAxes.push(new am4charts.ValueAxis());
@@ -46,7 +46,7 @@ export default {
             
             //series
             var series = this.chart.series.push(new am4charts.ColumnSeries());
-            series.dataFields.categoryX = "fch_transaccion";
+            series.dataFields.categoryX = "fch_hr_transaccion";
             series.dataFields.valueY = "imp_rentabilidad";                             
             series.name = "Rentabilidad";
             series.columns.template.fillOpacity = .8;

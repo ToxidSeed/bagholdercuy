@@ -7,8 +7,8 @@ from common.logger import logger
 from reader.cuenta import CuentaReader
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from app import db, app
-import logging
+from config.extensions import db
+from flask import current_app
 
 
 class LoginController:
@@ -22,7 +22,7 @@ class LoginController:
             cuenta = None
             token = ""
 
-            passdb = hashlib.sha224("{0}{1}".format(usuario,password).encode("utf-8")).hexdigest()
+            passdb = hashlib.sha224("{0}{1}".format(usuario, password).encode("utf-8")).hexdigest()
         
             userdb = UsuarioModel.query.filter(
                 UsuarioModel.usuario == usuario
@@ -58,7 +58,7 @@ class LoginController:
             "exp":exp
         }        
         
-        return jwt.encode(payload, app.config.get("AUTH_SECRET_KEY"), algorithm="HS256")
+        return jwt.encode(payload, current_app.config.get("AUTH_SECRET_KEY"), algorithm="HS256")
 
     def validar_token(self, args={}):
         try:
@@ -66,7 +66,7 @@ class LoginController:
             if token is None:
                 raise AppException(msg="No se ha enviado el token")
 
-            decodificado = jwt.decode(token, app.config.get("AUTH_SECRET_KEY"), algorithms=["HS256"])
+            decodificado = jwt.decode(token, current_app.config.get("AUTH_SECRET_KEY"), algorithms=["HS256"])
 
             #exp_date = datetime.utcfromtimestamp(decodificado.get('exp'))
 

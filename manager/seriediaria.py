@@ -3,7 +3,7 @@ from domain.mes import Mes
 from common.AppException import AppException
 from model.seriediaria import SerieDiariaModel
 from datetime import date
-from app import db
+from config.extensions import db
 from typing_extensions import deprecated
 
 

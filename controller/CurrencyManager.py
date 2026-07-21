@@ -8,7 +8,7 @@ from model.MonedaModel import MonedaModel
 from model.MonedaParModel import MonedaParModel
 from model.bussiness.moneda_par_handler import MonedaParHandler 
 from datetime import date, datetime
-from app import db
+from config.extensions import db
 from sqlalchemy import func
 
 

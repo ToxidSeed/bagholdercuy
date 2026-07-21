@@ -1,5 +1,5 @@
 from model.CalendarioSemanal import CalendarioSemanalModel
-from app import db
+from config.extensions import db
 
 class CalendarioSemanalReader:
     def get_fch_inicio_semana(fch_referencia):

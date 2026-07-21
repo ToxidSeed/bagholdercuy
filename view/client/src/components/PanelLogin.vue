@@ -3,7 +3,7 @@
         <q-card class="absolute-center" >
             <q-card-section>
                 <q-img
-                src="/bagholderlogo.png"
+                src="/bagholder_full_logo_300px.png"
                 style="width: 100%"
                 >          
                 </q-img>

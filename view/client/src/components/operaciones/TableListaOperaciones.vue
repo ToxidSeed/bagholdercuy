@@ -8,6 +8,7 @@
             :selected.sync="selected"
             row-key="id"
             dense       
+            flat
             :pagination="pagination"  
             separator="vertical"                      
         >

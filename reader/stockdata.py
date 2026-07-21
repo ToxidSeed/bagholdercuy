@@ -1,6 +1,6 @@
 from model.StockData import StockData
 from model.CalendarioSemanal import CalendarioSemanalModel
-from app import db
+from config.extensions import db
 from config.constants import TIPO_FRECUENCIA_SERIE_DIARIA
 
 from sqlalchemy import func,and_,extract

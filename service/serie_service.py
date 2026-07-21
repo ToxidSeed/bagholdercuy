@@ -11,7 +11,7 @@ from model.variacionsemanal import VariacionSemanalModel
 from model.variaciondiaria import VariacionDiariaModel
 from model.variacionmensual import VariacionMensualModel
 from datetime import date, datetime
-from app import db
+from config.extensions import db
 import pandas as pd
 from common.Formatter import Formatter
 from decimal import Decimal
@@ -276,7 +276,7 @@ class VariacionMensualLoader:
         fch_inicio_mes = mes_helper.get_fch_inicio_mes(fch_inicio_proceso)
 
         # 
-        fch_mes_anterior = SerieMensualReader.get_fch_mes_anterior(cod_symbol, fch_inicio_proceso)
+        fch_mes_anterior = SerieMensualReader.get_fch_mes_anterior(cod_symbol, fch_inicio_mes)
 
         #
         fch_inicio_series_para_calculo = fch_mes_anterior if fch_mes_anterior else fch_inicio_mes

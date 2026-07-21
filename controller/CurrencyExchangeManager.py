@@ -1,5 +1,5 @@
 from distutils.log import error
-from app import db
+from config.extensions import db
 #from config import *
 from common.AppException import AppException
 from model.tipocambio import TipoCambioModel

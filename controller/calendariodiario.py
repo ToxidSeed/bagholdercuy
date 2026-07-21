@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from controller.base import Base
 from common.Response import Response
 from datetime import datetime, date, timedelta

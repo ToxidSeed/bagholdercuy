@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from reader.comentarioalerta import ComentarioAlertaReader
 from common.AppException import AppException
 

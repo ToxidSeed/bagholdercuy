@@ -3,7 +3,7 @@ from parser.monitoreo import MonitoreoParser
 from reader.monitoreo import MonitoreoReader
 from common.Response import Response
 from manager.monitoreo import MonitoreoManager
-from app import db
+from config.extensions import db
 from api.marketdata import MarketDataAPI
 
 

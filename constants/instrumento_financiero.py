@@ -11,6 +11,7 @@ ETF
 FUTURE
 """
 
+
 class InstrumentoFinanciero:
     __slots__ = ("_map",)
 

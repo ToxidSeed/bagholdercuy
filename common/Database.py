@@ -1,14 +1,13 @@
 import mysql.connector
 import json
+import os
 
-def __connect():
-    with open('./config/database.json') as f:
-        data = json.load(f)
+def __connect():    
     
-    return mysql.connector.connect(user=data["user"],
-                                    password=data["password"],
-                                    host=data["host"],
-                                    database=data["database"])
+    return mysql.connector.connect(user=os.getenv("BAGHOLDER_MYSQL_USERNAME"),
+                                    password=os.getenv("BAGHOLDER_MYSQL_PASSWORD"),
+                                    host=os.getenv('BAGHOLDER_MYSQL_HOST'),
+                                    database=os.getenv('BAGHOLDER_MYSQL_DATABASE'))
 
 def execute_query(stmt, params=None, show_last_executed=False):
     stmt_str = _get_query(stmt)

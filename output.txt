@@ -1,0 +1,74 @@
+.
+├── api
+├── boot
+├── common
+├── config
+├── constants
+├── controller
+├── data
+├── domain
+├── helper
+├── info
+├── manager
+├── model
+│   └── bussiness
+├── parser
+├── processor
+├── proxy
+├── reader
+├── schemas
+├── service
+├── structure
+├── test
+│   ├── reader
+│   └── service
+├── tmp
+├── utils
+└── view
+    └── client
+        ├── Numix-compact
+        │   └── xfwm4
+        ├── public
+        └── src
+            ├── api
+            ├── assets
+            ├── common
+            ├── components
+            │   ├── Configuracion
+            │   ├── CurrencyExchange
+            │   ├── Funds
+            │   ├── Holdings
+            │   │   └── winBuscarTransacciones
+            │   ├── MantOpciones
+            │   ├── Ordenes
+            │   ├── Symbol
+            │   ├── alerta
+            │   ├── broker
+            │   ├── ciclos
+            │   ├── common
+            │   │   └── winBuscadorOpciones
+            │   ├── cuenta
+            │   ├── dialogs
+            │   ├── generic
+            │   ├── helpers
+            │   ├── informes
+            │   ├── informes-variacion-diaria
+            │   ├── informes-variacion-semanal
+            │   ├── metricas
+            │   ├── operaciones
+            │   │   ├── pages
+            │   │   │   └── ibkr
+            │   │   │       ├── _components
+            │   │   │       └── gen-transacciones
+            │   │   ├── rentabilidadanual
+            │   │   ├── rentabilidadoperaciones
+            │   │   └── rentabilidadsemanal
+            │   ├── serie
+            │   ├── simulacion-rentabilidad
+            │   │   └── opciones
+            │   ├── split
+            │   ├── usuario
+            │   ├── variaciondiaria
+            │   └── watchlist
+            ├── store
+            └── styles

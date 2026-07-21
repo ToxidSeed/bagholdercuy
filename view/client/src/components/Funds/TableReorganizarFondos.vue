@@ -11,7 +11,7 @@
             dense
         >            
             <template v-slot:top >
-                <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha(filter.fch_transaccion)"/>
+                <q-btn color="green" icon="refresh" flat dense @click="get_transacciones_x_fecha(filter.fch_hr_transaccion)"/>
                 <q-btn color="blue-10" icon="arrow_upward" flat dense @click="subir"/>
                 <q-btn color="blue-10" icon="arrow_downward" flat dense @click="bajar"/>
                 <q-btn color="red" icon="delete" flat dense @click="eliminar"/>
@@ -68,12 +68,12 @@ export default {
         }
     },
     mounted:function(){
-        //this.get_transacciones_x_fecha(this.filter.fch_transaccion)
+        //this.get_transacciones_x_fecha(this.filter.fch_hr_transaccion)
     },
     watch:{
         filter:function(newval){            
-            let fch_transaccion = newval.fch_transaccion
-            this.get_transacciones_x_fecha(fch_transaccion)
+            let fch_hr_transaccion = newval.fch_hr_transaccion
+            this.get_transacciones_x_fecha(fch_hr_transaccion)
         }
     },
     methods:{             
@@ -137,14 +137,14 @@ export default {
                 }
             })
         },
-        get_transacciones_x_fecha:function(fch_transaccion){  
-            console.log(fch_transaccion)          
+        get_transacciones_x_fecha:function(fch_hr_transaccion){  
+            console.log(fch_hr_transaccion)          
             this.data = []
             this.selected=[]
             this.list_eliminar=[]
 
             this.$http.post('/FundsManager/FundsManager/get_transacciones_x_fecha',{
-                fch_transaccion: fch_transaccion
+                fch_hr_transaccion: fch_hr_transaccion
             },{
                 headers:headers()
             }            

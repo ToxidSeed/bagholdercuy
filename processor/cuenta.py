@@ -1,6 +1,6 @@
 from model.cuenta import CuentaModel
 from reader.cuenta import CuentaReader
-from app import db
+from config.extensions import db
 
 class CuentaProcessor:
 

@@ -9,7 +9,7 @@
                     <q-separator/>
                     <router-view                     
                     v-on:procesar-fin="procesar_fin_handler"
-                    v-on:fch_transaccion-change="actualizar_tabla_fondos"
+                    v-on:fch_hr_transaccion-change="actualizar_tabla_fondos"
                     ></router-view>
                     <q-separator/>
                 </template>
@@ -56,24 +56,24 @@ export default {
         /*let fch_actual = date.format(new Date(),CLIENT_DATE_FORMAT)
         console.log(fch_actual)
         this.filter = {
-            fch_transaccion: date.format(new Date(),CLIENT_DATE_FORMAT),
+            fch_hr_transaccion: date.format(new Date(),CLIENT_DATE_FORMAT),
             updtime:Date.now()
         }*/
-        //this.filter.fch_transaccion = this.fch_actual
+        //this.filter.fch_hr_transaccion = this.fch_actual
         //this.filter.updtime = Date.now()        
         //this.actualizar_tabla_fondos()
     },
     methods:{
         procesar_fin_handler:function(data){
             console.log(data)
-            let fch_transaccion = data.fch_transaccion
-            this.actualizar_tabla_fondos(fch_transaccion)
+            let fch_hr_transaccion = data.fch_hr_transaccion
+            this.actualizar_tabla_fondos(fch_hr_transaccion)
             this.$emit('procesar-fin')
         },
-        actualizar_tabla_fondos:function(fch_transaccion=null){                      
-            /*console.log(fch_transaccion)*/
+        actualizar_tabla_fondos:function(fch_hr_transaccion=null){                      
+            /*console.log(fch_hr_transaccion)*/
             this.filter = {
-                fch_transaccion: fch_transaccion,
+                fch_hr_transaccion: fch_hr_transaccion,
                 updtime:Date.now()
             }            
             /*this.$refs.TableTransaccionesFondosFecha.get_transacciones_x_fecha()*/

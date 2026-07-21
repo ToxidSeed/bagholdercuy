@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.orden import OrdenModel
 from model.transaccion import TransaccionModel
 
@@ -126,7 +126,7 @@ class TransaccionProcessor:
         transaccion.cantidad = ctd_nueva_transaccion
         transaccion.ctd_saldo_transaccion = ctd_nueva_transaccion
         transaccion.id_cuenta = orden.id_cuenta
-        transaccion.fch_transaccion = orden.fch_orden
+        transaccion.fch_hr_transaccion = orden.fch_orden
         transaccion.cod_mes_transaccion = cod_mes_transaccion
         transaccion.cod_semana_transaccion = calendariodiario.cod_semana
         transaccion.imp_accion = orden.imp_accion        

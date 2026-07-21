@@ -10,7 +10,7 @@ from config.constants import TIPO_OPERACION_TRANSFERENCIA, TIPO_ORDEN_COMPRA, TI
 from datetime import date, datetime
 from operator import methodcaller
 
-from app import db
+from config.extensions import db
 
 class OperacionProcessor:   
     def __init__(self):

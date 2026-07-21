@@ -2,6 +2,7 @@ import logging
 import mysql.connector
 from datetime import datetime
 import json
+import os
 
 class MySQLHandler(logging.Handler):
     def __init__(self):
@@ -10,7 +11,7 @@ class MySQLHandler(logging.Handler):
         self.conn = mysql.connector.connect(
             host='localhost',
             user='alone',
-            password='alone',
+            password=os.getenv("BAGHOLDER_MYSQL_PASSWORD"),
             database='bagholdercuy'
         )
         self.cursor = self.conn.cursor()   

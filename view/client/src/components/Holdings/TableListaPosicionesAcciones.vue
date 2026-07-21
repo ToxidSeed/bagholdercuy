@@ -137,7 +137,8 @@ export default {
                     field:"",
                     name:""
                 }
-            ],            
+            ],
+            pos_acciones_cod_symbol_list:[],
             data:[],
             interval_id:null,      
             timeout_para_iniciar_id:null,      
@@ -171,7 +172,8 @@ export default {
                 store.dispatch('incluir_httpresp_si_apperror', httpresp);
 
                 var appresp = httpresp.data
-                if(appresp.success){                    
+                if(appresp.success){  
+                    this.pos_acciones_cod_symbol_list = []
                     appresp.data.forEach(elem => {                        
                         elem.cantidad = elem.cantidad.toFixed(0)
                         elem.imp_minimo = elem.min_imp_unitario.toFixed(2)
@@ -186,10 +188,11 @@ export default {
                         elem.imp_valor_actual_posicion = "0.00"
                         elem.imp_ganancia = "0.00"*/
                         this.data.push(elem)
-                    })                    
+                        this.pos_acciones_cod_symbol_list.push(elem.cod_symbol)
+                    })                        
                     
                     //obtenemos las cotizaciones
-                    //this.get_cotizaciones()
+                    this.get_cotizaciones()
 
                     //
                     //this.iniciar_intervalo_ejecucion()
@@ -277,19 +280,36 @@ export default {
            }            
         },
         get_cotizaciones: function(){           
-            this.data.forEach( async(elem) => {                                
-                let res = await this.$http.post(
-                'cotizacion/CotizacionManager/get_cotizacion',{
-                    symbol:elem.symbol
-                },
-                postconfig()
-                )
-                let appdata = res.data.data            
-                elem.imp_valor_actual = appdata.imp_cierre.toFixed(3)   
-                elem.imp_valor_actual_posicion = (appdata.imp_cierre * elem.ctd_saldo_posicion).toFixed(2)
-                elem.imp_ganancia = (elem.imp_valor_actual_posicion - elem.imp_posicion_incial).toFixed(2)
-                     
-            })                                                     
+            this.$http.post(
+            'market_data_api/MarketDataApiController/get_stock_prices',{
+                cod_symbol_list:this.pos_acciones_cod_symbol_list
+            },
+            postconfig()
+            ).then(httpresp => {
+                store.dispatch('incluir_httpresp_si_apperror', httpresp);
+                var appresp = httpresp.data
+                if(appresp.success){
+                    let appdata = appresp.data
+                    this.data = this.data.map((elem) => {
+                        const cotizacion = appdata[elem.cod_symbol];
+                        if (cotizacion) {
+                            // Retornamos un nuevo objeto combinando el anterior con los nuevos datos
+                            // Usamos spread operator (...) o Object.assign
+                            const nuevoValorPosicion = (cotizacion.mid * parseFloat(elem.cantidad)).toFixed(2);
+                            
+                            return {
+                                ...elem, // Copia propiedades existentes
+                                imp_valor_actual: cotizacion.mid.toFixed(3),
+                                imp_valor_actual_posicion: nuevoValorPosicion,
+                                imp_ganancia: (parseFloat(nuevoValorPosicion) - parseFloat(elem.imp_posicion_incial)).toFixed(2)
+                            };
+                        }
+                        // Si no hay cotización, devolvemos el elemento tal cual
+                        return elem;
+                    });
+                }
+            })
+                                                                     
         },
         init:async function(fch_dia){
 

@@ -1,5 +1,5 @@
 from model.seriediaria import SerieDiariaModel
-from app import db
+from config.extensions import db
 from datetime import date
 from common.AppException import AppException
 

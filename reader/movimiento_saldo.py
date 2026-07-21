@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.movimiento_saldo import MovimientoSaldoModel
 from model.transaccion import TransaccionModel
 

@@ -10,7 +10,12 @@ import json
 
 
 class Response:
-    def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata={},errors=[], stacktrace=None):
+    def __init__(self,success=True, code=0, data=None, msg="", raw_data=None, formatter=None, extradata=None,errors=None, stacktrace=None):
+        if extradata is None:
+            extradata = {}
+        if errors is None:
+            errors = []
+        
         self.answer = {
             "success":success,
             "code":code,
@@ -34,7 +39,9 @@ class Response:
     def message(self, msg=""):
         self.answer["message"] = msg
         
-    def from_raw_data(self, rawdata=None, formats={}):
+    def from_raw_data(self, rawdata=None, formats=None):
+        if formats is None:
+            formats = {}
         self.formats = formats
         if rawdata is not None:
             self.raw_data = rawdata

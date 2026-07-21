@@ -3,7 +3,7 @@ from common.Response import Response
 from common.AppException import AppException
 from reader.stocksplit import StockSplitReader
 from service.stocksplit import StockSplitFMPService
-from app import db
+from config.extensions import db
 
 class StockSplitController(Base):
     def get_all_aplits(self, args={}):

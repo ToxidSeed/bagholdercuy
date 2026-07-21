@@ -1,8 +1,8 @@
 from model.operacion import OperacionModel
 from model.StockSymbol import StockSymbol as StockSymbolModel
-from model.OptionContract import OptionContractModel
+from model.contrato_opcion import ContratoOpcionModel
 
-from app import db
+from config.extensions import db
 from sqlalchemy.sql.functions import func
 
 class OperacionReader:
@@ -141,13 +141,13 @@ class OperacionReader:
             OperacionModel.dsc_glosa_operacion,
             OperacionModel.fch_registro,
             StockSymbolModel.symbol.label("cod_symbol"),
-            OptionContractModel.symbol.label("cod_contrato_opcion")
+            ContratoOpcionModel.cod_symbol.label("cod_contrato_opcion")
         ).select_from(
             OperacionModel
         ).join(
             StockSymbolModel, OperacionModel.id_symbol == StockSymbolModel.id
         ).outerjoin(
-            OptionContractModel, OperacionModel.id_contrato_opcion == OptionContractModel.id
+            ContratoOpcionModel, OperacionModel.id_contrato_opcion == ContratoOpcionModel.id_contrato_opcion
         ).where(
             OperacionModel.id_cuenta == id_cuenta
         )

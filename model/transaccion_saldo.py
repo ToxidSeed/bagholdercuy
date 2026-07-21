@@ -1,10 +1,14 @@
-from app import db
+from config.extensions import db
 from datetime import datetime
 import uuid
 from .types import BinaryUUID
 
 class TransaccionSaldoModel(db.Model):
     __tablename__ = 'tb_transaccion_saldo'
+
+    """
+    Tabla que almacena los saldos de las transacciones.
+    """
 
     # Clave primaria (BINARY 16)
     # Clave primaria (BINARY 16)

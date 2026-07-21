@@ -1,8 +1,11 @@
 from sqlalchemy import inspect
 from datetime import datetime, date
+from enum import Enum
 
 class Formatter:
-    def __init__(self, custom={}):
+    def __init__(self, custom=None):
+        if custom is None:
+            custom = {}
         self.custom = custom
         self.exclude_fields = []
 
@@ -17,26 +20,33 @@ class Formatter:
     def format(self,indata=None):                
         if type(indata).__name__ in ["list", "ResultProxy","LegacyCursorResult"]:
             return self.process_list(inlist=indata)
-        if self.is_namedtuple(indata):
+        elif self.is_namedtuple(indata):
             return self.process_namedtuple(indata)
-        if type(indata).__name__ == "date":    
+        elif type(indata).__name__ == "date":    
             #return indata.isoformat()
             return indata.strftime("%Y-%m-%d")
-        if type(indata).__name__ == "Decimal":
+        elif type(indata).__name__ == "datetime":    
+            #return indata.isoformat()
+            return indata.strftime("%Y-%m-%d %H:%M:%S")
+        elif type(indata).__name__ == "Decimal":
             return float(indata)
-        if type(indata).__name__ == "time":
+        elif type(indata).__name__ == "time":
             return indata.strftime("%H:%M:%S")
-        if type(indata).__name__ == "dict":
+        elif type(indata).__name__ == "dict":
             return self.format_dict(indata)
-        if type(indata).__name__ in ['result','LegacyRow', 'Row']:
+        elif type(indata).__name__ in ['result','LegacyRow', 'Row']:
             return self.format_dict(dict(indata))
-        if any("Model" == base.__name__ for base in indata.__class__.__bases__):
+        elif any("Model" == base.__name__ for base in indata.__class__.__bases__):
             output = indata.__dict__
             if "_sa_instance_state" in output:
                 output.pop('_sa_instance_state')
             return self.format_dict(output)
-        
-        return indata
+        elif type(indata).__name__ in ['str','int']:
+            return indata
+        elif issubclass(type(indata), Enum):
+            return getattr(indata, 'value')
+        else:
+            return indata
 
     def is_namedtuple(self, node=None):
         if isinstance(node, tuple) and hasattr(node, "_fields"):

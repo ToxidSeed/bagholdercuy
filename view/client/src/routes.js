@@ -18,6 +18,7 @@ import MainOperacion from '@/components/operaciones/MainOperacion.vue';
 import MainOrden from '@/components/Ordenes/MainOrden.vue';
 import MainMantOpciones from '@/components/MantOpciones/MainMantOpciones.vue';
 import PanelReorganizar from '@/components/Holdings/PanelReorganizar.vue';
+import ReprocesarPosicionesPage from '@/components/Holdings/reprocesar-posiciones/ReprocesarPosicionesPage.vue';
 import PanelVariacionMensual from '@/components/informes/PanelVariacionMensual.vue';
 import PanelVariacionSemanal from '@/components/informes-variacion-semanal/PanelVariacionSemanal.vue';
 import PanelVariacionDiaria from '@/components/informes/PanelVariacionDiaria.vue';
@@ -85,6 +86,10 @@ import Main from '@/Main.vue'
 import PageCiclos from './components/ciclos/PageCiclos.vue';
 import PanelCiclosDuracion from './components/ciclos/PanelCiclosDuracion.vue'
 import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
+
+//
+import IbkrImportarOperacionesPage from './components/operaciones/pages/ibkr/IbkrImportarOperacionesPage.vue'
+import GenerarTransaccionesPage from './components/operaciones/pages/ibkr/GenerarTransaccionesPage.vue'
 
 
 Vue.use(VueRouter);
@@ -167,6 +172,12 @@ const routes = [
       }, {
         path: '/operacion', component: MainOperacion
       }, {
+        path: '/carga-operaciones/ibkr', component: IbkrImportarOperacionesPage
+      }, {
+        path: '/generar-transacciones/ibkr',
+        name: 'generar-transacciones-ibkr',
+        component: GenerarTransaccionesPage
+      }, {
         path: '/currency', component: MainPanelCurrency
       }, {
         path: '/currency/:action=:moneda_id', component: MainPanelCurrency, props: true
@@ -212,6 +223,8 @@ const routes = [
       },
       {
         path: "/reorganizarorden", component: PanelReorganizar
+      }, {
+        path: "/reprocesarposiciones", component: ReprocesarPosicionesPage
       }, {
         path: "/variacionmensual", component: PanelVariacionMensual
       }, {

@@ -7,7 +7,7 @@ from domain.semana import CodigoSemana
 import logging
 
 logger = logging.getLogger(__name__)
-from app import db
+from config.extensions import db
 
 class SerieSemanalService:
     def generar_series(self, cod_symbol, fch_inicio_procesamiento):

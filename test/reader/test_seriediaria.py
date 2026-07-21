@@ -1,6 +1,6 @@
 from reader.seriediaria import SerieDiariaReader
 from sqlalchemy.exc import ProgrammingError
-from app import db
+from config.extensions import db
 import pytest
 
 class SessionExcepcionMock:    

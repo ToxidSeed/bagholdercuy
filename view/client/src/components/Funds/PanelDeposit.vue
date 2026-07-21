@@ -94,7 +94,7 @@ export default {
             }
 
             let data = {
-                fch_transaccion: this.fec_deposito
+                fch_hr_transaccion: this.fec_deposito
             }
 
             this.$http.post('FundsManager/DepositResource/add',{
@@ -128,10 +128,10 @@ export default {
             this.$refs.msgbox.httpresp(httpresp)                   
         },
         fec_deposito_change_handler:function(){
-            this.$emit('fch_transaccion-change', this.fec_deposito)
+            this.$emit('fch_hr_transaccion-change', this.fec_deposito)
             this.$http.post(
                 '/FundsManager/FundsManager/ult_transaccion',{
-                    fch_transaccion:this.fec_deposito
+                    fch_hr_transaccion:this.fec_deposito
                 },
                 {
                     headers:headers()

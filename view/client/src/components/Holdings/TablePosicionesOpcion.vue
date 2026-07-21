@@ -21,8 +21,7 @@
                 <!--<div class="text-h6">Opciones</div>-->
             </template>
         </q-table>
-        <q-separator/>
-        
+        <q-separator/>        
         <WinFiltrosPosicionOpciones v-model="WinFiltrosPosicionOpciones.open"
         v-on:filtrar-posiciones-opcion="filtrar"
         />
@@ -43,7 +42,6 @@ export default {
         }
     },
     components:{
-
         WinFiltrosPosicionOpciones
     },    
     data: () => {
@@ -54,35 +52,40 @@ export default {
             },
             columns:[
                 {                    
+                    label:"id_contrato_opcion",
+                    align:"left",
+                    field:"id_contrato_opcion",
+                    name:"id_contrato_opcion"                      
+                },{                    
                     label:"Contrato",
                     align:"left",
-                    field:"symbol",
-                    name:"symbol",
+                    field:"cod_symbol",
+                    name:"cod_symbol",
                     style:"width:100px;"      
                 },{                    
                     label:"Subyacente",
                     align:"left",
-                    field:"cod_subyacente",
-                    name:"cod_subyacente",
+                    field:"cod_symbol_subyacente",
+                    name:"cod_symbol_subyacente",
                     style:"width:100px;"      
                 },{                    
                     label:"Expiracion",
                     align:"left",
-                    field:"fch_expiracion",
-                    name:"fch_expiracion",
+                    field:"fch_vencimiento",
+                    name:"fch_vencimiento",
                     style:"width:100px;"      
                 },{                    
                     label:"Tipo opcion",
                     align:"left",
-                    field:"cod_tipo_opcion",
-                    name:"cod_tipo_opcion",
+                    field:"tipo_opcion",
+                    name:"tipo_opcion",
                     headerStyle:"white-space:normal !important;",
                     style:"width:20px;"                          
                 },{                    
                     label:"Imp. ejercicio",
                     align:"right",
-                    field:"imp_ejercicio",
-                    name:"imp_ejercicio",                    
+                    field:"imp_strike",
+                    name:"imp_strike",                    
                     style:"width:20px;"     /*,
                     classes: row => (
                         (row.cod_tipo_opcion == 'C' && row.ctd_saldo_posicion >= 0 && row.imp_valor_subyacente >= row.imp_ejercicio) || 
@@ -127,20 +130,20 @@ export default {
                 },{
                     label:"Imp. valor minimo",
                     align:"right",
-                    field:"imp_minimo",
-                    name:"imp_minimo",
+                    field:"min_imp_unitario",
+                    name:"min_imp_unitario",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor promedio",
                     align:"right",
-                    field:"imp_promedio",
-                    name:"imp_promedio",
+                    field:"mean_imp_unitario",
+                    name:"mean_imp_unitario",
                     style:"width:100px;"      
                 },{
                     label:"Imp. valor maximo",
                     align:"right",
-                    field:"imp_maximo",
-                    name:"imp_maximo",
+                    field:"max_imp_unitario",
+                    name:"max_imp_unitario",
                     style:"width:100px;"      
                 }/*,{
                     label:"Valor subyacente",
@@ -175,7 +178,7 @@ export default {
     computed:{
         visible_columns:function(){
             let visible = []
-            let columnas_ocultas = ["xx"]
+            let columnas_ocultas = ["id_contrato_opcion"]
             for (let column of this.columns){
                 if (columnas_ocultas.includes(column.name) == true){
                     continue;
@@ -208,33 +211,36 @@ export default {
                 let appdata = httpresp.data
                 this.data = []
 
-                for (let elem of appdata.data){    
-                    elem.imp_minimo = elem.imp_minimo.toFixed(2)                
-                    elem.imp_maximo = elem.imp_maximo.toFixed(2)
-                    elem.imp_promedio = elem.imp_promedio.toFixed(2)
-                    /*
-                    this.cotizacion[elem.cod_subyacente] = null                    
-                    let row = Object.assign({}, elem);
-                    row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
-                    row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
-                    row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
-                    row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
-                    row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
-                    row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
-                    row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
-                    row["imp_valor_subyacente"] = 0
-                    */
-
-                    /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
-                    row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
-                    if (elem.cod_tipo_opcion == "C"){
-                        row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }else{
-                        row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
-                    }*/
-                    
-                    this.data.push(elem) 
+                if (appdata.data) {
+                    for (let elem of appdata.data){    
+                        //elem.imp_minimo = elem.imp_minimo.toFixed(2)                
+                        //elem.imp_maximo = elem.imp_maximo.toFixed(2)
+                        //elem.imp_promedio = elem.imp_promedio.toFixed(2)
+                        /*
+                        this.cotizacion[elem.cod_subyacente] = null                    
+                        let row = Object.assign({}, elem);
+                        row.fch_expiracion = date.transform(elem.fch_expiracion,"YYYY-MM-DD","DD/MM/YYYY")
+                        row.fch_primera_posicion = date.transform(elem.fch_primera_posicion,"YYYY-MM-DD","DD/MM/YYYY")
+                        row["imp_ejercicio"] = elem["imp_ejercicio"].toFixed(2)
+                        row["imp_posicion_incial"] = elem["imp_posicion_incial"].toFixed(2)
+                        row["imp_min_accion"] = elem["imp_min_accion"].toFixed(2)
+                        row["imp_prom_accion"] = elem["imp_prom_accion"].toFixed(2)
+                        row["imp_max_accion"] = elem["imp_max_accion"].toFixed(2)
+                        row["imp_valor_subyacente"] = 0
+                        */
+    
+                        /*row["imp_valor_posicion"] = elem["imp_valor_posicion"].toFixed(2)
+                        row["imp_rentabilidad"] = elem["imp_rentabilidad"].toFixed(2)         
+                        if (elem.cod_tipo_opcion == "C"){
+                            row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) + parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
+                        }else{
+                            row["imp_rentable"] = (parseFloat(elem.imp_ejercicio) - parseFloat(elem.imp_prom_accion)).toFixed(2)                                                            
+                        }*/
+                        
+                        this.data.push(elem) 
+                    }
                 }
+                console.log(this.data)
                     
                 //this.iniciar_intervalo_cotizaciones()
             })

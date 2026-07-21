@@ -1,9 +1,7 @@
-from app import db
+from config.extensions import db
 from common.AppException import AppException
-from common.Formatter import Formatter
 from common.Response import Response
 
-from model.StockData import StockData as StockDataModel
 from model.variacionsemanal import VariacionSemanalModel
 from model.variacionmensual import VariacionMensualModel
 from model.variaciondiaria import VariacionDiariaModel
@@ -14,21 +12,27 @@ from model.seriediaria import SerieDiariaModel
 
 from reader.calendariosemanal import CalendarioSemanalReader
 from reader.seriediaria import SerieDiariaReader
-from reader.calendariodiario import CalendarioDiarioReader
 
 from sqlalchemy.sql import extract
-from sqlalchemy.orm import outerjoin
 from sqlalchemy import and_
 
 from controller.base import Base
+from flask import request
+from flask_restful import Resource, Api
+from flask import Blueprint
+from pydantic import ValidationError
+from schemas.reportes import VariacionDiariaSearchRequest
+from schemas.responses.reportes import variaciones_diarias_schema
+
+
 
 class VariacionSemanalBuilder(Base):
 
-    def build(self, args={}):        
+    def build(self, args={}):
 
         symbol = args.get("symbol")
 
-        if symbol is None or symbol =="":
+        if symbol is None or symbol == "":
             raise AppException(msg="No se ha ingresado el 'symbol'")
 
         stmt = db.select(
@@ -41,6 +45,7 @@ class VariacionSemanalBuilder(Base):
 
         records = db.session.execute(stmt).scalars().all()
         return Response().from_raw_data(records)
+
 
 class VariacionMensualBuilder(Base):
 
@@ -63,17 +68,104 @@ class VariacionMensualBuilder(Base):
         records = result.scalars().all()
         return Response().from_raw_data(records)
 
-class VariacionDiariaBuilder(Base):
 
-    def build(self, args={}):
+class VariacionDiariaBuilder(Resource):
+    AUTH_REQUIRED = False
 
-        symbol = args.get('symbol')        
+    def post(self, args=None):
+        if args is None:
+            args = request.get_json() or {}
+
+        try:
+            try:
+                params = VariacionDiariaSearchRequest(**args)
+            except ValidationError as e:
+                errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+                raise AppException(msg="Errores de validación", errors=errors_list)
+
+            symbol = params.symbol
+            fch_desde = params.fch_desde
+            fch_hasta = params.fch_hasta
+
+            stmt = db.select(
+                extract("year", VariacionDiariaModel.fch_serie).label("anyo"),
+                VariacionDiariaModel.symbol,
+                VariacionDiariaModel.fch_serie,
+                VariacionDiariaModel.imp_cierre_ant,
+                VariacionDiariaModel.imp_apertura,
+                VariacionDiariaModel.imp_maximo,
+                VariacionDiariaModel.imp_minimo,
+                VariacionDiariaModel.imp_cierre,
+                VariacionDiariaModel.pct_variacion_apertura,
+                VariacionDiariaModel.imp_variacion_apertura,
+                VariacionDiariaModel.pct_variacion_cierre,
+                VariacionDiariaModel.imp_variacion_cierre,
+                VariacionDiariaModel.pct_variacion_maximo,
+                VariacionDiariaModel.imp_variacion_maximo,
+                VariacionDiariaModel.pct_variacion_minimo,
+                VariacionDiariaModel.imp_variacion_minimo
+            ).where(
+                VariacionDiariaModel.symbol == symbol
+            )
+
+            if fch_desde:
+                stmt = stmt.where(
+                    VariacionDiariaModel.fch_serie >= fch_desde
+                )
+
+            if fch_hasta:
+                stmt = stmt.where(
+                    VariacionDiariaModel.fch_serie <= fch_hasta
+                )
+
+            stmt = stmt.order_by(
+                VariacionDiariaModel.fch_serie.desc()
+            )
+
+            result = db.session.execute(stmt)
+            records = result.all()
+
+            from model.StockSymbol import StockSymbol
+            symbol_item = db.session.execute(
+                db.select(StockSymbol).filter(StockSymbol.symbol == symbol)
+            ).scalar_one_or_none()
+            symbol_text = symbol_item.name if symbol_item else symbol
+
+            response_data = variaciones_diarias_schema.dump(records)
+            return {
+                "success": True,
+                "code": 0,
+                "message": "",
+                "expired": False,
+                "errors": [],
+                "stacktrace": None,
+                "data": response_data,
+                "extradata": {
+                    "meta": {
+                        "symbol_value": symbol,
+                        "symbol_text": symbol_text
+                    }
+                }
+            }, 200
+
+        except Exception as e:
+            response = Response().from_exception(e)
+            return response, 400 if isinstance(e, AppException) else 500
+
+    def build(self, args=None):
+        if args is None:
+            args = {}
+
+        symbol = args.get('symbol')
+
+        fch_desde = args.get('fch_desde')
+        fch_hasta = args.get('fch_hasta')
 
         if symbol is None or symbol == "":
             raise AppException(msg="No se ha ingresado el 'symbol")
 
         stmt = db.select(
-            extract("year",VariacionDiariaModel.fch_serie).label("anyo"),
+            extract("year", VariacionDiariaModel.fch_serie).label("anyo"),
             VariacionDiariaModel.symbol,
             VariacionDiariaModel.fch_serie,
             VariacionDiariaModel.imp_cierre_ant,
@@ -91,15 +183,42 @@ class VariacionDiariaBuilder(Base):
             VariacionDiariaModel.imp_variacion_minimo
         ).where(
             VariacionDiariaModel.symbol == symbol
-        ).order_by(
+        )
+
+        if fch_desde:
+            stmt = stmt.where(
+                VariacionDiariaModel.fch_serie >= fch_desde
+            )
+
+        if fch_hasta:
+            stmt = stmt.where(
+                VariacionDiariaModel.fch_serie <= fch_hasta
+            )
+
+        stmt = stmt.order_by(
             VariacionDiariaModel.fch_serie.desc()
-        ).limit(365)
+        )
 
         result = db.session.execute(stmt)
         records = result.all()
-        return Response().from_raw_data(records)
+
+        from model.StockSymbol import StockSymbol
+        symbol_item = db.session.execute(
+            db.select(StockSymbol).filter(StockSymbol.symbol == symbol)
+        ).scalar_one_or_none()
+        symbol_text = symbol_item.name if symbol_item else symbol
+
+        resp = Response()
+        resp.add_extradata("meta", {
+            "symbol_value": symbol,
+            "symbol_text": symbol_text
+        })
+        return resp.from_raw_data(records)
+
+
 
 class VariacionSemanalEvolucion(Base):
+    AUTH_REQUIRED = False
 
     def build(self, args={}):
 
@@ -116,11 +235,10 @@ class VariacionSemanalEvolucion(Base):
         if semana is None or semana == "":
             raise AppException(msg="No se ha ingresado la 'semana'")
 
-        calendario = CalendarioSemanalReader.get_por_num_semana(anyo, semana)
-        #calendario = CalendarioDiarioReader.get_fechas_x_semana(anyo, semana)
+        # calendario = CalendarioDiarioReader.get_fechas_x_semana(anyo, semana)
 
         stmt = db.select(
-            SerieDiariaModel.symbol,
+            SerieDiariaModel.cod_symbol,
             CalendarioDiarioModel.fch_dia.label('fch_serie'),
             SerieDiariaModel.imp_apertura,
             SerieDiariaModel.imp_maximo,
@@ -132,9 +250,9 @@ class VariacionSemanalEvolucion(Base):
             SerieDiariaModel,
             and_(
                 CalendarioDiarioModel.fch_dia == SerieDiariaModel.fch_serie,
-                SerieDiariaModel.symbol == symbol
+                SerieDiariaModel.cod_symbol == symbol
             )
-        ).where(            
+        ).where(
             CalendarioDiarioModel.flg_fin_semana == 'N',
             CalendarioDiarioModel.num_anyo_semana == anyo,
             CalendarioDiarioModel.num_semana == semana
@@ -144,13 +262,14 @@ class VariacionSemanalEvolucion(Base):
         records = result.all()
         return Response().from_raw_data(records)
 
+
 class EvolucionSemanalSeries(Base):
-    def __init__(self):        
+
+    def __init__(self):
         self.row_template = {}
         self.semana = None
         self.series = []
         self.filas = []
-        
 
     def build(self, args={}):
 
@@ -168,53 +287,52 @@ class EvolucionSemanalSeries(Base):
             raise AppException(msg="No se ha ingresado la 'semana'")
 
         self.semana = CalendarioSemanalReader.get_por_num_semana(anyo, semana)
-        #fechas = Formatter().format(self.semana)
+        # fechas = Formatter().format(self.semana)
 
         self.series = self.__get_series_semana(symbol, self.semana)
         self.__crear_filas(symbol)
 
         response = {
-            "semana":self.semana,
-            "series":self.filas
+            "semana": self.semana,
+            "series": self.filas
         }
 
         return Response().from_raw_data(response)
-    
-    def __get_series_semana(self, symbol, semana:CalendarioSemanalModel):
+
+    def __get_series_semana(self, symbol, semana: CalendarioSemanalModel):
         return SerieDiariaReader.get_series_entre_fechas(symbol, semana.fch_inicio, semana.fch_fin)
-    
+
     def __crear_filas(self, symbol):
-        filas = []
-        for valor in ["apertura","maximo","minimo","cierre"]:
+        for valor in ["apertura", "maximo", "minimo", "cierre"]:
             row = {
-                "valor":valor,
-                "symbol":symbol,
-                "imp_lunes":0,            
-                "imp_martes":0,
-                "imp_miercoles":0,
-                "imp_jueves":0,
-                "imp_viernes":0, 
-                "dia_max":None,
-                "dia_min":None
-            } 
+                "valor": valor,
+                "symbol": symbol,
+                "imp_lunes": 0,
+                "imp_martes": 0,
+                "imp_miercoles": 0,
+                "imp_jueves": 0,
+                "imp_viernes": 0,
+                "dia_max": None,
+                "dia_min": None
+            }
             self.__completar_campos(row)
-            self.filas.append(row)            
-    
-    def __completar_campos(self, pre_fila):                
+            self.filas.append(row)
+
+    def __completar_campos(self, pre_fila):
 
         valor = pre_fila.get('valor')
         dia_max = None
         dia_min = None
 
         for serie in self.series:
-            imp_lunes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_lunes)  
-            imp_martes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_martes)      
-            imp_miercoles = self.__get_importe_x_fecha(valor, serie, self.semana.fch_miercoles)    
-            imp_jueves = self.__get_importe_x_fecha(valor, serie, self.semana.fch_jueves)    
-            imp_viernes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_viernes)    
+            imp_lunes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_lunes)
+            imp_martes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_martes)
+            imp_miercoles = self.__get_importe_x_fecha(valor, serie, self.semana.fch_miercoles)
+            imp_jueves = self.__get_importe_x_fecha(valor, serie, self.semana.fch_jueves)
+            imp_viernes = self.__get_importe_x_fecha(valor, serie, self.semana.fch_viernes)
 
             if imp_lunes is not None:
-                pre_fila["imp_lunes"] = imp_lunes    
+                pre_fila["imp_lunes"] = imp_lunes
 
             if imp_martes is not None:
                 pre_fila["imp_martes"] = imp_martes
@@ -230,28 +348,31 @@ class EvolucionSemanalSeries(Base):
 
             if serie.maxrow == 1 and dia_max is None:
                 dia_max = serie.fch_serie.weekday() + 1
-            
+
             if serie.minrow == 1 and dia_min is None:
                 dia_min = serie.fch_serie.weekday() + 1
 
         if pre_fila.get("valor") == 'maximo':
             pre_fila["dia_max"] = dia_max
-        
+
         if pre_fila.get("valor") == 'minimo':
             pre_fila["dia_min"] = dia_min
-         
-    def __get_importe_x_fecha(self, valor, serie:SerieDiariaModel, fecha):
+
+    def __get_importe_x_fecha(self, valor, serie: SerieDiariaModel, fecha):
         importe = None
 
-        if serie.fch_serie == fecha:                        
-            importe = float(getattr(serie, 'imp_'+valor))
-        
+        if serie.fch_serie == fecha:
+            importe = float(getattr(serie, 'imp_' + valor))
+
         return importe
 
-    
+
+def init_module(app, url_prefix):
+    bp = Blueprint("reportes_bp", __name__)
+    api = Api(bp)
+
+    api.add_resource(VariacionDiariaBuilder, "/variacion-diaria")
+
+    app.register_blueprint(bp, url_prefix=f"{url_prefix}/reportes")
 
 
-
-
-
-        

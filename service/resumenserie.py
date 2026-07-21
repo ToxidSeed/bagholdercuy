@@ -6,7 +6,7 @@ from reader.seriemensual import SerieMensualReader
 from reader.variacionmensual import VariacionMensualReader
 from model.resumenserie import ResumenSerieModel
 from datetime import date, datetime
-from app import db
+from config.extensions import db
 
 class ResumenSerieService:
     def guardar(self, cod_symbol):

@@ -1,4 +1,4 @@
-from app import db
+from config.extensions import db
 from model.variaciondiaria import VariacionDiariaModel
 from model.seriediaria import SerieDiariaModel
 from reader.seriediaria import SerieDiariaReader

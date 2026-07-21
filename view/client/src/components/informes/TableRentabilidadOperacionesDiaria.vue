@@ -28,10 +28,10 @@ export default {
             data:[],
             columns:[
                 {
-                    name: 'fch_transaccion',                    
+                    name: 'fch_hr_transaccion',                    
                     label: 'Fch. Transaccion',
                     align: 'left',                    
-                    field: "fch_transaccion"
+                    field: "fch_hr_transaccion"
                 },
                 {
                     name: 'imp_rentabilidad',                    

@@ -1,5 +1,6 @@
-from app import db
+from config.extensions import db
 from datetime import datetime
+
 
 class InstrumentoFinancieroModel(db.Model):
     __tablename__ = 'tb_instrumento_financiero'
