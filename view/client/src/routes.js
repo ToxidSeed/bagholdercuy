@@ -90,6 +90,8 @@ import PanelCiclosVariacion from './components/ciclos/PanelCiclosVariacion.vue'
 //
 import IbkrImportarOperacionesPage from './components/operaciones/pages/ibkr/IbkrImportarOperacionesPage.vue'
 import GenerarTransaccionesPage from './components/operaciones/pages/ibkr/GenerarTransaccionesPage.vue'
+import InteractiveBrokersConfigurationPage from './pages/ibkr-configuration/InteractiveBrokersConfigurationPage.vue'
+import IbkrContractsPage from './pages/ibkr-configuration/contracts/IbkrContractsPage.vue'
 
 
 Vue.use(VueRouter);
@@ -422,6 +424,17 @@ const routes = [
             name: "stocksplit-editar",
             props: true,
             component: PanelMantStockSplit
+          }
+        ]
+      },
+      {
+        path: "/ibkr",
+        component: InteractiveBrokersConfigurationPage,
+        children: [
+          {
+            path: "",
+            name: "ibkr",
+            component: IbkrContractsPage
           }
         ]
       }

@@ -1,7 +1,9 @@
 export const SERIE = {
     MARKETSTACK_LOAD: "SerieManager/MarketStackLoaderController/load",
     MARKETDATA_LOAD: "SerieManager/MarketDataLoaderController/load",
-    INVESTING_LOAD: "SerieManager/InvestingLoaderController/load"
+    INVESTING_LOAD: "SerieManager/InvestingLoaderController/load",
+    ALPHAVANTAGE_LOAD: "/api/v2/series/alphavantage-loader",
+    MASSIVE_LOAD: "/api/v2/series/massive-loader"
 }
 
 export const OPERACION = {
