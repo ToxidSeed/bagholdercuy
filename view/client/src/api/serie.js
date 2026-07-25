@@ -53,6 +53,14 @@ class Serie {
         return axios.post(SERIE.MARKETDATA_LOAD, params, postconfig())
     }
 
+    load_alphavantage_series = function (params) {
+        return axios.post(SERIE.ALPHAVANTAGE_LOAD, params, postconfig())
+    }
+
+    load_massive_series = function (params) {
+        return axios.post(SERIE.MASSIVE_LOAD, params, postconfig())
+    }
+
 }
 
 export default Serie

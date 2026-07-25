@@ -199,6 +199,12 @@
                         </q-item-section>
                         <q-item-section>Stock Split</q-item-section>
                     </q-item>
+                    <q-item active-class="my-menu-link" :to="{ name: 'ibkr' }">
+                        <q-item-section avatar>
+                            <q-icon color="primary" name="keyboard_arrow_right" />
+                        </q-item-section>
+                        <q-item-section>Interactive Brokers</q-item-section>
+                    </q-item>
                 </q-list>
             </q-expansion-item>
         </q-list>

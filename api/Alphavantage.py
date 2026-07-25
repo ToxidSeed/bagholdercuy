@@ -1,19 +1,21 @@
-from app import app, db
+
+from flask import current_app
 import requests
 from datetime import datetime, date
+from schemas.alphavantage_schema import AlphavantageDailyResponse, AlphavantageDailyQuote
 
 
 class Alphavantage:
     def __init__(self):
         self.default_endpoint = "https://www.alphavantage.co/query"
-        self.key = app.config["ALPHAVANTAGE_KEY"]        
+        self.key = current_app.config["ALPHAVANTAGE_KEY"]        
         pass    
 
     def fx_daily(self, params={}):
         params["function"] = "FX_DAILY"
-        params["apikey"] = app.config.get("ALPHAVANTAGE_KEY")
+        params["apikey"] = self.key
 
-        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"), params=params)
+        response = requests.get(current_app.config.get("ALPHAVANTAGE_ENDPOINT"), params=params)
         data = response.json()
         return data
 
@@ -26,13 +28,14 @@ class Alphavantage:
         params = {
             "function": function,
             "symbol": symbol,
-            "outputsize": outputsize,
-            "apikey": app.config["ALPHAVANTAGE_KEY"]
+            #"outputsize": outputsize,
+            "apikey": self.key
         }        
 
         response = requests.get(self.default_endpoint, params=params)
         data = response.json()
-        series = data["Time Series (Daily)"]
+        parsed_response = AlphavantageDailyResponse.model_validate(data)
+        series = parsed_response.time_series
 
         new_quote = None
         last_quote = None
@@ -45,22 +48,23 @@ class Alphavantage:
         result = []
         for price_date, raw_quote in series.items():
             if date.fromisoformat(price_date) > since_date: 
-                rownumber+=1
-                new_quote = Quote(
-                    price_date = price_date,
-                    symbol = symbol,                    
-                    open = float(raw_quote["1. open"]),
-                    high = float(raw_quote["2. high"]),
-                    low = float(raw_quote["3. low"]),
-                    close= float(raw_quote["4. close"])
+                rownumber += 1
+                new_quote = AlphavantageDailyQuote(
+                    price_date=price_date,
+                    symbol=symbol,                    
+                    open=raw_quote.open,
+                    high=raw_quote.high,
+                    low=raw_quote.low,
+                    close=raw_quote.close,
+                    volume=raw_quote.volume
                 )
 
-                #since Alphavantage returns in descending order
+                # since Alphavantage returns in descending order
                 if rownumber == 1:
                     last_quote = new_quote                
                 result.append(new_quote)
 
-        #returning the last quote loaded
+        # returning the last quote loaded
         return (last_quote, result)
 
     def get_last_intraday(self, args={}):
@@ -131,9 +135,9 @@ class Alphavantage:
         params = {
             "function":function,            
             "symbol":symbol,            
-            "apikey":ALPHAVANTAGE_KEY
+            "apikey":self.key
         }
-        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"),params)
+        response = requests.get(self.default_endpoint, params=params)
         data = response.json()
         series = data["Weekly Adjusted Time Series"]
         return series
@@ -145,10 +149,10 @@ class Alphavantage:
         params = {
             "function":function,            
             "symbol":symbol,            
-            "apikey":ALPHAVANTAGE_KEY
+            "apikey":self.key
         }
 
-        response = requests.get(app.config.get("ALPHAVANTAGE_ENDPOINT"), params)
+        response = requests.get(self.default_endpoint, params=params)
         data = response.json()
         series = data["Monthly Adjusted Time Series"]
         return series

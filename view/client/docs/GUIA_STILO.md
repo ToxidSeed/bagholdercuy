@@ -23,8 +23,8 @@ Agrupa los archivos por funcionalidad o pantalla, no por tipo técnico.
 
 ### Archivos de Estado Centralizado (`Vue.observable`)
 Creamos un solo archivo que represente el "estado" de esa pantalla o módulo.
-* **Convención:** **`camelCase`** con sufijo `State` o prefijo `estado`.
-* **Ejemplos válidos:** `dashboardState.js`, `estadoFiltros.js`.
+* **Convención:** **`camelCase`** con sufijo `State` o prefijo `state`.
+* **Ejemplos válidos:** `dashboardState.js`, `stateFilters.js`.
 * **Lo que NO va aquí:** Variables puramente visuales que solo le importan a un componente (ej. el texto de un input antes de hacer clic en buscar). Eso se queda en el `data()` del componente.
 
 ### Archivos de Utilidades Puras
@@ -43,7 +43,7 @@ Utilizaremos el estándar de **`PascalCase`**, dividiendo responsabilidades seg�
 
 | Tipo de Componente | Convención | Responsabilidad | Ejemplo |
 | :--- | :--- | :--- | :--- |
-| **Páginas (Smart)** | Prefijo `Pagina` o sufijo `View`. | Director de orquesta. Hace las llamadas a la API y pasa datos hacia abajo mediante props. | `PaginaPrincipal.vue` |
+| **Páginas (Smart)** | Prefijo `Page` o sufijo `View`. | Director de orquesta. Hace las llamadas a la API y pasa datos hacia abajo mediante props. | `PagePrincipal.vue` |
 | **Componentes (Dumb)** | Nombre descriptivo de su interfaz. | Interfaz gráfica. Reciben datos (props) y emiten eventos hacia arriba. | `FilterTable.vue` |
 
 ---
@@ -102,28 +102,28 @@ Para mantener el rendimiento y la simplicidad, prohíbimos el uso de clases en l
 
 1. **Datos planos de API (DTOs):** Si el frontend recibe miles de registros de la base de datos que solo se van a dibujar en pantalla sin mutar ni requerir cálculos complejos, se deben mantener como objetos planos (`{}`). Iterar arreglos masivos solo para convertirlos en instancias de clase consume memoria innecesaria.
 2. **Estado Global o Singletons:** Si solo existirá una instancia de los datos en toda la ejecución de la app (ej. el perfil del inversor, o el estado de un panel), **no se usan clases**. Se debe utilizar el patrón centralizado con `Vue.observable`.
-3. **Colecciones de Utilidades:** No se deben crear clases vacías para agrupar funciones (ej. `class CalculadoraFinanciera`). Las utilidades puras (como fórmulas de interés compuesto o formateadores de fechas) deben exportarse como funciones sueltas desde un archivo `.js` estándar en `camelCase`.## 6. Clases e Instanciación (POO en JavaScript)
-
-En nuestro ecosistema, las Clases actúan estrictamente como "moldes" para crear múltiples objetos independientes que requieran encapsular tanto sus propios datos (estado) como su propia lógica de negocio (métodos).
-
-### Nomenclatura Estricta
-
-| Elemento | Convención | Ejemplo |
-| :--- | :--- | :--- |
-| **Nombre de la Clase** | **`PascalCase`** (Sustantivo singular) | `class OperacionBursatil {}` |
-| **Nombre del Archivo** | **`PascalCase`** | `OperacionBursatil.js` |
-| **Instancia (Variable)** | **`camelCase`** | `const miOperacion = new OperacionBursatil()` |
-
-### ¿Cuándo instanciar una Clase? (`new Clase()`)
-
-**SÍ debes usar e instanciar una clase cuando:**
-* Necesitas crear múltiples entidades independientes, donde cada una maneja su propio estado interno y ejecuta cálculos sobre sí misma.
-* **Ejemplo Arquitectónico:** Si tienes una tabla con 50 operaciones distintas, cada fila debe ser instanciada (`new ContratoOpcion()`). Esto permite que el componente de Vue sea "tonto" y simplemente llame a los métodos de la instancia, delegando la lógica matemática al modelo: `{{ operacion.calcularRetorno(precioActual) }}`.
-
-### ¿Cuándo NO usar una Clase? (Antipatrones)
-
-Para mantener el rendimiento y la simplicidad, prohíbimos el uso de clases en los siguientes escenarios:
-
-1. **Datos planos de API (DTOs):** Si el frontend recibe miles de registros de la base de datos que solo se van a dibujar en pantalla sin mutar ni requerir cálculos complejos, se deben mantener como objetos planos (`{}`). Iterar arreglos masivos solo para convertirlos en instancias de clase consume memoria innecesaria.
-2. **Estado Global o Singletons:** Si solo existirá una instancia de los datos en toda la ejecución de la app (ej. el perfil del inversor, o el estado de un panel), **no se usan clases**. Se debe utilizar el patrón centralizado con `Vue.observable`.
 3. **Colecciones de Utilidades:** No se deben crear clases vacías para agrupar funciones (ej. `class CalculadoraFinanciera`). Las utilidades puras (como fórmulas de interés compuesto o formateadores de fechas) deben exportarse como funciones sueltas desde un archivo `.js` estándar en `camelCase`.
+
+### Organizacion de Paginas y Componentes
+
+```text
+src/
+└── pages/
+    └── ibkr-configuration/
+        ├── InteractiveBrokersConfigurationPage.vue
+        │
+        ├── contracts/
+        │   ├── ContractsPage.vue
+        │   └── components/
+        │
+        └── series/                                 <-- Entidad de negocio clara
+            ├── SeriesListPage.vue                 <-- O "SeriesIndexPage.vue"
+            ├── SeriesDetailPage.vue
+            └── components/
+                ├── shared/                         <-- Componentes que comparten ambos
+                │   └── SeriesStatusBadge.vue
+                ├── list/                           <-- Componentes exclusivos de la lista
+                │   └── SeriesTable.vue
+                └── detail/                         <-- Componentes exclusivos del detalle
+                    └── SeriesChartCard.vue
+```
