@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
 from config.extensions import db
-from flask import current_app
+from flask import current_app, request, Blueprint
 from common.AppException import AppException
 from common.Response import Response
 from common.Formatter import Formatter
@@ -22,6 +22,7 @@ from config.constants import (
     SERIES_PROF_CARGA_ULT6MESES,
 )
 from controller.base import Base
+from flask_restful import Resource, Api
 
 from parser.serie import SimulacionVariacionParser, SerieControllerParser
 from reader.seriediaria import SerieDiariaReader
@@ -53,8 +54,15 @@ import structure.series_structure as series_structure
 from domain.semana import CodigoSemana
 from domain.mes import Mes
 from dataclasses import dataclass
+import json
 from api.marketstack import MarketStackAPI
 from api.marketdata import MarketDataAPI
+from api.Alphavantage import Alphavantage
+from api.massive import MassiveAPI
+from pydantic import ValidationError
+from schemas.alphavantage_schema import AlphavantageSeriesLoadParams
+from schemas.massive_schema import MassiveSeriesLoadParams
+from model.staging_market_data import StagingMarketDataModel
 from model.seriediaria import SerieDiariaModel
 from model.variaciondiaria import VariacionDiariaModel
 from model.seriesemanal import SerieSemanalModel
@@ -669,3 +677,257 @@ class SimulacionVariacionManager(Base):
                 )
 
         return Response().from_raw_data(variaciones)
+
+class AlphavantageSeriesLoader(Resource):
+    AUTH_REQUIRED = False
+
+    def post(self, args=None):
+        if args is None:
+            if request.is_json:
+                args = request.get_json() or {}
+            else:
+                args = request.form.to_dict() if request.form else {}
+        return self.load(args)
+
+    def load(self, args=None):
+        try:
+            if args is None:
+                args = {}
+            params = AlphavantageSeriesLoadParams(**args)
+            cod_symbol = params.cod_symbol
+            fch_desde = params.fch_desde
+            fch_hasta = params.fch_hasta
+            modo_carga = params.modo_carga
+
+            df_series = self.get_api_series(cod_symbol, fch_desde, fch_hasta)
+            if df_series.empty:
+                return Response(msg="No se encontraron datos para la serie especificada").get()
+
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(
+                df_series
+            )
+            fch_inicio_series = SerieDiariaLoader().load(
+                cod_symbol, df_series, modo_carga
+            )
+            VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            ResumenSerieService().guardar(cod_symbol)
+            db.session.commit()
+            return Response(msg="Se ha realizado la carga correctamente").get()
+        except ValidationError as e:
+            db.session.rollback()
+            errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+            return Response().from_exception(AppException(msg="Errores de validación", errors=errors_list))
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e)
+
+    def get_api_series(self, cod_symbol, fch_desde="", fch_hasta=""):
+        last_quote, quotes = Alphavantage().get_daily_data_since(
+            symbol=cod_symbol, since=fch_desde
+        )
+
+        records = []
+        for item in quotes:
+            records.append({
+                "cod_symbol": cod_symbol,
+                "fch_serie": item.price_date,
+                "imp_apertura": item.open,
+                "imp_maximo": item.high,
+                "imp_minimo": item.low,
+                "imp_cierre": item.close,
+                "volumen": item.volume,
+            })
+
+        df_series = pd.DataFrame(records)
+        if df_series.empty:
+            return df_series
+
+        df_series["fch_serie"] = pd.to_datetime(df_series["fch_serie"]).dt.date
+
+        if fch_desde:
+            fch_d = date.fromisoformat(fch_desde) if isinstance(fch_desde, str) else fch_desde
+            df_series = df_series[df_series["fch_serie"] >= fch_d]
+        if fch_hasta:
+            fch_h = date.fromisoformat(fch_hasta) if isinstance(fch_hasta, str) else fch_hasta
+            df_series = df_series[df_series["fch_serie"] <= fch_h]
+
+        return df_series
+
+    def parse_incoming_series(self, df_series):
+        df_series["imp_apertura_sin_ajus"] = df_series["imp_apertura"]
+        df_series["imp_maximo_sin_ajus"] = df_series["imp_maximo"]
+        df_series["imp_minimo_sin_ajus"] = df_series["imp_minimo"]
+        df_series["imp_cierre_sin_ajus"] = df_series["imp_cierre"]
+
+        fch_max_serie = df_series["fch_serie"].max()
+        fch_min_serie = df_series["fch_serie"].min()
+        return df_series, fch_max_serie, fch_min_serie
+
+class MassiveSeriesLoader(Resource):
+    AUTH_REQUIRED = False
+
+    def post(self, args=None):
+        if args is None:
+            if request.is_json:
+                args = request.get_json() or {}
+            else:
+                args = request.form.to_dict() if request.form else {}
+        return self.load(args)
+
+    def load(self, args=None):
+        staging_id = None
+        try:
+            if args is None:
+                args = {}
+            params = MassiveSeriesLoadParams(**args)
+            cod_symbol = params.cod_symbol
+            fch_desde = params.fch_desde
+            fch_hasta = params.fch_hasta
+            modo_carga = params.modo_carga
+
+            if df_series.empty:
+                if staging_id:
+                    staging_entry = StagingMarketDataModel.query.get(staging_id)
+                    if staging_entry:
+                        staging_entry.estado = "PROCESADO"
+                        db.session.commit()
+                return Response(msg="No se encontraron datos para la serie especificada").get()
+
+            df_series, fch_max_serie, fch_min_serie = self.parse_incoming_series(
+                df_series
+            )
+            fch_inicio_series = SerieDiariaLoader().load(
+                cod_symbol, df_series, modo_carga
+            )
+            VariacionDiariaLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionSemanalLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            SerieModel = SerieMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            VariacionMensualLoader().load(cod_symbol, fch_inicio_series, modo_carga)
+            ResumenSerieService().guardar(cod_symbol)
+            
+            if staging_id:
+                staging_entry = StagingMarketDataModel.query.get(staging_id)
+                if staging_entry:
+                    staging_entry.estado = "PROCESADO"
+
+            db.session.commit()
+            return Response(msg="Se ha realizado la carga correctamente").get()
+        except ValidationError as e:
+            db.session.rollback()
+            if staging_id:
+                try:
+                    staging_entry = StagingMarketDataModel.query.get(staging_id)
+                    if staging_entry:
+                        staging_entry.estado = "ERROR"
+                        db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+            return Response().from_exception(AppException(msg="Errores de validación", errors=errors_list))
+        except Exception as e:
+            db.session.rollback()
+            if staging_id:
+                try:
+                    staging_entry = StagingMarketDataModel.query.get(staging_id)
+                    if staging_entry:
+                        staging_entry.estado = "ERROR"
+                        db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            return Response().from_exception(e)
+
+    def get_api_series(self, cod_symbol, fch_desde="", fch_hasta=""):
+        from_val = fch_desde if fch_desde else "2000-01-01"
+        to_val = fch_hasta if fch_hasta else date.today().isoformat()
+        
+        api = MassiveAPI()
+        res = api.custom_bars(
+            indices_ticker=cod_symbol,
+            multiplier=1,
+            timespan="day",
+            from_date=from_val,
+            to_date=to_val
+        )
+
+        storage_path = current_app.config.get("FILE_STORAGE_PATH", "/home/alone/data/bagholderdata/")
+        os.makedirs(storage_path, exist_ok=True)
+        
+        filename = f"massive_ohlc_{cod_symbol}_{from_val}_to_{to_val}_{str(uuid.uuid4())}.json"
+        full_path = os.path.join(storage_path, filename)
+        
+        raw_json_str = json.dumps(res)
+        with open(full_path, "w") as f:
+            f.write(raw_json_str)
+            
+        file_size_kb = int(os.path.getsize(full_path) / 1024)
+
+        staging_entry = StagingMarketDataModel(
+            proveedor="MASSIVE",
+            endpoint="Indices - Custom Bars (OHLC)",
+            ticker=cod_symbol,
+            file_path=filename,
+            file_size_kb=file_size_kb,
+            estado="PENDIENTE"
+        )
+
+        db.session.add(staging_entry)
+        db.session.commit()
+        staging_id = staging_entry.id_staging
+
+        results = res.get("results", [])
+        if not results:
+            return pd.DataFrame(), staging_id
+
+        records = []
+        for item in results:
+            records.append({
+                "cod_symbol": cod_symbol,
+                "t": item.get("t"),
+                "o": item.get("o"),
+                "h": item.get("h"),
+                "l": item.get("l"),
+                "c": item.get("c"),
+                "v": 0
+            })
+
+        df_series = pd.DataFrame(records)
+        return df_series, staging_id
+
+    def parse_incoming_series(self, df_series):
+        df_series = df_series.rename(
+            columns={
+                "t": "fch_serie",
+                "o": "imp_apertura",
+                "h": "imp_maximo",
+                "l": "imp_minimo",
+                "c": "imp_cierre",
+                "v": "volumen",
+            }
+        )
+
+        df_series["fch_serie"] = pd.to_datetime(df_series["fch_serie"], unit="ms").dt.date
+
+        df_series["imp_apertura_sin_ajus"] = df_series["imp_apertura"]
+        df_series["imp_maximo_sin_ajus"] = df_series["imp_maximo"]
+        df_series["imp_minimo_sin_ajus"] = df_series["imp_minimo"]
+        df_series["imp_cierre_sin_ajus"] = df_series["imp_cierre"]
+
+        fch_max_serie = df_series["fch_serie"].max()
+        fch_min_serie = df_series["fch_serie"].min()
+        return df_series, fch_max_serie, fch_min_serie
+
+
+def init_module(app, url_prefix):
+    bp = Blueprint("series_bp", __name__)
+    api = Api(bp)
+
+    api.add_resource(AlphavantageSeriesLoader, "/alphavantage-loader")
+    api.add_resource(MassiveSeriesLoader, "/massive-loader")
+
+    app.register_blueprint(bp, url_prefix=f"{url_prefix}/series")
+    

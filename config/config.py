@@ -20,6 +20,10 @@ class Config:
     AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "default-auth-secret-key-12345")
     MARKETSTACK_ENDPOINT = os.getenv("MARKETSTACK_ENDPOINT")
     MARKETSTACK_API_TOKEN = os.getenv("MARKETSTACK_API_TOKEN")
+    ALPHAVANTAGE_KEY = os.getenv("ALPHAVANTAGE_KEY")
+    MASSIVE_ENDPOINT = os.getenv("MASSIVE_ENDPOINT", "https://api.massive.com")
+    MASSIVE_API_TOKEN = os.getenv("MASSIVE_API_TOKEN")
+    FILE_STORAGE_PATH = os.getenv("FILE_STORAGE_PATH", "/home/alone/data/bagholderdata/")
 
 
 class DevelopmentConfig(Config):

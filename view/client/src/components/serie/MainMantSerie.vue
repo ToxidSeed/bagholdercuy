@@ -25,6 +25,18 @@
                             </q-item-section>
                         </q-item>
 
+                        <q-item clickable v-close-popup @click="win_alphavantage_loader_open = true">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga de series desde <span class="text-blue-10 text-bold">alphavantage</span></div>
+                            </q-item-section>
+                        </q-item>
+
+                        <q-item clickable v-close-popup @click="win_massive_loader_open = true">
+                            <q-item-section class="text-subtitle1">
+                                <div>Carga de series desde <span class="text-blue-10 text-bold">massive</span></div>
+                            </q-item-section>
+                        </q-item>
+
                         <q-item clickable v-close-popup @click="win_investing_csv_loader_open = true">
                             <q-item-section class="text-subtitle1">
                                 <div>Carga de series desde <span class="text-blue-10 text-bold">Investing CSV</span>
@@ -56,6 +68,8 @@
         <WinNasdaqCsvLoader v-model="store.state.w_nasdaq_loader.open" />
         <WinMarketStackLoader v-model="win_marketstack_loader_open" />
         <WinMarketDataLoader v-model="win_marketdata_loader_open" />
+        <WinAlphavantageLoader v-model="win_alphavantage_loader_open" />
+        <WinMassiveLoader v-model="win_massive_loader_open" />
         <WinInvestingLoader v-model="win_investing_csv_loader_open" />
     </div>
 </template>
@@ -66,6 +80,8 @@ import WinNasdaqCsvLoader from './WinNasdaqCsvLoader.vue'
 import WinMarketStackLoader from './WinMarketStackLoader.vue'
 import WinMarketDataLoader from './WinMarketDataLoader.vue'
 import WinInvestingLoader from './WinInvestingLoader.vue'
+import WinAlphavantageLoader from './WinAlphavantageLoader.vue'
+import WinMassiveLoader from './WinMassiveLoader.vue'
 //import PanelSerieLoader from '@/components/serie/PanelSerieLoader.vue'
 export default {
     name: "MainMantSerie",
@@ -74,7 +90,9 @@ export default {
         WinNasdaqCsvLoader,
         WinMarketStackLoader,
         WinMarketDataLoader,
-        WinInvestingLoader
+        WinInvestingLoader,
+        WinAlphavantageLoader,
+        WinMassiveLoader
         //      PanelSerieLoader
     },
     data: () => {
@@ -83,7 +101,9 @@ export default {
             store: store,
             win_marketstack_loader_open: false,
             win_marketdata_loader_open: false,
-            win_investing_csv_loader_open: false
+            win_investing_csv_loader_open: false,
+            win_alphavantage_loader_open: false,
+            win_massive_loader_open: false
         }
     }
 }
