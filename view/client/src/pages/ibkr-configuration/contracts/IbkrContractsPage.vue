@@ -1,5 +1,5 @@
 <template>
-    <q-page class="q-pa-md">
+    <q-page class="q-pl-md q-pr-md">
         <!-- Header of the page -->
 
         <!-- Main Card -->
@@ -7,17 +7,6 @@
             <!-- Left Side -->
             <div class="col col-grow q-pr-xl column justify-between" style="min-height: 200px;">
                 <div>
-                    <!-- Badges Row -->
-                    <div class="row items-center q-gutter-x-sm q-mb-md">
-                        <q-chip dense square class="text-weight-bold text-caption text-teal-8 bg-teal-1 q-ma-none"
-                            style="letter-spacing: 0.5px; border-radius: 4px;">
-                            SYSTEM CORE
-                        </q-chip>
-                        <div class="row items-center text-teal-8 text-weight-medium text-subtitle2">
-                            <span class="dot-indicator q-mr-sm"></span>
-                            Listo para sincronizar
-                        </div>
-                    </div>
 
                     <!-- Title -->
                     <div class="text-h3 text-weight-bold text-grey-9 q-mb-md">
@@ -32,7 +21,7 @@
                 </div>
 
                 <!-- Stats Row -->
-                <div class="row q-gutter-x-xl q-mt-md">
+                <div class="row q-gutter-x-xl q-mt-xs">
                     <div>
                         <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">LAST SYNC
                         </div>
