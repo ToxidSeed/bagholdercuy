@@ -3,6 +3,7 @@ import requests
 from flask import current_app
 from datetime import date
 
+
 class InteractiveBrokersClient:
     def __init__(self):
         self._endpoint = None
@@ -15,7 +16,6 @@ class InteractiveBrokersClient:
 
     @classmethod
     def get_base_endpoint(cls):
-        from flask import current_app
         endpoint = current_app.config.get("INTERACTIVE_BROKERS_ENDPOINT")
         if not endpoint:
             raise KeyError(
@@ -32,7 +32,7 @@ class InteractiveBrokersClient:
         if args is None:
             args = {}
 
-        exch = args.get("exchange", exchange)        
+        exch = args.get("exchange", exchange)
 
         if not exch:
             raise ValueError("exchange is required")
@@ -40,15 +40,9 @@ class InteractiveBrokersClient:
         base = cls.get_base_endpoint().rstrip("/")
         endpoint = f"{base}/trsrv/all-conids"
 
-        headers = {
-            "Content-Type": "application/json"
-        }
-        params = {
-            "exchange": exch
-        }
+        headers = {"Content-Type": "application/json"}
+        params = {"exchange": exch}
 
         # Desactivamos verify=False por defecto ya que localmente el Gateway de IBKR suele usar certificados autofirmados (HTTP/HTTPS)
         response = requests.get(endpoint, params=params, headers=headers, verify=False)
         return response.json()
-
-    

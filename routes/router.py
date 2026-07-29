@@ -7,7 +7,8 @@ def init_routes(app):
     modules = [
         "controller.transaccion",
         "controller.reportes",
-        "controller.SerieManager"
+        "controller.SerieManager",
+        "controller.ibkr"
     ]
 
     for mod_name in modules:

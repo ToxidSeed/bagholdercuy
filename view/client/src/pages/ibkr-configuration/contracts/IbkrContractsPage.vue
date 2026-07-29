@@ -58,7 +58,6 @@
                     <div class="column items-center justify-center">
                         <q-icon name="cloud_sync" size="44px" class="q-mb-md" />
                         <div class="text-h6 text-weight-bold q-mb-xs">Sync All Contracts</div>
-
                     </div>
                 </q-btn>
             </div>
@@ -105,6 +104,9 @@
 </template>
 
 <script>
+import IbkrApi from "@/api/ibkr.js"
+import { HttpResponseHandler } from "@/common/http-response-handler.js"
+
 export default {
     name: "IbkrContractsPage",
     data() {
@@ -223,34 +225,45 @@ export default {
         handleSync() {
             if (this.syncing) return;
 
+            const exchangeToSync = this.selectedExchange === 'All Exchanges' ? 'AMEX' : this.selectedExchange;
+
             this.syncing = true;
             this.statusText = "Syncing";
 
-            setTimeout(() => {
-                this.syncing = false;
-                this.statusText = "Ready";
+            const api = new IbkrApi();
+            api.sync_all_conids({ exchange: exchangeToSync })
+                .then(httpresp => {
+                    HttpResponseHandler.showMessage(httpresp);
 
-                // Update stats mock-up
-                const now = new Date();
-                const formattedDate = now.getFullYear() + '-' +
-                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(now.getDate()).padStart(2, '0') + ' ' +
-                    String(now.getHours()).padStart(2, '0') + ':' +
-                    String(now.getMinutes()).padStart(2, '0');
+                    // Update last sync date info
+                    const now = new Date();
+                    const formattedDate = now.getFullYear() + '-' +
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(now.getDate()).padStart(2, '0') + ' ' +
+                        String(now.getHours()).padStart(2, '0') + ':' +
+                        String(now.getMinutes()).padStart(2, '0');
 
-                this.lastSync = formattedDate;
+                    this.lastSync = formattedDate;
 
-                // Add a new mock record on sync to make it fully dynamic
-                const conidMock = Math.floor(100000000 + Math.random() * 900000000);
-                this.data.unshift({
-                    conid: conidMock,
-                    cod_symbol: "AMZN",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: formattedDate + ":00"
+                    if (httpresp.data && httpresp.data.success) {
+                        const count = httpresp.data.data ? httpresp.data.data.inserted_count : 0;
+                        console.log(count)
+                        this.$q.notify({
+                            type: 'positive',
+                            message: httpresp.data.message || `Sincronización exitosa de conids para ${exchangeToSync}`
+                        });
+                    }
+                })
+                .catch(err => {
+                    this.$q.notify({
+                        type: 'negative',
+                        message: `Error al sincronizar contratos: ${err.message || err}`
+                    });
+                })
+                .finally(() => {
+                    this.syncing = false;
+                    this.statusText = "Ready";
                 });
-
-                this.totalRecords = (1240 + this.data.length - 5).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }, 3000);
         }
     }
 };

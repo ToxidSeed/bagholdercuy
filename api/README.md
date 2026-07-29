@@ -98,17 +98,35 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
     * Variables de Entorno: `IBKR_INTERACTIVE_BROKERS_ENDPOINT`
     * Secrets: Para retail no tiene
     * Software Adicional: Para clientes retail se requiere **Client Portal Gateway** cuyo enlace es: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/download-and-unzip-the-client-portal-api-gateway
-* **Endpoints**
+
+    * Ejecutar el api gateway:
+      Ubicarse en la carpeta donde se descargó y ejecutar 
+      ```sh
+      bin/run.sh root/conf.yaml
+      ```
+      Referencia: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/run-the-api-gateway
+
+      Por default se levanta en https://localhost:5000/v1/api
+
+      Para que los endpoint funcionen logearse a https://localhost:5000/ y saldrá el login de interactive brokers web
+
+* **Endpoints del Gateway de IBKR**
   * GET /trsrv/all-conids: 
     * Información: Este endpoint devuelve una lista de todos los CONIDs disponibles en la plataforma de Interactive Brokers, este endpoint es muy útil para obtener el conid de un ticker.
-    * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-api-endpoints/market-data/market-data#get-all-conids
+    * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/endpoints/contract/all-conids-by-exchange
+
   * GET /marketdata/snapshot: 
     * Información: Este endpoint devuelve una instantánea del mercado para un ticker especificado.
     * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-api-endpoints/market-data/market-data#snapshot-market-data
 
+* **Endpoints de nuestra API REST Local**
+  * POST `/ibkr/trsrv/all-conids` (ruta completa: `/<BAGHOLDER_APPNAME>/api/v2/ibkr/trsrv/all-conids`):
+    * **Propósito**: Consulta todos los contratos del exchange provisto desde IBKR e inserta en la base de datos (`tb_ibkr_contract`) los nuevos contratos que aún no se encuentren registrados.
+    * **Parámetros**: JSON body o Query params con `"exchange"` (e.g. `{"exchange": "NYSE"}`).
 
 * **Métodos principales**:
   * `get_last_intraday(self, args={})`: Obtiene la última cotización intradía del ticker especificado.
+  * `all_conids(cls, exchange=None, asset_class=None, args=None)`: Realiza la petición de conids a IBKR para el exchange solicitado.
 
 ## 2. Flujo de Datos Típico
 
