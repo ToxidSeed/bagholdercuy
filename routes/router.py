@@ -1,5 +1,6 @@
 # routes/router.py
 
+
 def init_routes(app):
     prefix = f"/{app.config['BAGHOLDER_APPNAME']}/api/v2"
 
@@ -7,7 +8,8 @@ def init_routes(app):
     modules = [
         "controller.transaccion",
         "controller.reportes",
-        "controller.SerieManager"
+        "controller.SerieManager",
+        "controller.ibkr",
     ]
 
     for mod_name in modules:
