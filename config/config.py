@@ -23,7 +23,9 @@ class Config:
     ALPHAVANTAGE_KEY = os.getenv("ALPHAVANTAGE_KEY")
     MASSIVE_ENDPOINT = os.getenv("MASSIVE_ENDPOINT", "https://api.massive.com")
     MASSIVE_API_TOKEN = os.getenv("MASSIVE_API_TOKEN")
-    FILE_STORAGE_PATH = os.getenv("FILE_STORAGE_PATH", "/home/alone/data/bagholderdata/")
+    FILE_STORAGE_PATH = os.getenv(
+        "FILE_STORAGE_PATH", "/home/alone/data/bagholderdata/"
+    )
     INTERACTIVE_BROKERS_ENDPOINT = os.getenv("INTERACTIVE_BROKERS_ENDPOINT")
 
 

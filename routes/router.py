@@ -1,5 +1,6 @@
 # routes/router.py
 
+
 def init_routes(app):
     prefix = f"/{app.config['BAGHOLDER_APPNAME']}/api/v2"
 
