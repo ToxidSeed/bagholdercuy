@@ -1,9 +1,7 @@
 <template>
-<<<<<<< HEAD
-    <q-page class="q-pa-md">
-=======
     <q-page class="q-pl-md q-pr-md">
->>>>>>> origin/master
+    <q-page class="q-pa-md">
+
         <!-- Header of the page -->
 
         <!-- Main Card -->
@@ -11,7 +9,6 @@
             <!-- Left Side -->
             <div class="col col-grow q-pr-xl column justify-between" style="min-height: 200px;">
                 <div>
-<<<<<<< HEAD
                     <!-- Badges Row -->
                     <div class="row items-center q-gutter-x-sm q-mb-md">
                         <q-chip dense square class="text-weight-bold text-caption text-teal-8 bg-teal-1 q-ma-none"
@@ -23,8 +20,7 @@
                             Listo para sincronizar
                         </div>
                     </div>
-=======
->>>>>>> origin/master
+
 
                     <!-- Title -->
                     <div class="text-h3 text-weight-bold text-grey-9 q-mb-md">
@@ -39,11 +35,8 @@
                 </div>
 
                 <!-- Stats Row -->
-<<<<<<< HEAD
-                <div class="row q-gutter-x-xl q-mt-md">
-=======
                 <div class="row q-gutter-x-xl q-mt-xs">
->>>>>>> origin/master
+                <div class="row q-gutter-x-xl q-mt-md">
                     <div>
                         <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">LAST SYNC
                         </div>
@@ -80,10 +73,8 @@
                     <div class="column items-center justify-center">
                         <q-icon name="cloud_sync" size="44px" class="q-mb-md" />
                         <div class="text-h6 text-weight-bold q-mb-xs">Sync All Contracts</div>
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/master
+
                     </div>
                 </q-btn>
             </div>
@@ -130,12 +121,10 @@
 </template>
 
 <script>
-<<<<<<< HEAD
-=======
 import IbkrApi from "@/api/ibkr.js"
 import { HttpResponseHandler } from "@/common/http-response-handler.js"
 
->>>>>>> origin/master
+
 export default {
     name: "IbkrContractsPage",
     data() {
@@ -254,36 +243,6 @@ export default {
         handleSync() {
             if (this.syncing) return;
 
-<<<<<<< HEAD
-            this.syncing = true;
-            this.statusText = "Syncing";
-
-            setTimeout(() => {
-                this.syncing = false;
-                this.statusText = "Ready";
-
-                // Update stats mock-up
-                const now = new Date();
-                const formattedDate = now.getFullYear() + '-' +
-                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                    String(now.getDate()).padStart(2, '0') + ' ' +
-                    String(now.getHours()).padStart(2, '0') + ':' +
-                    String(now.getMinutes()).padStart(2, '0');
-
-                this.lastSync = formattedDate;
-
-                // Add a new mock record on sync to make it fully dynamic
-                const conidMock = Math.floor(100000000 + Math.random() * 900000000);
-                this.data.unshift({
-                    conid: conidMock,
-                    cod_symbol: "AMZN",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: formattedDate + ":00"
-                });
-
-                this.totalRecords = (1240 + this.data.length - 5).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            }, 3000);
-=======
             const exchangeToSync = this.selectedExchange === 'All Exchanges' ? 'AMEX' : this.selectedExchange;
 
             this.syncing = true;
@@ -323,7 +282,6 @@ export default {
                     this.syncing = false;
                     this.statusText = "Ready";
                 });
->>>>>>> origin/master
         }
     }
 };
