@@ -1,88 +1,82 @@
 <template>
     <div>
-        <q-table
-            :columns="columns"
-            :data="store.state.t_resumen.data"
-            :pagination="pagination"
-            row-key="symbol_id"
-            separator="vertical"
-            dense
-            class="no-shadow"
-            wrap-cells
-        >
+        <q-table :columns="columns" :data="store.state.t_resumen.data" :pagination="pagination" row-key="symbol_id"
+            separator="vertical" dense class="no-shadow" wrap-cells>
             <template v-slot:body-cell-menu="props">
                 <q-td :props="props">
-                    <q-btn
-                    flat
-                    dense
-                    icon="more_vert"                    
-                    >
+                    <q-btn flat dense icon="more_vert">
                         <q-menu>
                             <q-list dense class="text-body1">
-                                <q-item clickable v-close-popup @click="store.table_resumen_serie.actualizar_serie(props.row)">
-                                    <q-item-section><span><q-icon name="update" color="green" class="q-pr-xs"></q-icon>Actualizar</span></q-item-section>
+                                <q-item clickable v-close-popup @click="store.abrir_w_sincronizar(props.row)">
+                                    <q-item-section><span><q-icon name="update" color="green-10"
+                                                class="q-pr-xs"></q-icon>Sincronizar</span></q-item-section>
                                 </q-item>
                                 <q-item clickable v-close-popup @click="store.abrir_w_reprocesar(props.row.cod_symbol)">
-                                    <q-item-section><span><q-icon name="construction" color="green" class="q-pr-xs"></q-icon>Reprocesar</span></q-item-section>
+                                    <q-item-section><span><q-icon name="construction" color="green"
+                                                class="q-pr-xs"></q-icon>Reprocesar</span></q-item-section>
                                 </q-item>
                             </q-list>
-                        </q-menu>    
+                        </q-menu>
                     </q-btn>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_general="props">
                 <q-td :props="props">
-                    <q-chip size="12px" :color="determinar_color_chip_estado_general(props.row.est_general)" :class="determinar_color_estado_general(props.row.est_general)">{{ props.row.est_general }}</q-chip>
+                    <q-chip size="12px" :color="determinar_color_chip_estado_general(props.row.est_general)"
+                        :class="determinar_color_estado_general(props.row.est_general)">{{ props.row.est_general
+                        }}</q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_serie_diaria="props">
                 <q-td :props="props">
-                    <q-chip size="12px" 
-                    :color="determinar_color_chip(props.row.est_serie_diaria)" 
-                    :class="determinar_color(props.row.est_serie_diaria)">{{ props.row.est_serie_diaria}}
-                    </q-chip>                   
+                    <q-chip size="12px" :color="determinar_color_chip(props.row.est_serie_diaria)"
+                        :class="determinar_color(props.row.est_serie_diaria)">{{ props.row.est_serie_diaria }}
+                    </q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_var_diaria="props">
-                <q-td :props="props">                                        
-                    <q-chip 
-                    :color="determinar_color_chip(props.row.est_var_diaria)" 
-                    size="12px" 
-                    :class="determinar_color(props.row.est_var_diaria)">
-                        <q-icon :name="determinar_icono(props.row.est_var_diaria)" class="q-pr-xs"/>{{ props.row.est_var_diaria }}
-                    </q-chip>                                    
+                <q-td :props="props">
+                    <q-chip :color="determinar_color_chip(props.row.est_var_diaria)" size="12px"
+                        :class="determinar_color(props.row.est_var_diaria)">
+                        <q-icon :name="determinar_icono(props.row.est_var_diaria)" class="q-pr-xs" />{{
+                            props.row.est_var_diaria }}
+                    </q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_serie_semanal="props">
-                <q-td :props="props">                                        
-                    <q-chip :color="determinar_color_chip(props.row.est_serie_semanal)" size="12px" 
-                    :class="determinar_color(props.row.est_serie_semanal)">
-                        <q-icon :name="determinar_icono(props.row.est_serie_semanal)" class="q-pr-xs"/>{{ props.row.est_serie_semanal }}
-                    </q-chip>                                    
+                <q-td :props="props">
+                    <q-chip :color="determinar_color_chip(props.row.est_serie_semanal)" size="12px"
+                        :class="determinar_color(props.row.est_serie_semanal)">
+                        <q-icon :name="determinar_icono(props.row.est_serie_semanal)" class="q-pr-xs" />{{
+                            props.row.est_serie_semanal }}
+                    </q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_var_semanal="props">
-                <q-td :props="props">                                        
-                    <q-chip :color="determinar_color_chip(props.row.est_var_semanal)" size="12px" 
-                    :class="determinar_color(props.row.est_var_semanal)">
-                        <q-icon :name="determinar_icono(props.row.est_var_semanal)" class="q-pr-xs"/>{{ props.row.est_var_semanal }}
-                    </q-chip>                                    
+                <q-td :props="props">
+                    <q-chip :color="determinar_color_chip(props.row.est_var_semanal)" size="12px"
+                        :class="determinar_color(props.row.est_var_semanal)">
+                        <q-icon :name="determinar_icono(props.row.est_var_semanal)" class="q-pr-xs" />{{
+                            props.row.est_var_semanal }}
+                    </q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_serie_mensual="props">
-                <q-td :props="props">                                        
-                    <q-chip :color="determinar_color_chip(props.row.est_serie_mensual)" size="12px" 
-                    :class="determinar_color(props.row.est_serie_mensual)">
-                        <q-icon :name="determinar_icono(props.row.est_serie_mensual)" class="q-pr-xs"/>{{ props.row.est_serie_mensual }}
-                    </q-chip>                                    
+                <q-td :props="props">
+                    <q-chip :color="determinar_color_chip(props.row.est_serie_mensual)" size="12px"
+                        :class="determinar_color(props.row.est_serie_mensual)">
+                        <q-icon :name="determinar_icono(props.row.est_serie_mensual)" class="q-pr-xs" />{{
+                            props.row.est_serie_mensual }}
+                    </q-chip>
                 </q-td>
             </template>
             <template v-slot:body-cell-est_var_mensual="props">
-                <q-td :props="props">                                        
-                    <q-chip :color="determinar_color_chip(props.row.est_var_mensual)" size="12px" 
-                    :class="determinar_color(props.row.est_var_mensual)">
-                        <q-icon :name="determinar_icono(props.row.est_var_mensual)" class="q-pr-xs"/>{{ props.row.est_var_mensual }}
-                    </q-chip>                                    
+                <q-td :props="props">
+                    <q-chip :color="determinar_color_chip(props.row.est_var_mensual)" size="12px"
+                        :class="determinar_color(props.row.est_var_mensual)">
+                        <q-icon :name="determinar_icono(props.row.est_var_mensual)" class="q-pr-xs" />{{
+                            props.row.est_var_mensual }}
+                    </q-chip>
                 </q-td>
             </template>
         </q-table>
@@ -90,129 +84,135 @@
             <q-card>
                 <q-card-section class="row items-center">
                     <q-avatar icon="thumb_up_alt" color="primary" text-color="white" />
-                    <span class="q-ml-sm">Deseas reparar el symbol <span class="text-primary text-bold">{{ cod_symbol_reparar }}</span>?</span>
+                    <span class="q-ml-sm">Deseas reparar el symbol <span class="text-primary text-bold">{{
+                        cod_symbol_reparar
+                            }}</span>?</span>
                 </q-card-section>
                 <q-card-actions align="right">
                     <q-btn flat label="Cancel" color="primary" v-close-popup />
-                    <q-btn label="Aceptar" color="primary" v-close-popup @click="reparar(cod_symbol_reparar)"/>
+                    <q-btn label="Aceptar" color="primary" v-close-popup @click="reparar(cod_symbol_reparar)" />
                 </q-card-actions>
             </q-card>
         </q-dialog>
-        <WinReprocesarSeries v-model="store.state.w_reprocesar.open"/>
-    </div>    
+        <WinReprocesarSeries v-model="store.state.w_reprocesar.open" />
+        <WinSincronizarSeries v-model="store.state.w_sincronizar.open"
+            :in-cod-symbol="store.state.w_sincronizar.cod_symbol" />
+    </div>
 </template>
 <script>
 
 import store from "./store"
 import WinReprocesarSeries from "./WinReprocesarSeries"
+import WinSincronizarSeries from "./WinSincronizarSeries"
 import SerieApi from "@/api/serie.js"
-import {HttpResponseHandler} from "@/common/http-response-handler.js"
+import { HttpResponseHandler } from "@/common/http-response-handler.js"
 
 export default {
-    name:"TableResumenSerie",
-    components:{
-        WinReprocesarSeries
+    name: "TableResumenSerie",
+    components: {
+        WinReprocesarSeries,
+        WinSincronizarSeries
     },
     data: () => {
         return {
             store: store,
-            confirm_reparar:false,
-            cod_symbol_reparar:"",
-            columns:[{
-                label:"",
-                align:"left",
-                name:"menu",
-                style:"width:10px;",                
-                field:"menu"
-            },{
-                label:"Symbol",
-                align:"left",   
-                name:"cod_symbol",
-                style:"width:50px",
-                field:"cod_symbol"
-            },{
-                label:"Fch. primera serie",
-                align:"left",
-                name:"fch_primera_serie_diaria",
-                style:"width:90px",
-                field:"fch_primera_serie_diaria"
-            },{
-                label:"Fch. ultima serie",
-                align:"left",
-                name:"fch_ultima_serie_diaria",
-                style:"width:90px",
-                field:"fch_ultima_serie_diaria"
-            },{
-                label:"N. Series",
-                align:"left",
-                name:"num_series_diarias",
-                style:"width:90px",
-                field:"num_series_diarias"
-            },{
-                label:"N. dias desde ultima serie",                
-                name:"num_dias_desde_ult_serie",                
-                style:"width:50px",                
-                headerStyle: 'min-width: 100px;text-align:center;',                
-                field:"num_dias_desde_ult_serie"
-            },{
-                label:"Estado",
-                align:"center",
-                name:"est_general",
-                style:"width:100px",
-                field:"est_general"
-            },{
-                label:"Estado Series diarias",
-                align:"left",
-                name:"est_serie_diaria",
-                style:"width:80px;",
-                field:"est_serie_diaria"
-            },{
-                label:"Estado Variaciones diarias",
-                align:"left",
-                name:"est_var_diaria",
-                style:"width:80px;",
-                field:"est_var_diaria"
-            },{
-                label:"Estado Series semanales",
-                align:"left",
-                name:"est_serie_semanal",
-                style:"width:80px;",
-                field:"est_serie_semanal"
-            },{
-                label:"Estado Variaciones semanales",
-                align:"center",
-                name:"est_var_semanal",
-                style:"width:80px;",                
-                field:"est_var_semanal"
-            },{
-                label:"Estado Series Mensuales",
-                align:"left",
-                name:"est_serie_mensual",
-                style:"width:80px;",
-                field:"est_serie_mensual"
-            },{
-                label:"Estado Variaciones Mensuales",
-                align:"left",
-                name:"est_var_mensual",
-                style:"width:80px;",
-                field:"est_var_mensual"
-            },{
-                label:"",
-                align:"",
-                name:"",
-                field:""
+            confirm_reparar: false,
+            cod_symbol_reparar: "",
+            columns: [{
+                label: "",
+                align: "left",
+                name: "menu",
+                style: "width:10px;",
+                field: "menu"
+            }, {
+                label: "Symbol",
+                align: "left",
+                name: "cod_symbol",
+                style: "width:50px",
+                field: "cod_symbol"
+            }, {
+                label: "Fch. primera serie",
+                align: "left",
+                name: "fch_primera_serie_diaria",
+                style: "width:90px",
+                field: "fch_primera_serie_diaria"
+            }, {
+                label: "Fch. ultima serie",
+                align: "left",
+                name: "fch_ultima_serie_diaria",
+                style: "width:90px",
+                field: "fch_ultima_serie_diaria"
+            }, {
+                label: "N. Series",
+                align: "left",
+                name: "num_series_diarias",
+                style: "width:90px",
+                field: "num_series_diarias"
+            }, {
+                label: "N. dias desde ultima serie",
+                name: "num_dias_desde_ult_serie",
+                style: "width:50px",
+                headerStyle: 'min-width: 100px;text-align:center;',
+                field: "num_dias_desde_ult_serie"
+            }, {
+                label: "Estado",
+                align: "center",
+                name: "est_general",
+                style: "width:100px",
+                field: "est_general"
+            }, {
+                label: "Estado Series diarias",
+                align: "left",
+                name: "est_serie_diaria",
+                style: "width:80px;",
+                field: "est_serie_diaria"
+            }, {
+                label: "Estado Variaciones diarias",
+                align: "left",
+                name: "est_var_diaria",
+                style: "width:80px;",
+                field: "est_var_diaria"
+            }, {
+                label: "Estado Series semanales",
+                align: "left",
+                name: "est_serie_semanal",
+                style: "width:80px;",
+                field: "est_serie_semanal"
+            }, {
+                label: "Estado Variaciones semanales",
+                align: "center",
+                name: "est_var_semanal",
+                style: "width:80px;",
+                field: "est_var_semanal"
+            }, {
+                label: "Estado Series Mensuales",
+                align: "left",
+                name: "est_serie_mensual",
+                style: "width:80px;",
+                field: "est_serie_mensual"
+            }, {
+                label: "Estado Variaciones Mensuales",
+                align: "left",
+                name: "est_var_mensual",
+                style: "width:80px;",
+                field: "est_var_mensual"
+            }, {
+                label: "",
+                align: "",
+                name: "",
+                field: ""
             }],
-            data:[],
-            pagination:{
-                rowsPerPage:20
+            data: [],
+            pagination: {
+                rowsPerPage: 20
             }
         }
     },
-    mounted:function(){
+    mounted: function () {
         //this.get_lista_fechas_maximas_x_symbol()
         this.recargar_datos()
     },
-    methods:{
+    methods: {
         /*
         get_lista_fechas_maximas_x_symbol:function(){
             this.$http.post(
@@ -225,69 +225,69 @@ export default {
             })
         },
         */
-        determinar_icono: function(estado){
-            if (estado == 'Correcto'){
+        determinar_icono: function (estado) {
+            if (estado == 'Correcto') {
                 return "check_circle_outline"
             }
-            if (estado == 'Defectuoso'){
+            if (estado == 'Defectuoso') {
                 return "error_outline"
             }
         },
-        determinar_color_chip_estado_general: function(estado){
-            if (estado == 'Actualizado'){
+        determinar_color_chip_estado_general: function (estado) {
+            if (estado == 'Actualizado') {
                 return "teal-1"
             }
-            if (estado == 'Defectuoso'){
+            if (estado == 'Defectuoso') {
                 return "deep-purple-1"
             }
-            if (estado == 'Desactualizado'){
+            if (estado == 'Desactualizado') {
                 return "amber-1"
             }
         },
-        determinar_color_estado_general: function(estado){
-            if (estado == 'Actualizado'){
+        determinar_color_estado_general: function (estado) {
+            if (estado == 'Actualizado') {
                 return "text-teal-10"
             }
-            if (estado == 'Defectuoso'){
+            if (estado == 'Defectuoso') {
                 return "text-deep-purple-10"
             }
-            if (estado == 'Desactualizado'){
+            if (estado == 'Desactualizado') {
                 return "text-amber-10"
             }
         },
-        determinar_color_chip: function(estado){
-            if (estado == 'Correcto'){
+        determinar_color_chip: function (estado) {
+            if (estado == 'Correcto') {
                 return "green-1"
             }
-            if (estado == 'Defectuoso'){
+            if (estado == 'Defectuoso') {
                 return "red-1"
             }
-            if (estado == 'Desactualizado'){
+            if (estado == 'Desactualizado') {
                 return "amber-1"
             }
         },
-        determinar_color: function(estado){
-            if (estado == 'Correcto'){
+        determinar_color: function (estado) {
+            if (estado == 'Correcto') {
                 return "text-green"
             }
-            if (estado.toUpperCase() == 'OK'){
+            if (estado.toUpperCase() == 'OK') {
                 return "text-green"
             }
-            if (estado == 'Defectuoso'){
+            if (estado == 'Defectuoso') {
                 return " text-red"
             }
-            if (estado.toUpperCase() == 'ERROR'){
+            if (estado.toUpperCase() == 'ERROR') {
                 return " text-red"
             }
-            if (estado == 'Desactualizado'){
+            if (estado == 'Desactualizado') {
                 return " text-amber-10"
             }
         }/*,
         preguntar_confirmar_reparar: function(cod_symbol){
             this.confirm_reparar = true
             this.cod_symbol_reparar = cod_symbol
-        }*/,        
-        reparar: function(cod_symbol){
+        }*/,
+        reparar: function (cod_symbol) {
             let data = {
                 "cod_symbol": cod_symbol
             }
@@ -299,7 +299,7 @@ export default {
                 this.recargar_datos()
             })
         },
-        recargar_datos: async function(){
+        recargar_datos: async function () {
             //let data = await new SerieApi().get_lista_fechas_maximas_x_symbol()
             //store.state.t_resumen_data = data
             store.get_resumen_serie()

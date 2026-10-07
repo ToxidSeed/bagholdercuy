@@ -34,18 +34,18 @@ from reader.variacionsemanal import VariacionSemanalReader
 from manager.seriediaria import SimpleSerieDiariaManager
 from manager.variaciaciondiaria import VariacionDiariaManager
 from manager.serieintegridad import *
-from service.seriediaria import SerieDiariaService
-from service.variaciondiaria import VariacionDiariaService
-from service.seriesemanal import SerieSemanalService
-from service.variacionsemanal import VariacionSemanalService
-from service.seriemensual import SerieMensualService
-from service.variacionmensual import VariacionMensualService
-from service.resumenserie import ResumenSerieService
-from service.serie_service import (
+from service.serie.seriediaria import SerieDiariaService
+from service.serie.variaciondiaria import VariacionDiariaService
+from service.serie.seriesemanal import SerieSemanalService
+from service.serie.variacionsemanal import VariacionSemanalService
+from service.serie.seriemensual import SerieMensualService
+from service.serie.variacionmensual import VariacionMensualService
+from service.serie.resumenserie import ResumenSerieService
+from service.serie.serie_service import (
     VariacionSemanalLoader,
     SerieMensualLoader,
     VariacionMensualLoader,
-    SerieDiariaLoader,
+    SerieService,
     VariacionDiariaLoader,
     SerieSemanalLoader,
 )
@@ -921,6 +921,17 @@ class MassiveSeriesLoader(Resource):
         fch_min_serie = df_series["fch_serie"].min()
         return df_series, fch_max_serie, fch_min_serie
 
+class SeriesSynchronizationController(Resource):
+    """
+    Recibira los siguientes parametros:
+    - proveedor
+    - symbol
+    - fch_desde
+    - fch_hasta
+    - modo_carga: Append, Overwrite, Replace
+    """
+    def post(self):
+        pass
 
 def init_module(app, url_prefix):
     bp = Blueprint("series_bp", __name__)
@@ -928,6 +939,7 @@ def init_module(app, url_prefix):
 
     api.add_resource(AlphavantageSeriesLoader, "/alphavantage-loader")
     api.add_resource(MassiveSeriesLoader, "/massive-loader")
+    api.add_resource(SeriesSynchronizationController, "/synchronize")
 
     app.register_blueprint(bp, url_prefix=f"{url_prefix}/series")
     

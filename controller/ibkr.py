@@ -11,6 +11,44 @@ from common.logger import logger
 class IbkrContractsController(Resource):
     AUTH_REQUIRED = False
 
+    def get(self):
+        try:
+            args = request.args
+
+            try:
+                conid = args.get("conid", type=int)
+                page = int(args.get("page", 1))
+                page_size = int(args.get("page_size", 100))
+            except (ValueError, TypeError):
+                raise AppException(
+                    msg="Los parámetros 'conid', 'page' y 'page_size' deben ser numéricos"
+                )
+
+            if args.get("conid") and conid is None:
+                raise AppException(msg="El parámetro 'conid' debe ser numérico")
+
+            try:
+                result = IbkrContractsService().get_contracts(
+                    conid=conid,
+                    cod_symbol=args.get("cod_symbol"),
+                    exchange=args.get("exchange"),
+                    page=page,
+                    page_size=page_size,
+                )
+            except ValueError as e:
+                raise AppException(msg=str(e))
+
+            return {
+                "success": True,
+                "message": f"Se encontraron {result['total']} contratos.",
+                "data": result,
+            }, 200
+        except AppException as e:
+            return {"success": False, "message": e.msg, "errors": e.errors}, 400
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return {"success": False, "message": f"Error no controlado: {str(e)}"}, 500
+
     def post(self):
         try:
             # Aceptamos tanto JSON body como query parameters
@@ -41,6 +79,8 @@ def init_module(app, url_prefix):
     bp = Blueprint("ibkr_bp", __name__)
     api = Api(bp)
 
-    api.add_resource(IbkrContractsController, "/trsrv/load-all-conids")
+    api.add_resource(
+        IbkrContractsController, "/trsrv/load-all-conids", "/trsrv/contracts"
+    )
 
     app.register_blueprint(bp, url_prefix=f"{url_prefix}/ibkr")

@@ -22,8 +22,15 @@ import helper.mes_helper as mes_helper
 from config.constants import CONST_WRITE_MODE_TEXT_APPEND, CONST_WRITE_MODE_TEXT_REPLACE, CONST_WRITE_MODE_TEXT_OVERWRITE
 
 
+class SerieService:
+    """
+    Sincroniza las series con las diferentes fuentes de datos
+    - depende del proveedor de datos
+    """
+    def sincronize(self):
+        pass
 
-class SerieDiariaLoader:
+
     def load(self, cod_symbol, df_series, modo_carga):        
         df_series["fch_semana"] = df_series["fch_serie"].apply(lambda x: CodigoSemana.from_fecha(x).to_fecha_inicio_semana())
         df_series["fch_mes"] = df_series["fch_serie"].apply(lambda x: Mes.from_fecha(x).to_fecha_mes())

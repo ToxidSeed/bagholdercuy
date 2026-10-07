@@ -97,14 +97,13 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 * **Configuración requerida**: 
     * Variables de Entorno: `IBKR_INTERACTIVE_BROKERS_ENDPOINT`
     * Secrets: Para retail no tiene
-    * Software Adicional: Para clientes retail se requiere **Client Portal Gateway** cuyo enlace es: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/download-and-unzip-the-client-portal-api-gateway
+    * Software Adicional: Para clientes retail se requiere **Client Portal Gateway** cuyo enlace para la instalacion es: https://ibkrcampus.com/docs/web-api/authentication/cpgw/installation-authentication
 
     * Ejecutar el api gateway:
       Ubicarse en la carpeta donde se descargó y ejecutar 
       ```sh
       bin/run.sh root/conf.yaml
-      ```
-      Referencia: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/run-the-api-gateway
+      ```      
 
       Por default se levanta en https://localhost:5000/v1/api
 
@@ -119,6 +118,14 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
     * Información: Este endpoint devuelve una instantánea del mercado para un ticker especificado.
     * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-api-endpoints/market-data/market-data#snapshot-market-data
 
+  * POST /iserver/secdef/search:
+    * Información: Busca contratos por símbolo o nombre en Interactive Brokers.
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/contract/search-contract-by-symbol
+
+  * GET /iserver/marketdata/history:
+    * Información: Obtiene datos históricos de mercado (velas/barras) para un CONID y período de tiempo especificado.
+    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/market-data/historical-market-data
+
 * **Endpoints de nuestra API REST Local**
   * POST `/ibkr/trsrv/all-conids` (ruta completa: `/<BAGHOLDER_APPNAME>/api/v2/ibkr/trsrv/all-conids`):
     * **Propósito**: Consulta todos los contratos del exchange provisto desde IBKR e inserta en la base de datos (`tb_ibkr_contract`) los nuevos contratos que aún no se encuentren registrados.
@@ -127,6 +134,9 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 * **Métodos principales**:
   * `get_last_intraday(self, args={})`: Obtiene la última cotización intradía del ticker especificado.
   * `all_conids(cls, exchange=None, asset_class=None, args=None)`: Realiza la petición de conids a IBKR para el exchange solicitado.
+  * `search_contract_by_symbol(cls, symbol=None, name=False, sec_type=None, args=None)`: Busca contratos por símbolo o nombre en la API de IBKR (`POST /iserver/secdef/search`).
+  * `historical_market_data(cls, conid=None, period=None, bar=None, exchange=None, start_time=None, outside_rth=None, source=None, args=None)`: Obtiene datos históricos de mercado para un CONID específico (`GET /iserver/marketdata/history`).
+
 
 ## 2. Flujo de Datos Típico
 
