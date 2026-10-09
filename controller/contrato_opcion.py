@@ -3,7 +3,7 @@ from app import app, db
 
 from controller.base import Base
 from model.contrato_opcion import ContratoOpcionModel
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 import common.converter as converter
 from common.AppException import AppException
 from common.Response import Response
@@ -241,9 +241,9 @@ class SymbolLoader(Base):
 
     def get_symbol(self, symbol=""):
         sym = db.session.query(
-            StockSymbol
+            SymbolModel
         ).filter(
-            StockSymbol.symbol == symbol
+            SymbolModel.symbol == symbol
         ).first()
 
         if sym is None:

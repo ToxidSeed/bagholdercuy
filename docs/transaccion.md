@@ -10,7 +10,7 @@ CREATE TABLE `tb_transaccion` (
   `id_transaccion_origen` binary(16) DEFAULT NULL,
   `id_cuenta` int(11) NOT NULL,
   `cod_symbol` varchar(25) NOT NULL,
-  `id_instrumento_financiero` int(11) DEFAULT NULL,
+  `id_symbol_type` int(11) DEFAULT NULL,
   `id_tipo_transaccion` int(11) NOT NULL,
   `id_indicador_apcierre` int NOT NULL,
   `id_evento_origen` int NOT NULL,

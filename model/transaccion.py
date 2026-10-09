@@ -18,9 +18,9 @@ class TransaccionModel(db.Model):
     id_cuenta = db.Column(db.Integer, nullable=False)    
     cod_symbol = db.Column(db.String(25), nullable=False)
     
-    id_instrumento_financiero = db.Column(
+    id_symbol_type = db.Column(
         db.Integer,
-        db.ForeignKey('tb_instrumento_financiero.id_instrumento_financiero'),
+        db.ForeignKey('tb_symbol_type.id_symbol_type'),
         nullable=True
     )
     id_tipo_transaccion = db.Column(
@@ -36,7 +36,7 @@ class TransaccionModel(db.Model):
     )
     id_evento_origen = db.Column(db.Integer, db.ForeignKey('tb_evento_origen.id_evento_origen'), nullable=False)
 
-    instrumento_financiero = db.relationship('InstrumentoFinancieroModel')
+    symbol_type = db.relationship('SymbolTypeModel')
     tipo_transaccion = db.relationship('TipoTransaccionModel')
     indicador_apcierre = db.relationship('IndicadorApcierreModel')
     evento_origen = db.relationship('EventoOrigenModel')

@@ -10,7 +10,7 @@ def init_routes(app):
         "controller.reportes",
         "controller.SerieManager",
         "controller.ibkr",
-        "controller.instrumento_financiero"
+        "controller.symbol_type"
     ]
 
     for mod_name in modules:

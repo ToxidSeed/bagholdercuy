@@ -1,12 +1,12 @@
 from config.extensions import db
-from model.instrumento_financiero import InstrumentoFinancieroModel
+from model.symbol_type import SymbolTypeModel
 
 
-class InstrumentoFinancieroReader:
+class SymbolTypeReader:
     @staticmethod
     def get_list(**filters):
         stmt = db.select(
-            InstrumentoFinancieroModel
+            SymbolTypeModel
         )
 
         result = db.session.execute(stmt)

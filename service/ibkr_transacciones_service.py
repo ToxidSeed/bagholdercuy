@@ -4,7 +4,7 @@ from model.ibkr_operacion_importada import IbkrOperacionImportadaModel, CodigoOp
 from reader.ibkr_operacion_importada import IbkrOperacionImportadaReader
 from domain.contratoopcion import ContratoOpcionHumanReadable
 from constants.tipo_transaccion import get_tipo_transaccion
-from constants.instrumento_financiero import get_instrumento_financiero
+from constants.symbol_type import get_symbol_type
 import datetime
 import uuid
 from constants.indicador_apcierre import indicador_apcierre
@@ -51,14 +51,14 @@ class IbkrTransaccionesService:
             return
 
         tipo_transaccion = get_tipo_transaccion()
-        instrumento_financiero = get_instrumento_financiero()
+        symbol_type = get_symbol_type()
 
         #OPEN: C
         #CLOSE: V        
 
         equivalencias_categoria_instrumento = {
-            CategoriaActivo.ACCIONES.value: instrumento_financiero.STOCK,
-            CategoriaActivo.OPCIONES.value: instrumento_financiero.OPTION
+            CategoriaActivo.ACCIONES.value: symbol_type.STOCK,
+            CategoriaActivo.OPCIONES.value: symbol_type.OPTION
         }
 
         for op in operaciones_importadas_objs:
@@ -90,7 +90,7 @@ class IbkrTransaccionesService:
                 id_cuenta=id_cuenta,
                 cod_symbol=cod_symbol,
                 id_tipo_transaccion=id_tipo_transaccion,
-                id_instrumento_financiero=equivalencias_categoria_instrumento[op.categoria_activo],
+                id_symbol_type=equivalencias_categoria_instrumento[op.categoria_activo],
                 fch_hr_transaccion=op.fch_hora_operacion if op.fch_hora_operacion else datetime.datetime.now(),
                 id_indicador_apcierre=id_indicador_apcierre,
                 id_evento_origen=id_evento_origen,

@@ -10,7 +10,7 @@ from sqlalchemy import func, true
 from datetime import date, datetime
 from app import app, db
 from model.StockData import StockData
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from common.Response import Response
 from datetime import datetime, date
 from api.marketdata import MarketDataAPI
@@ -56,9 +56,9 @@ class MarketDataApiController(Base):
             return
 
         symbolobj = db.session.query(
-            StockSymbol
+            SymbolModel
         ).filter(
-            StockSymbol.symbol==symbol
+            SymbolModel.symbol==symbol
         ).first()
 
         asset_type = symbolobj.asset_type
@@ -273,7 +273,7 @@ class Symbol:
             for row in my_list:
                 rownumber+=1
                 if rownumber >1:
-                    symbol = StockSymbol(
+                    symbol = SymbolModel(
                         symbol=row[0],
                         name=row[1],
                         exchange=row[2],
@@ -303,10 +303,10 @@ class Symbol:
                 asset_type.append(DataManager.ASSET_TYPE_OPTIONS)
 
             symbol_list = db.session.query(
-                StockSymbol
+                SymbolModel
             ).filter(
-                StockSymbol.symbol.ilike(search_text),
-                StockSymbol.asset_type.in_(asset_type)
+                SymbolModel.symbol.ilike(search_text),
+                SymbolModel.asset_type.in_(asset_type)
             ).all()
             return Response(raw_data=symbol_list).get()
         except Exception as e:

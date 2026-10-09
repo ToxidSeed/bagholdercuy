@@ -125,9 +125,9 @@ class VariacionDiariaBuilder(Resource):
             result = db.session.execute(stmt)
             records = result.all()
 
-            from model.StockSymbol import StockSymbol
+            from model.symbol import SymbolModel
             symbol_item = db.session.execute(
-                db.select(StockSymbol).filter(StockSymbol.symbol == symbol)
+                db.select(SymbolModel).filter(SymbolModel.symbol == symbol)
             ).scalar_one_or_none()
             symbol_text = symbol_item.name if symbol_item else symbol
 
@@ -202,9 +202,9 @@ class VariacionDiariaBuilder(Resource):
         result = db.session.execute(stmt)
         records = result.all()
 
-        from model.StockSymbol import StockSymbol
+        from model.symbol import SymbolModel
         symbol_item = db.session.execute(
-            db.select(StockSymbol).filter(StockSymbol.symbol == symbol)
+            db.select(SymbolModel).filter(SymbolModel.symbol == symbol)
         ).scalar_one_or_none()
         symbol_text = symbol_item.name if symbol_item else symbol
 

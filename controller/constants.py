@@ -1,8 +1,8 @@
 from controller.base import Base
 from model.tipo_transaccion import TipoTransaccionModel
-from model.instrumento_financiero import InstrumentoFinancieroModel
+from model.symbol_type import SymbolTypeModel
 from reader.tipo_transaccion import TipoTransaccionReader
-from reader.instrumento_financiero import InstrumentoFinancieroReader
+from reader.symbol_type import SymbolTypeReader
 from common.Response import Response
 
 class ConstantsController(Base):
@@ -10,7 +10,7 @@ class ConstantsController(Base):
         try:
             constants_resp = {
                 "tiposTransaccion": self.get_tipos_transaccion(),
-                "instrumentosFinancieros":self.get_instrumentos_financieros()                
+                "symbolTypes":self.get_symbol_types()                
             }
 
             return Response().from_raw_data(constants_resp)
@@ -21,6 +21,6 @@ class ConstantsController(Base):
         records = TipoTransaccionReader.get_list()
         return {row.cod_tipo_transaccion: {"code":row.cod_tipo_transaccion, "value":row.id_tipo_transaccion, "label":row.nom_tipo_transaccion} for row in records} 
 
-    def get_instrumentos_financieros(self, args={}):
-        records = InstrumentoFinancieroReader.get_list()
-        return {row.cod_instrumento_financiero : {"code":row.cod_instrumento_financiero, "value":row.id_instrumento_financiero, "label":row.nom_instrumento_financiero} for row in records}
+    def get_symbol_types(self, args={}):
+        records = SymbolTypeReader.get_list()
+        return {row.cod_symbol_type : {"code":row.cod_symbol_type, "value":row.id_symbol_type, "label":row.nom_symbol_type} for row in records}

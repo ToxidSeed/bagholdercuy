@@ -2,7 +2,7 @@ from config.extensions import db
 from model.transaccion import TransaccionModel
 from model.contrato_opcion import ContratoOpcionModel
 from model.calendariodiario import CalendarioDiarioModel
-from model.StockSymbol import StockSymbol as StockSymbolModel
+from model.symbol import SymbolModel
 
 from reader.calendariosemanal import CalendarioSemanalReader
 
@@ -102,7 +102,7 @@ class TransaccionReader:
             TransaccionModel
         ).options(
             joinedload(TransaccionModel.tipo_transaccion),
-            joinedload(TransaccionModel.instrumento_financiero),
+            joinedload(TransaccionModel.symbol_type),
             joinedload(TransaccionModel.indicador_apcierre),
             joinedload(TransaccionModel.evento_origen)
         ).where(
@@ -467,7 +467,7 @@ class TransaccionReader:
         stmt = db.select(                        
             TransaccionModel.id_cuenta,
             TransaccionModel.id_symbol,
-            StockSymbolModel.symbol,
+            SymbolModel.symbol,
             func.min(TransaccionModel.fch_hr_transaccion).label('fch_primera_posicion'),
             func.sum(TransaccionModel.ctd_saldo_transaccion).label("ctd_saldo_posicion"),
             func.sum(TransaccionModel.ctd_saldo_transaccion * TransaccionModel.imp_accion).label("imp_posicion_incial"),
@@ -478,8 +478,8 @@ class TransaccionReader:
         ).select_from(
             TransaccionModel
         ).outerjoin(
-            StockSymbolModel, and_(
-                TransaccionModel.id_symbol == StockSymbolModel.id                
+            SymbolModel, and_(
+                TransaccionModel.id_symbol == SymbolModel.id                
             )
         ).filter(            
             TransaccionModel.id_cuenta == id_cuenta,
@@ -488,7 +488,7 @@ class TransaccionReader:
         ).group_by(
             TransaccionModel.id_cuenta,
             TransaccionModel.id_symbol,
-            StockSymbolModel.symbol
+            SymbolModel.symbol
         )        
 
         result = db.session.execute(stmt)

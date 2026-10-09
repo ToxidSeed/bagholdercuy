@@ -1,6 +1,6 @@
 from config.extensions import db
 from model.monitoreo import MonitoreoModel
-from model.StockSymbol import StockSymbol as StockSymbolModel
+from model.symbol import SymbolModel
 from model.configuracionalerta import  ConfiguracionAlertaModel
 from common.AppException import AppException
 
@@ -37,13 +37,13 @@ class MonitoreoReader:
             MonitoreoModel.id_symbol,
             MonitoreoModel.id_cuenta,
             MonitoreoModel.fch_registro,
-            StockSymbolModel.symbol.label("cod_symbol"),
-            StockSymbolModel.name.label("nom_symbol"),
+            SymbolModel.symbol.label("cod_symbol"),
+            SymbolModel.name.label("nom_symbol"),
             ConfiguracionAlertaModel.id_config_alerta
         ).select_from(
             MonitoreoModel
         ).join(
-            StockSymbolModel, MonitoreoModel.id_symbol == StockSymbolModel.id
+            SymbolModel, MonitoreoModel.id_symbol == SymbolModel.id
         ).outerjoin(
             ConfiguracionAlertaModel, MonitoreoModel.id_monitoreo == ConfiguracionAlertaModel.id_monitoreo
         ).where(

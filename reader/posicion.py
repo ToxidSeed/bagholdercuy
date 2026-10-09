@@ -1,8 +1,8 @@
 from model.contrato_opcion import ContratoOpcionModel
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from model.transaccion import TransaccionModel
 from model.transaccion_saldo import TransaccionSaldoModel
-from constants.instrumento_financiero import get_instrumento_financiero
+from constants.symbol_type import get_symbol_type
 from sqlalchemy import func
 from config.extensions import db
 import pandas as pd
@@ -14,7 +14,7 @@ class PosicionReader:
         """
         stmt = db.select(
             TransaccionModel.cod_symbol,
-            TransaccionModel.id_instrumento_financiero.label("cod_tipo_activo"),
+            TransaccionModel.id_symbol_type.label("cod_tipo_activo"),
             
             func.min(TransaccionModel.fch_hr_transaccion).label('holding_since'),
             func.sum(TransaccionModel.imp_unitario * TransaccionSaldoModel.ctd_saldo).label("sum_imp_accion"), # Weighted sum price * quantity
@@ -36,7 +36,7 @@ class PosicionReader:
             TransaccionSaldoModel.ctd_saldo != 0
         ).group_by(
             TransaccionModel.cod_symbol,
-            TransaccionModel.id_instrumento_financiero
+            TransaccionModel.id_symbol_type
         )
         
         result = db.session.execute(stmt)
@@ -45,7 +45,7 @@ class PosicionReader:
     def get_saldos_actuales_por_cuenta(id_cuenta):
         stmt = db.select(
             TransaccionModel.cod_symbol,
-            StockSymbol.name,
+            SymbolModel.name,
             TransaccionModel.orden_fifo,
             TransaccionModel.fch_hr_transaccion,
             TransaccionModel.imp_unitario,
@@ -56,10 +56,10 @@ class PosicionReader:
         ).join(
             TransaccionSaldoModel, TransaccionModel.id_transaccion == TransaccionSaldoModel.id_transaccion
         ).join(
-            StockSymbol, TransaccionModel.cod_symbol == StockSymbol.symbol
+            SymbolModel, TransaccionModel.cod_symbol == SymbolModel.symbol
         ).where(
             TransaccionModel.id_cuenta == id_cuenta,
-            TransaccionModel.id_instrumento_financiero != get_instrumento_financiero().OPTION,
+            TransaccionModel.id_symbol_type != get_symbol_type().OPTION,
             TransaccionSaldoModel.ctd_saldo != 0
         )
 
@@ -115,7 +115,7 @@ class PosicionReader:
             ContratoOpcionModel, TransaccionModel.id_contrato_opcion == ContratoOpcionModel.id_contrato_opcion
         ).where(
             TransaccionModel.id_cuenta == id_cuenta,
-            TransaccionModel.id_instrumento_financiero == get_instrumento_financiero().OPTION,
+            TransaccionModel.id_symbol_type == get_symbol_type().OPTION,
             TransaccionSaldoModel.ctd_saldo != 0
         )
 

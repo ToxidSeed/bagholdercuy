@@ -106,7 +106,7 @@ El backend está organizado en paquetes altamente especializados en la raíz del
 * **Archivos Clave**:
   * [__init__.py](file:///home/alone/projects/bagholdercuy/constants/__init__.py): Mecanismo de registro automático (`register_init`) para cargar catálogos dinámicamente al iniciar.
   * [tipo_transaccion.py](file:///home/alone/projects/bagholdercuy/constants/tipo_transaccion.py): Constantes para Compras (`C`) y Ventas (`V`).
-  * [instrumento_financiero.py](file:///home/alone/projects/bagholdercuy/constants/instrumento_financiero.py): Tipos de activos (Acciones, Opciones Financieras, Efectivo).
+  * [symbol_type.py](file:///home/alone/projects/bagholdercuy/constants/symbol_type.py): Tipos de activos (Acciones, Opciones Financieras, Efectivo).
   * [evento_origen.py](file:///home/alone/projects/bagholdercuy/constants/evento_origen.py): Orígenes de datos (IBKR, Manual, Dividendos).
   * [indicador_apcierre.py](file:///home/alone/projects/bagholdercuy/constants/indicador_apcierre.py): Indicador de Apertura (`A`), Cierre (`C`), o Ninguno (`N`).
 

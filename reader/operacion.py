@@ -1,5 +1,5 @@
 from model.operacion import OperacionModel
-from model.StockSymbol import StockSymbol as StockSymbolModel
+from model.symbol import SymbolModel
 from model.contrato_opcion import ContratoOpcionModel
 
 from config.extensions import db
@@ -140,12 +140,12 @@ class OperacionReader:
             OperacionModel.ctd_posicion,
             OperacionModel.dsc_glosa_operacion,
             OperacionModel.fch_registro,
-            StockSymbolModel.symbol.label("cod_symbol"),
+            SymbolModel.symbol.label("cod_symbol"),
             ContratoOpcionModel.cod_symbol.label("cod_contrato_opcion")
         ).select_from(
             OperacionModel
         ).join(
-            StockSymbolModel, OperacionModel.id_symbol == StockSymbolModel.id
+            SymbolModel, OperacionModel.id_symbol == SymbolModel.id
         ).outerjoin(
             ContratoOpcionModel, OperacionModel.id_contrato_opcion == ContratoOpcionModel.id_contrato_opcion
         ).where(
