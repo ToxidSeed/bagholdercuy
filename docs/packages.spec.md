@@ -56,7 +56,7 @@ El backend está organizado en paquetes altamente especializados en la raíz del
 * **Responsabilidad**: Son los puntos de entrada (bootstrap) de la aplicación Flask.
 * **Patrón de Diseño**:
   * **Carga Dinámica (Legacy)**: En `app.py`, la clase `EntryAPI` actúa como un despachador dinámico genérico para solicitudes HTTP POST y GET. Recibe los parámetros `module_name`, `class_name` y `method_name` desde la URL, importa dinámicamente el controlador correspondiente en `controller/` y ejecuta el método solicitado.
-  * **Rutas Modernas (V2 API)**: Utiliza `routes.router.init_routes` para inicializar Blueprints estándar en Flask para módulos modernos (`controller.transaccion`, `controller.reportes`, `controller.SerieManager`).
+  * **Rutas Modernas (V2 API)**: Utiliza `routes.router.init_routes` para inicializar Blueprints estándar en Flask para módulos modernos (`controller.transaccion`, `controller.reportes`, `controller.serie_controller`).
   * **JWT**: Valida tokens de acceso descodificados a través de la clave secreta `AUTH_SECRET_KEY`.
 
 ---
@@ -184,7 +184,7 @@ El backend está organizado en paquetes altamente especializados en la raíz del
 ### 2.14. `routes/`
 * **Responsabilidad**: Define el enrutamiento de Flask para los controladores API modernos (API V2).
 * **Archivos Clave**:
-  * [router.py](file:///home/alone/projects/bagholdercuy/routes/router.py): Registra las rutas asociándolas a los controladores habilitados (`controller.transaccion`, `controller.reportes`, `controller.SerieManager`) usando el prefijo `/{BAGHOLDER_APPNAME}/api/v2`.
+  * [router.py](file:///home/alone/projects/bagholdercuy/routes/router.py): Registra las rutas asociándolas a los controladores habilitados (`controller.transaccion`, `controller.reportes`, `controller.serie_controller`) usando el prefijo `/{BAGHOLDER_APPNAME}/api/v2`.
 
 ---
 

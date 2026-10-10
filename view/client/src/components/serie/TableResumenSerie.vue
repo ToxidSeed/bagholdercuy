@@ -216,7 +216,7 @@ export default {
         /*
         get_lista_fechas_maximas_x_symbol:function(){
             this.$http.post(
-                "/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol",{},
+                "/serie_controller/SerieController/get_lista_fechas_maximas_x_symbol",{},
                 postconfig()
             ).then(httpresp => {
                 this.$store.commit("messagebox",{"httpresp":httpresp,"mostrar_si_error":true}) 

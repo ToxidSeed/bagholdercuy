@@ -7,7 +7,7 @@ import { SERIE } from './endpoints'
 class Serie {
 
     get_estadisticas = async function (params) {
-        const httpresp = axios.post("/SerieManager/SerieController/get_estadisticas",
+        const httpresp = axios.post("/serie_controller/SerieController/get_estadisticas",
             params,
             postconfig()
         )
@@ -16,7 +16,7 @@ class Serie {
     }
 
     actualizar_serie = async function (data) {
-        let httpresp = await axios.post("/SerieManager/SerieManagerLoader/actualizar_serie", {
+        let httpresp = await axios.post("/serie_controller/SerieManagerLoader/actualizar_serie", {
             cod_symbol: data.cod_symbol
         }, postconfig())
 
@@ -28,7 +28,7 @@ class Serie {
     }
 
     reparar = async function (data) {
-        let httpresp = await axios.post("/SerieManager/ReparadorSeriesController/reparar", {
+        let httpresp = await axios.post("/serie_controller/ReparadorSeriesController/reparar", {
             cod_symbol: data.cod_symbol
         }, postconfig())
         return httpresp
@@ -36,7 +36,7 @@ class Serie {
 
     get_lista_fechas_maximas_x_symbol = async function () {
         try {
-            let httpresp = await axios.post("/SerieManager/SerieController/get_lista_fechas_maximas_x_symbol", {
+            let httpresp = await axios.post("/serie_controller/SerieController/get_lista_fechas_maximas_x_symbol", {
             }, postconfig())
             store.dispatch("incluir_httpresp_si_apperror", httpresp)
             return httpresp.data.data

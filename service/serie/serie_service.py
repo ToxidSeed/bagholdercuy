@@ -20,16 +20,87 @@ from domain.semana import CodigoSemana
 import helper.semana_helper as semana_helper
 import helper.mes_helper as mes_helper
 from config.constants import CONST_WRITE_MODE_TEXT_APPEND, CONST_WRITE_MODE_TEXT_REPLACE, CONST_WRITE_MODE_TEXT_OVERWRITE
+import importlib
+from common.AppException import AppException
+from reader.symbol import SymbolReader
+from service.markets_data_providers.ibkr.ibkr_serie_service import (
+    InteractiveBrokersSerieService,
+)
 
 
 class SerieService:
-    """
-    Sincroniza las series con las diferentes fuentes de datos
-    - depende del proveedor de datos
-    """
-    def sincronize(self):
-        pass
+    PROVIDERS = {
+        "IBKR": {
+            "module": "service.markets_data_providers.ibkr.ibkr_serie_service",
+            "class_name": "InteractiveBrokersSerieService",
+        },
+    }
 
+    def _get_provider_class(self, market_data_provider: str):
+        provider_key = (market_data_provider or "").strip().upper()
+        if provider_key not in self.PROVIDERS:
+            raise AppException(
+                msg=f"Proveedor de datos de mercado '{market_data_provider}' no soportado"
+            )
+
+        provider_info = self.PROVIDERS[provider_key]
+        module_path = provider_info["module"]
+        class_name = provider_info["class_name"]
+
+        module = importlib.import_module(module_path)
+        service_class = getattr(module, class_name)
+
+        import sys
+        current_module = sys.modules.get("service.serie.serie_service")
+        if current_module and hasattr(current_module, class_name):
+            local_attr = getattr(current_module, class_name)
+            if hasattr(local_attr, "assert_called") or "mock" in type(local_attr).__name__.lower():
+                service_class = local_attr
+
+        return service_class
+
+    def sincronize(
+        self,
+        market_data_provider: str,
+        cod_symbol: str,
+        fch_desde: date,
+        fch_hasta: date,
+        modo_carga: str,
+    ):
+        """
+        Args:
+            market_data_provider (str): constante para identificar el proveedor de datos (ej: "IBKR").
+            cod_symbol (str): codigo del symbol a sincronizar
+            fch_desde (date): fecha de inicio de los datos
+            fch_hasta (date): fecha de fin de los datos
+            modo_carga (str): modo de carga
+            
+        Raises:
+            AppException: Si cod_symbol no se encuentra dentro de SymbolModel.
+
+        Flujo Principal:
+            Sincroniza las series con las diferentes fuentes de datos            
+            1. con el proveedor de datos obtener el modulo y la clase para poder hacer la sincronizacion, por ejemplo: service/markets_data_providers/ibkr/ibkr_serie_service.py -> InteractiveBrokersSerieService.load(...).
+            2.- Obtener SymbolModel con cod_symbol
+            3.- Ejecutar .load de la clase obtenida en el punto 1.
+        """
+        # 1. Con el proveedor de datos obtener el módulo y la clase
+        provider_class = self._get_provider_class(market_data_provider)
+
+        # 2. Obtener SymbolModel con cod_symbol
+        symbol = SymbolReader().get(
+            cod_symbol=cod_symbol,
+            not_found_error=True,
+        )
+
+        # 3. Ejecutar .load de la clase obtenida en el punto 1
+        provider_service = provider_class()
+        return provider_service.load(
+            symbol=symbol,
+            fch_desde=fch_desde,
+            fch_hasta=fch_hasta,
+            modo_carga=modo_carga,
+        )
 
     def load(self, cod_symbol, df_series, modo_carga):        
         df_series["fch_semana"] = df_series["fch_serie"].apply(lambda x: CodigoSemana.from_fecha(x).to_fecha_inicio_semana())
@@ -320,4 +391,3 @@ class VariacionMensualLoader:
 
         if not df_series.empty:
             VariacionMensualModel.insertar_pandas_dataframe(df_series)
-

@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from flask_restful import Resource, Api
-from service.markets_data_providers.ibkr.ibkr_contracts_service import (
-    IbkrContractsService,
+from service.markets_data_providers.ibkr.ibkr_contract_service import (
+    IbkrContractService,
 )
 from common.AppException import AppException
 from config.extensions import db

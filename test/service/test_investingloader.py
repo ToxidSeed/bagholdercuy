@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from decimal import Decimal
 from datetime import date
-from controller.SerieManager import InvestingLoader
+from controller.serie_controller import InvestingLoader
 from service.serie_service import SerieDiariaLoader
 
 def test_investing_loader_spanish_decimals(monkeypatch):

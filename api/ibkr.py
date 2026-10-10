@@ -94,7 +94,8 @@ class InteractiveBrokersClient:
         """
         GET /iserver/marketdata/history
         Obtiene datos históricos de mercado para un CONID específico.
-        https://ibkrcampus.com/docs/web-api/v1/endpoints/market-data/historical-market-data
+        https://www.interactivebrokers.com/docs/web-api/v1/endpoints/market-data/historical-market-data
+        https://www.interactivebrokers.com/docs/web-api/api-reference/trading/trading-market-data/get-md-history
         """
         if args is None:
             args = {}

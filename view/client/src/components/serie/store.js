@@ -67,7 +67,7 @@ export default {
         form_data.append("cod_symbol", this.state.w_reprocesar.cod_symbol)
         //form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
 
-        axios.post("/SerieManager/ReprocesoSerieController/reprocesar"
+        axios.post("/serie_controller/ReprocesoSerieController/reprocesar"
             ,form_data
             ,postconfig()
         ).then(httpresponse => {
