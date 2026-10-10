@@ -1,9 +1,10 @@
 export const SERIE = {
-    MARKETSTACK_LOAD: "SerieManager/MarketStackLoaderController/load",
-    MARKETDATA_LOAD: "SerieManager/MarketDataLoaderController/load",
-    INVESTING_LOAD: "SerieManager/InvestingLoaderController/load",
+    MARKETSTACK_LOAD: "serie_controller/MarketStackLoaderController/load",
+    MARKETDATA_LOAD: "serie_controller/MarketDataLoaderController/load",
+    INVESTING_LOAD: "serie_controller/InvestingLoaderController/load",
     ALPHAVANTAGE_LOAD: "/api/v2/series/alphavantage-loader",
-    MASSIVE_LOAD: "/api/v2/series/massive-loader"
+    MASSIVE_LOAD: "/api/v2/series/massive-loader",
+    SYNCHRONIZE: "/api/v2/series/synchronize"
 }
 
 export const OPERACION = {

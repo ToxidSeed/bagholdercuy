@@ -2,12 +2,12 @@ from config.extensions import db
 
 from sqlalchemy import delete
 
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 
 class SymbolRemover:
     def eliminar_todo():
         stmt = (
-            delete(StockSymbol)
+            delete(SymbolModel)
         )
 
         db.session.execute(stmt)

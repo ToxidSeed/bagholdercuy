@@ -1,5 +1,4 @@
 <template>
-    <q-page class="q-pl-md q-pr-md">
     <q-page class="q-pa-md">
 
         <!-- Header of the page -->
@@ -36,24 +35,27 @@
 
                 <!-- Stats Row -->
                 <div class="row q-gutter-x-xl q-mt-xs">
-                <div class="row q-gutter-x-xl q-mt-md">
-                    <div>
-                        <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">LAST SYNC
+                    <div class="row q-gutter-x-xl q-mt-md">
+                        <div>
+                            <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">LAST SYNC
+                            </div>
+                            <div class="text-h6 text-weight-bold text-grey-8">{{ lastSync }}</div>
                         </div>
-                        <div class="text-h6 text-weight-bold text-grey-8">{{ lastSync }}</div>
-                    </div>
-                    <div>
-                        <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">TOTAL RECORDS
+                        <div>
+                            <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">TOTAL
+                                RECORDS
+                            </div>
+                            <div class="text-h6 text-weight-bold text-grey-8">{{ totalRecords }}</div>
                         </div>
-                        <div class="text-h6 text-weight-bold text-grey-8">{{ totalRecords }}</div>
-                    </div>
-                    <div>
-                        <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">STATUS</div>
-                        <div class="q-mt-xs">
-                            <q-chip dense class="text-weight-medium text-subtitle2 q-ma-none q-px-sm"
-                                :class="statusBadgeClass">
-                                {{ statusText }}
-                            </q-chip>
+                        <div>
+                            <div class="text-caption text-weight-bold text-grey-5 uppercase-tracking q-mb-xs">STATUS
+                            </div>
+                            <div class="q-mt-xs">
+                                <q-chip dense class="text-weight-medium text-subtitle2 q-ma-none q-px-sm"
+                                    :class="statusBadgeClass">
+                                    {{ statusText }}
+                                </q-chip>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -73,8 +75,6 @@
                     <div class="column items-center justify-center">
                         <q-icon name="cloud_sync" size="44px" class="q-mb-md" />
                         <div class="text-h6 text-weight-bold q-mb-xs">Sync All Contracts</div>
-
-
                     </div>
                 </q-btn>
             </div>
@@ -96,12 +96,14 @@
                     class="bg-white exchange-select" style="width: 180px;" />
 
                 <!-- Apply Button -->
-                <q-btn label="Apply" no-caps unelevated class="apply-btn text-weight-medium q-px-md"
+                <q-btn label="Apply" no-caps unelevated class="apply-btn text-weight-medium q-px-md" :loading="loading"
                     @click="applyFilters" />
             </div>
 
             <div class="row items-center q-gutter-x-md text-grey-8">
-                <div class="text-subtitle2 text-weight-regular">Display: {{ filteredData.length }} rows</div>
+                <div class="text-subtitle2 text-weight-regular">Display: {{ data.length }} of {{ pagination.rowsNumber
+                    }} rows
+                </div>
 
                 <!-- View Mode toggle group -->
                 <div class="view-toggle-group row no-wrap">
@@ -114,8 +116,9 @@
         </div>
 
         <!-- Table -->
-        <q-table :data="filteredData" :columns="columns" row-key="conid" dense flat :pagination="pagination"
-            separator="vertical" class="contracts-table border-table">
+        <q-table :data="data" :columns="columns" row-key="conid" dense flat :pagination.sync="pagination"
+            :loading="loading" :rows-per-page-options="[20, 50, 100, 500]" binary-state-sort separator="vertical"
+            class="contracts-table border-table" @request="onRequest">
         </q-table>
     </q-page>
 </template>
@@ -131,7 +134,7 @@ export default {
         return {
             syncing: false,
             lastSync: "2023-10-27 14:30",
-            totalRecords: "1,240",
+            totalRecords: "-",
             statusText: "Ready",
 
             filterSymbol: "",
@@ -141,8 +144,11 @@ export default {
             exchangeOptions: ["All Exchanges", "NASDAQ", "NYSE", "ARCA", "BATS"],
             viewMode: "grid",
 
+            loading: false,
             pagination: {
-                rowsPerPage: 20
+                page: 1,
+                rowsPerPage: 20,
+                rowsNumber: 0
             },
             columns: [
                 {
@@ -150,7 +156,7 @@ export default {
                     label: 'CONID (PK)',
                     align: 'left',
                     field: 'conid',
-                    sortable: true,
+                    sortable: false,
                     style: "width:50px"
                 },
                 {
@@ -158,7 +164,7 @@ export default {
                     label: 'SYMBOL',
                     align: 'left',
                     field: 'cod_symbol',
-                    sortable: true,
+                    sortable: false,
                     style: "width:50px"
                 },
                 {
@@ -166,7 +172,7 @@ export default {
                     label: 'EXCHANGE',
                     align: 'left',
                     field: 'exchange',
-                    sortable: true,
+                    sortable: false,
                     style: "width:50px"
                 },
                 {
@@ -174,7 +180,7 @@ export default {
                     label: 'REGISTRATION DATE',
                     align: 'left',
                     field: 'fch_hr_registro',
-                    sortable: true,
+                    sortable: false,
                     style: "width:50px"
                 },
                 {
@@ -184,38 +190,7 @@ export default {
                     field: ''
                 }
             ],
-            data: [
-                {
-                    conid: 4391,
-                    cod_symbol: "AAPL",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: "2023-10-27 14:30:12"
-                },
-                {
-                    conid: 265598,
-                    cod_symbol: "TSLA",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: "2023-10-27 14:31:00"
-                },
-                {
-                    conid: 271439,
-                    cod_symbol: "MSFT",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: "2023-10-27 14:32:45"
-                },
-                {
-                    conid: 12087,
-                    cod_symbol: "SPY",
-                    exchange: "ARCA",
-                    fch_hr_registro: "2023-10-27 14:35:10"
-                },
-                {
-                    conid: 495512572,
-                    cod_symbol: "NVDA",
-                    exchange: "NASDAQ",
-                    fch_hr_registro: "2023-10-28 09:15:30"
-                }
-            ]
+            data: []
         };
     },
     computed: {
@@ -224,21 +199,51 @@ export default {
                 return "text-orange-9 bg-orange-1";
             }
             return "text-teal-8 bg-teal-1";
-        },
-        filteredData() {
-            return this.data.filter(item => {
-                const matchesSymbol = this.appliedFilterSymbol ?
-                    item.cod_symbol.toLowerCase().includes(this.appliedFilterSymbol.toLowerCase()) : true;
-                const matchesExchange = this.appliedSelectedExchange && this.appliedSelectedExchange !== 'All Exchanges' ?
-                    item.exchange.toLowerCase() === this.appliedSelectedExchange.toLowerCase() : true;
-                return matchesSymbol && matchesExchange;
-            });
         }
     },
     methods: {
         applyFilters() {
-            this.appliedFilterSymbol = this.filterSymbol;
+            this.appliedFilterSymbol = (this.filterSymbol || "").trim();
             this.appliedSelectedExchange = this.selectedExchange;
+            this.onRequest({ pagination: { ...this.pagination, page: 1 } });
+        },
+        onRequest(props) {
+            const { page, rowsPerPage } = props.pagination;
+
+            const params = { page, page_size: rowsPerPage };
+            if (this.appliedFilterSymbol) {
+                params.cod_symbol = this.appliedFilterSymbol;
+            }
+            if (this.appliedSelectedExchange && this.appliedSelectedExchange !== "All Exchanges") {
+                params.exchange = this.appliedSelectedExchange;
+            }
+
+            this.loading = true;
+            const api = new IbkrApi();
+            api.get_contracts(params)
+                .then(httpresp => {
+                    const result = httpresp.data && httpresp.data.data ? httpresp.data.data : {};
+                    this.data = result.items || [];
+                    this.pagination = {
+                        ...this.pagination,
+                        page: result.page || page,
+                        rowsPerPage: result.page_size || rowsPerPage,
+                        rowsNumber: result.total || 0
+                    };
+                    this.totalRecords = (result.total || 0).toLocaleString();
+                })
+                .catch(err => {
+                    const msg = err.response && err.response.data && err.response.data.message
+                        ? err.response.data.message
+                        : (err.message || err);
+                    this.$q.notify({
+                        type: "negative",
+                        message: `Error al cargar contratos: ${msg}`
+                    });
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
         },
         handleSync() {
             if (this.syncing) return;

@@ -1,5 +1,5 @@
 from model.orden import OrdenModel
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from model.posicion import PosicionModel
 from model.operacion import OperacionModel
 

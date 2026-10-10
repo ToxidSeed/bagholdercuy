@@ -4,14 +4,14 @@ export default {
     namespaced: true,
     state: {
         tiposTransaccion:null,
-        instrumentosFinancieros:null
+        symbolTypes:null
     },
     mutations: {
         SET_TIPOS_TRANSACCION(state, records){
             state.tiposTransaccion = records
         },
-        SET_INSTRUMENTOS_FINANCIEROS(state, records){
-            state.instrumentosFinancieros = records
+        SET_SYMBOL_TYPES(state, records){
+            state.symbolTypes = records
         }
     },
     actions: {
@@ -20,7 +20,7 @@ export default {
             const httpdata = httpresp.data
             const data = httpdata.data            
             commit('SET_TIPOS_TRANSACCION', data.tiposTransaccion)
-            commit('SET_INSTRUMENTOS_FINANCIEROS', data.instrumentosFinancieros)            
+            commit('SET_SYMBOL_TYPES', data.symbolTypes)            
         }
     }
 }

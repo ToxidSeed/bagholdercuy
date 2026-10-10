@@ -13,7 +13,7 @@ from common.Error import Error
 from domain.semana import CodigoSemana
 from domain.contratoopcion import ContratoOpcionHumanReadable
 
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from model.transaccion import TransaccionModel
 from model.TipoModel import TipoModel
 from model.importacion import ImportacionModel, OrigenImportacion, TipoDataset, EstadoImportacion

@@ -93,7 +93,7 @@ export default {
         load:function(){
             var symbol_value = this.symbol.value
             this.$http.post(
-            '/SerieManager/SerieManager/load',{
+            '/serie_controller/SerieManager/load',{
                 symbol:symbol_value,
                 method:this.method,
                 frequency:this.frequency

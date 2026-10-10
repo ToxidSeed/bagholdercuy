@@ -99,7 +99,7 @@ export default {
             //console.log(form_data)                      
             
             this.$http.post(
-                '/SerieManager/InvestingLoader/load',form_data,postConfig                
+                '/serie_controller/InvestingLoader/load',form_data,postConfig                
             ).then(httpresp => {                
                 store.dispatch("incluir_httpresp", httpresp)
             }).finally(() => {

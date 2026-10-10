@@ -34,18 +34,18 @@ from reader.variacionsemanal import VariacionSemanalReader
 from manager.seriediaria import SimpleSerieDiariaManager
 from manager.variaciaciondiaria import VariacionDiariaManager
 from manager.serieintegridad import *
-from service.seriediaria import SerieDiariaService
-from service.variaciondiaria import VariacionDiariaService
-from service.seriesemanal import SerieSemanalService
-from service.variacionsemanal import VariacionSemanalService
-from service.seriemensual import SerieMensualService
-from service.variacionmensual import VariacionMensualService
-from service.resumenserie import ResumenSerieService
-from service.serie_service import (
+from service.serie.seriediaria import SerieDiariaService
+from service.serie.variaciondiaria import VariacionDiariaService
+from service.serie.seriesemanal import SerieSemanalService
+from service.serie.variacionsemanal import VariacionSemanalService
+from service.serie.seriemensual import SerieMensualService
+from service.serie.variacionmensual import VariacionMensualService
+from service.serie.resumenserie import ResumenSerieService
+from service.serie.serie_service import (
     VariacionSemanalLoader,
     SerieMensualLoader,
     VariacionMensualLoader,
-    SerieDiariaLoader,
+    SerieService,
     VariacionDiariaLoader,
     SerieSemanalLoader,
 )
@@ -62,6 +62,8 @@ from api.massive import MassiveAPI
 from pydantic import ValidationError
 from schemas.alphavantage_schema import AlphavantageSeriesLoadParams
 from schemas.massive_schema import MassiveSeriesLoadParams
+from schemas.serie_schema import SeriesSynchronizationRequest
+from schemas.responses.serie import series_synchronization_response_schema
 from model.staging_market_data import StagingMarketDataModel
 from model.seriediaria import SerieDiariaModel
 from model.variaciondiaria import VariacionDiariaModel
@@ -921,6 +923,69 @@ class MassiveSeriesLoader(Resource):
         fch_min_serie = df_series["fch_serie"].min()
         return df_series, fch_max_serie, fch_min_serie
 
+class SeriesSynchronizationController(Resource):
+    AUTH_REQUIRED = False
+    
+    def post(self, args=None):
+        """
+        Args:
+            - market_data_provider: str (Requerido)
+            - cod_symbol: str (Requerido)
+            - fch_desde: str (Requerido)
+            - fch_hasta: str (Requerido)
+            - modo_carga: str (Requerido) - Valores permitidos: APPEND, OVERWRITE, REPLACE
+        Flujo:
+            - El procesamiento lo hace con service/serie/serie_service.py - SerieService - sincronize
+        """
+        if args is None:
+            if request.is_json:
+                args = request.get_json() or {}
+            elif request.form:
+                args = request.form.to_dict()
+            elif request.args:
+                args = request.args.to_dict()
+            else:
+                args = {}
+
+        try:
+            try:
+                params = SeriesSynchronizationRequest(**args)
+            except ValidationError as e:
+                errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+                raise AppException(
+                    msg=f"Errores de validación: {'; '.join(errors_list)}",
+                    errors=errors_list,
+                )
+
+            resultado = SerieService().sincronize(
+                market_data_provider=params.market_data_provider,
+                cod_symbol=params.cod_symbol,
+                fch_desde=params.fch_desde,
+                fch_hasta=params.fch_hasta,
+                modo_carga=params.modo_carga,
+            )
+
+            db.session.commit()
+
+            fch_min, fch_max = resultado if resultado else (None, None)
+            response_data = series_synchronization_response_schema.dump({
+                "market_data_provider": params.market_data_provider,
+                "cod_symbol": params.cod_symbol,
+                "fch_min_serie": fch_min,
+                "fch_max_serie": fch_max,
+            })
+
+            return Response(
+                msg="Se ha realizado la sincronización correctamente",
+                data=response_data,
+            ).get(), 200
+
+        except AppException as e:
+            db.session.rollback()
+            return Response().from_exception(e), 400
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e), 500
 
 def init_module(app, url_prefix):
     bp = Blueprint("series_bp", __name__)
@@ -928,6 +993,7 @@ def init_module(app, url_prefix):
 
     api.add_resource(AlphavantageSeriesLoader, "/alphavantage-loader")
     api.add_resource(MassiveSeriesLoader, "/massive-loader")
+    api.add_resource(SeriesSynchronizationController, "/synchronize")
 
     app.register_blueprint(bp, url_prefix=f"{url_prefix}/series")
     

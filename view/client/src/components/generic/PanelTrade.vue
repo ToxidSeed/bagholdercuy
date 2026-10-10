@@ -144,7 +144,7 @@ export default {
                 order_type: "",
                 asset_type: "",
                 subyacente: "",
-                id_instrumento_financiero: null,
+                id_symbol_type: null,
                 id_tipo_transaccion: null,
                 id_contrato_opcion: null
             },
@@ -186,7 +186,7 @@ export default {
         }
     },
     computed: {
-        ...mapState('serverConstants', ['instrumentosFinancieros', 'tiposTransaccion']),
+        ...mapState('serverConstants', ['symbolTypes', 'tiposTransaccion']),
         ref_num_orden_visible: function () {
             return this.ref_num_orden.length == 0 ? false : true;
         },
@@ -218,7 +218,7 @@ export default {
             this.$refs.symbol.focus()
         },
         search: function () {
-            console.log(this.instrumentosFinancieros)
+            console.log(this.symbolTypes)
             console.log('xxxxx')
             if (this.symbol_search == "") {
                 return
@@ -308,9 +308,9 @@ export default {
                 return;
             }
 
-            if (this.order.id_instrumento_financiero == null) {
+            if (this.order.id_symbol_type == null) {
                 this.$q.notify({
-                    message: `El symbol ${this.order.symbol} no tiene id_instrumento_financiero informado`,
+                    message: `El symbol ${this.order.symbol} no tiene id_symbol_type informado`,
                     color: "white",
                     textColor: 'red',
                     position: 'bottom-right',
@@ -335,7 +335,7 @@ export default {
             this.order.symbol = item.symbol
             this.order.symbol_name = item.name
             this.order.moneda_id = item.moneda_id
-            this.order.id_instrumento_financiero = item.id_instrumento_financiero
+            this.order.id_symbol_type = item.id_symbol_type
             this.symbol_search = item.symbol
             //this.order.asset_type = item.asset_type
             this.symbol_info = item.name
@@ -348,7 +348,7 @@ export default {
             this.order.contrato = option.cod_symbol
             this.symbol_info = option.descripcion
             this.order.subyacente = option.cod_symbol_subyacente
-            this.order.id_instrumento_financiero = this.instrumentosFinancieros.OPTION.value
+            this.order.id_symbol_type = this.symbolTypes.OPTION.value
             this.order.id_contrato_opcion = option.id_contrato_opcion
             this.symbol_search = option.cod_symbol
             this.order.symbol_name = option.descripcion
@@ -362,7 +362,7 @@ export default {
             this.$http.post(
                 'orden/OrdenController/ejecutar', {
                 cod_symbol: this.order.symbol,
-                id_instrumento_financiero: this.order.id_instrumento_financiero,
+                id_symbol_type: this.order.id_symbol_type,
                 id_tipo_transaccion: this.order.id_tipo_transaccion,
                 id_contrato_opcion: this.order.id_contrato_opcion,
                 cantidad: this.order.cantidad,

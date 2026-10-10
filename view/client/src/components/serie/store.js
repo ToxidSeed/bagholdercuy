@@ -18,7 +18,21 @@ export default {
         },
         w_nasdaq_loader:{
             open:false
+        },
+        w_sincronizar:{
+            cod_symbol:"",
+            open:false
         }
+    },
+    abrir_w_sincronizar: function(row){
+        let symbol = ""
+        if (typeof row === 'string') {
+            symbol = row
+        } else if (row && row.cod_symbol) {
+            symbol = row.cod_symbol
+        }
+        this.state.w_sincronizar.cod_symbol = symbol
+        this.state.w_sincronizar.open = true
     },
     actualizar_serie: async function(row){
         try{            
@@ -53,7 +67,7 @@ export default {
         form_data.append("cod_symbol", this.state.w_reprocesar.cod_symbol)
         //form_data.append("id_cuenta", localStorage.getItem("id_cuenta"))
 
-        axios.post("/SerieManager/ReprocesoSerieController/reprocesar"
+        axios.post("/serie_controller/ReprocesoSerieController/reprocesar"
             ,form_data
             ,postconfig()
         ).then(httpresponse => {

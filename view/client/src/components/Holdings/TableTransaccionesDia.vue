@@ -103,8 +103,8 @@ export default {
                 }, {
                     label: "Inst. Fin.",
                     align: "left",
-                    field: row => row.instrumento_financiero ? row.instrumento_financiero.cod_instrumento_financiero : '',
-                    name: "cod_instrumento_financiero",
+                    field: row => row.symbol_type ? row.symbol_type.cod_symbol_type : '',
+                    name: "cod_symbol_type",
                     style: 'width:60px;'
                 }, {
                     label: "Tipo",

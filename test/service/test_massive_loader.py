@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 from datetime import date
 from unittest.mock import patch, MagicMock
-from controller.SerieManager import MassiveSeriesLoader
+from controller.serie_controller import MassiveSeriesLoader
 from service.serie_service import (
     SerieDiariaLoader,
     VariacionDiariaLoader,

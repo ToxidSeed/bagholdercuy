@@ -27,7 +27,8 @@
 
                         <q-item clickable v-close-popup @click="win_alphavantage_loader_open = true">
                             <q-item-section class="text-subtitle1">
-                                <div>Carga de series desde <span class="text-blue-10 text-bold">alphavantage</span></div>
+                                <div>Carga de series desde <span class="text-blue-10 text-bold">alphavantage</span>
+                                </div>
                             </q-item-section>
                         </q-item>
 

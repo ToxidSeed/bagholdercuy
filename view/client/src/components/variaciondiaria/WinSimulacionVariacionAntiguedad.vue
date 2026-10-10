@@ -254,7 +254,7 @@ export default {
         },
         simular:function(filtros){
             this.$http.post(
-                "/SerieManager/SimulacionVariacionManager/simular",
+                "/serie_controller/SimulacionVariacionManager/simular",
                 {
                     cod_symbol: filtros.cod_symbol,
                     fch_final: filtros.fch_final,

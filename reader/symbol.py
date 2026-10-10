@@ -1,4 +1,4 @@
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from common.AppException import AppException
 
 from config.extensions import db
@@ -10,7 +10,7 @@ class SymbolReader:
         self.__buffer = buffer
         self.__memoria = {}
 
-    def get(self, cod_symbol=None, id_symbol=None, not_found_error=False) -> StockSymbol:
+    def get(self, cod_symbol=None, id_symbol=None, not_found_error=False) -> SymbolModel:
 
         if cod_symbol is None and id_symbol is None:
             raise AppException(msg="No se ha indicado el codigo o el id del symbol")
@@ -30,9 +30,9 @@ class SymbolReader:
                 return symbol
 
         query = db.select(
-            StockSymbol
+            SymbolModel
         ).where(
-            StockSymbol.symbol == cod_symbol
+            SymbolModel.symbol == cod_symbol
         )
 
         result = db.session.execute(query)
@@ -48,9 +48,9 @@ class SymbolReader:
 
     def __get_x_id(self, id_symbol):
         query = db.select(
-            StockSymbol
+            SymbolModel
         ).where(
-            StockSymbol.id == id_symbol
+            SymbolModel.id == id_symbol
         )
 
         result = db.session.execute(query)
@@ -62,21 +62,21 @@ class SymbolReader:
         cod_symbol = args.get("cod_symbol")
 
         stmt = db.select(
-            StockSymbol
+            SymbolModel
         )
 
         if id_symbol is not None:
             stmt = stmt.where(
-                StockSymbol.id == id_symbol
+                SymbolModel.id == id_symbol
             )
 
         if cod_symbol is not None:
             stmt = stmt.where(
-                StockSymbol.symbol.ilike(f"%{cod_symbol}%")
+                SymbolModel.symbol.ilike(f"%{cod_symbol}%")
             )
 
         stmt = stmt.order_by(
-            StockSymbol.symbol.asc()
+            SymbolModel.symbol.asc()
         )
 
         stmt = stmt.limit(current_app.config.get("DEFAULT_LIMIT"))

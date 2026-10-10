@@ -115,7 +115,7 @@ export default {
             let fch_desde = date.format(date.addYears(now, -1),"DD/MM/YYYY")
 
             this.$http.post(
-                'SerieManager/SerieController/get_series_diarias',{
+                'serie_controller/SerieController/get_series_diarias',{
                     cod_symbol:params.cod_symbol,
                     fch_desde:fch_desde,
                     fch_hasta:fch_hasta                 

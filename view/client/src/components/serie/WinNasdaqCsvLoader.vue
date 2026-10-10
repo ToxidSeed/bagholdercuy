@@ -94,7 +94,7 @@ export default {
             console.log(postconfig)
 
             this.$http.post(
-                '/SerieManager/NasdaqCsvLoader/load',form_data,postconfig                
+                '/serie_controller/NasdaqCsvLoader/load',form_data,postconfig                
             ).then(httpresp => {
                 console.log(httpresp)
                 HttpResponseHandler.showMessage(httpresp)

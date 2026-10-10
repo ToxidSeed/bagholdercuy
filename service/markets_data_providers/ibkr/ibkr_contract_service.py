@@ -3,7 +3,67 @@ from model.ibkr_contract import IbkrContractsModel
 from api.ibkr import InteractiveBrokersClient
 
 
-class IbkrContractsService:
+class IbkrContractService:
+    MAX_PAGE_SIZE = 1000
+
+    def get_contracts(
+        self,
+        conid: int = None,
+        cod_symbol: str = None,
+        exchange: str = None,
+        page: int = 1,
+        page_size: int = 100,
+    ) -> dict:
+        """
+        Obtiene los contratos de IBKR almacenados aplicando filtros opcionales y paginación.
+        - conid: coincidencia exacta.
+        - cod_symbol: coincidencia por prefijo (case-insensitive según collation).
+        - exchange: coincidencia exacta.
+        """
+        if page is None or page < 1:
+            raise ValueError("El parámetro 'page' debe ser mayor o igual a 1")
+        if page_size is None or page_size < 1 or page_size > self.MAX_PAGE_SIZE:
+            raise ValueError(
+                f"El parámetro 'page_size' debe estar entre 1 y {self.MAX_PAGE_SIZE}"
+            )
+
+        query = db.session.query(IbkrContractsModel)
+
+        if conid is not None:
+            query = query.filter(IbkrContractsModel.conid == conid)
+        if cod_symbol:
+            query = query.filter(IbkrContractsModel.cod_symbol.like(f"{cod_symbol}%"))
+        if exchange:
+            query = query.filter(IbkrContractsModel.exchange == exchange)
+
+        total = query.count()
+        records = (
+            query.order_by(IbkrContractsModel.cod_symbol, IbkrContractsModel.conid)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+            .all()
+        )
+
+        return {
+            "items": [self._to_dict(r) for r in records],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    @staticmethod
+    def _to_dict(contract: IbkrContractsModel) -> dict:
+        return {
+            "conid": contract.conid,
+            "cod_symbol": contract.cod_symbol,
+            "exchange": contract.exchange,
+            "fch_hr_registro": (
+                contract.fch_hr_registro.isoformat()
+                if contract.fch_hr_registro
+                else None
+            ),
+        }
+
     def load_contracts(self, exchange: str) -> int:
         """
         Coordina el flujo completo de obtención e inserción de contratos de IBKR.

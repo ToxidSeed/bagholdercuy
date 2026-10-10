@@ -5,7 +5,7 @@ from datetime import datetime, date
 
 from controller.base import Base
 
-from model.StockSymbol import StockSymbol as SymbolModel
+from model.symbol import SymbolModel
 from model.contrato_opcion import ContratoOpcionModel
 
 from reader.symbol import SymbolReader

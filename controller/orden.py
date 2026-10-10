@@ -7,7 +7,7 @@ from domain.mes import Mes
 from domain.semana import CodigoSemana
 
 #from model.orden import OrdenModel
-from model.StockSymbol import StockSymbol
+from model.symbol import SymbolModel
 from model.transaccion import TransaccionModel
 
 from service.transaccion import TransaccionService
@@ -46,7 +46,7 @@ class OrdenController(Base):
         now = datetime.now()
         transaccion = TransaccionModel(
             cod_symbol = params.cod_symbol,
-            id_instrumento_financiero = params.id_instrumento_financiero,            
+            id_symbol_type = params.id_symbol_type,            
             id_contrato_opcion = params.id_contrato_opcion,
             id_tipo_transaccion = params.id_tipo_transaccion,
             fch_hr_transaccion = params.fch_hr_transaccion,

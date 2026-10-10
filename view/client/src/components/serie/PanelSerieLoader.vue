@@ -89,7 +89,7 @@ export default {
         procesar:function(){
             this.loading = true
             this.$http.post(
-            '/SerieManager/SerieManagerLoader/procesar',{
+            '/serie_controller/SerieManagerLoader/procesar',{
                 profundidad: this.profundidad.value,
                 symbol: this.symbol.value
             },{
