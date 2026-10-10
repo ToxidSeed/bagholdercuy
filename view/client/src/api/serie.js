@@ -61,6 +61,10 @@ class Serie {
         return axios.post(SERIE.MASSIVE_LOAD, params, postconfig())
     }
 
+    synchronize = function (params) {
+        return axios.post(SERIE.SYNCHRONIZE, params, postconfig())
+    }
+
 }
 
 export default Serie

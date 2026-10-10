@@ -3,7 +3,8 @@ export const SERIE = {
     MARKETDATA_LOAD: "serie_controller/MarketDataLoaderController/load",
     INVESTING_LOAD: "serie_controller/InvestingLoaderController/load",
     ALPHAVANTAGE_LOAD: "/api/v2/series/alphavantage-loader",
-    MASSIVE_LOAD: "/api/v2/series/massive-loader"
+    MASSIVE_LOAD: "/api/v2/series/massive-loader",
+    SYNCHRONIZE: "/api/v2/series/synchronize"
 }
 
 export const OPERACION = {

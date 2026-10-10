@@ -62,6 +62,8 @@ from api.massive import MassiveAPI
 from pydantic import ValidationError
 from schemas.alphavantage_schema import AlphavantageSeriesLoadParams
 from schemas.massive_schema import MassiveSeriesLoadParams
+from schemas.serie_schema import SeriesSynchronizationRequest
+from schemas.responses.serie import series_synchronization_response_schema
 from model.staging_market_data import StagingMarketDataModel
 from model.seriediaria import SerieDiariaModel
 from model.variaciondiaria import VariacionDiariaModel
@@ -922,16 +924,68 @@ class MassiveSeriesLoader(Resource):
         return df_series, fch_max_serie, fch_min_serie
 
 class SeriesSynchronizationController(Resource):
-    """
-    Recibira los siguientes parametros:
-    - proveedor
-    - symbol
-    - fch_desde
-    - fch_hasta
-    - modo_carga: Append, Overwrite, Replace
-    """
-    def post(self):
-        pass
+    AUTH_REQUIRED = False
+    
+    def post(self, args=None):
+        """
+        Args:
+            - market_data_provider: str (Requerido)
+            - cod_symbol: str (Requerido)
+            - fch_desde: str (Requerido)
+            - fch_hasta: str (Requerido)
+            - modo_carga: str (Requerido) - Valores permitidos: APPEND, OVERWRITE, REPLACE
+        Flujo:
+            - El procesamiento lo hace con service/serie/serie_service.py - SerieService - sincronize
+        """
+        if args is None:
+            if request.is_json:
+                args = request.get_json() or {}
+            elif request.form:
+                args = request.form.to_dict()
+            elif request.args:
+                args = request.args.to_dict()
+            else:
+                args = {}
+
+        try:
+            try:
+                params = SeriesSynchronizationRequest(**args)
+            except ValidationError as e:
+                errors_list = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
+                raise AppException(
+                    msg=f"Errores de validación: {'; '.join(errors_list)}",
+                    errors=errors_list,
+                )
+
+            resultado = SerieService().sincronize(
+                market_data_provider=params.market_data_provider,
+                cod_symbol=params.cod_symbol,
+                fch_desde=params.fch_desde,
+                fch_hasta=params.fch_hasta,
+                modo_carga=params.modo_carga,
+            )
+
+            db.session.commit()
+
+            fch_min, fch_max = resultado if resultado else (None, None)
+            response_data = series_synchronization_response_schema.dump({
+                "market_data_provider": params.market_data_provider,
+                "cod_symbol": params.cod_symbol,
+                "fch_min_serie": fch_min,
+                "fch_max_serie": fch_max,
+            })
+
+            return Response(
+                msg="Se ha realizado la sincronización correctamente",
+                data=response_data,
+            ).get(), 200
+
+        except AppException as e:
+            db.session.rollback()
+            return Response().from_exception(e), 400
+        except Exception as e:
+            db.session.rollback()
+            return Response().from_exception(e), 500
 
 def init_module(app, url_prefix):
     bp = Blueprint("series_bp", __name__)

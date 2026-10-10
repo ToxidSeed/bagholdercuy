@@ -62,6 +62,8 @@
 <script>
 import SelectSymbol from "@/components/SelectSymbol.vue"
 import date from 'date-and-time'
+import Serie from "@/api/serie.js"
+import store from "@/store/store.js"
 
 export default {
     name: "WinSincronizarSeries",
@@ -194,7 +196,52 @@ export default {
             this.nom_symbol = symbol.label
         },
         procesar: function () {
-            // Nota: WinSincronizarSeries no tiene servicio REST por el momento
+            if (!this.cod_symbol) {
+                store.dispatch("incluir_msg", "Debe seleccionar un símbolo")
+                return
+            }
+            if (!this.fch_desde || !this.fch_hasta) {
+                store.dispatch("incluir_msg", "Debe ingresar las fechas de inicio y fin")
+                return
+            }
+
+            this.loading = true
+
+            const providerMap = {
+                "INTERACTIVE BROKERS": "IBKR",
+                "IBKR": "IBKR",
+                "MARKETDATA": "MARKETDATA",
+                "ALPHAVANTAGE": "ALPHAVANTAGE",
+                "MASSIVE": "MASSIVE",
+                "CSV NASDAQ": "CSV_NASDAQ",
+                "CSV INVESTING": "CSV_INVESTING"
+            }
+            const providerVal = typeof this.proveedor === 'object' && this.proveedor !== null
+                ? this.proveedor.value || this.proveedor.label
+                : this.proveedor
+
+            const params = {
+                market_data_provider: providerMap[providerVal] || providerVal,
+                cod_symbol: this.cod_symbol,
+                fch_desde: date.transform(this.fch_desde, "DD/MM/YYYY", "YYYY-MM-DD"),
+                fch_hasta: date.transform(this.fch_hasta, "DD/MM/YYYY", "YYYY-MM-DD"),
+                modo_carga: (this.modo_carga || "APPEND").toUpperCase()
+            }
+
+            const api_serie = new Serie()
+            api_serie.synchronize(params).then(resp => {
+                this.loading = false
+                store.dispatch("incluir_httpresp", resp)
+                this.$emit("sincronizado", resp.data)
+            }).catch(err => {
+                this.loading = false
+                if (err.response) {
+                    store.dispatch("incluir_httpresp", err.response)
+                } else {
+                    console.error(err)
+                    store.dispatch("incluir_msg", err.message || "Error al sincronizar")
+                }
+            })
         }
     }
 }
