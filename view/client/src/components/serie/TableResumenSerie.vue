@@ -6,14 +6,16 @@
                 <q-td :props="props">
                     <q-btn flat dense icon="more_vert">
                         <q-menu>
-                            <q-list dense class="text-body1">
-                                <q-item clickable v-close-popup @click="store.abrir_w_sincronizar(props.row)">
-                                    <q-item-section><span><q-icon name="update" color="green-10"
-                                                class="q-pr-xs"></q-icon>Sincronizar</span></q-item-section>
-                                </q-item>
-                                <q-item clickable v-close-popup @click="store.abrir_w_reprocesar(props.row.cod_symbol)">
-                                    <q-item-section><span><q-icon name="construction" color="green"
-                                                class="q-pr-xs"></q-icon>Reprocesar</span></q-item-section>
+                            <q-list dense class="q-pa-xs">
+                                <q-item clickable v-close-popup class="text-green-10 q-px-md"
+                                    @click="store.abrir_w_sincronizar(props.row)">
+                                    <q-item-section avatar>
+                                        <q-avatar color="green-1" text-color="green-10" icon="sync" size="sm" />
+                                    </q-item-section>
+                                    <q-item-section>
+                                        <q-item-label class="text-weight-medium">Sincronizar</q-item-label>
+                                        <q-item-label caption>Actualizar esta serie</q-item-label>
+                                    </q-item-section>
                                 </q-item>
                             </q-list>
                         </q-menu>
@@ -94,7 +96,6 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
-        <WinReprocesarSeries v-model="store.state.w_reprocesar.open" />
         <WinSincronizarSeries v-model="store.state.w_sincronizar.open"
             :in-cod-symbol="store.state.w_sincronizar.cod_symbol" />
     </div>
@@ -102,7 +103,6 @@
 <script>
 
 import store from "./store"
-import WinReprocesarSeries from "./WinReprocesarSeries"
 import WinSincronizarSeries from "./WinSincronizarSeries"
 import SerieApi from "@/api/serie.js"
 import { HttpResponseHandler } from "@/common/http-response-handler.js"
@@ -110,7 +110,6 @@ import { HttpResponseHandler } from "@/common/http-response-handler.js"
 export default {
     name: "TableResumenSerie",
     components: {
-        WinReprocesarSeries,
         WinSincronizarSeries
     },
     data: () => {
