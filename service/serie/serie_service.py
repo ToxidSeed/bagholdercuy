@@ -26,6 +26,7 @@ from reader.symbol import SymbolReader
 from service.markets_data_providers.ibkr.ibkr_serie_service import (
     InteractiveBrokersSerieService,
 )
+from service.serie.resumenserie import ResumenSerieService
 
 
 class SerieService:
@@ -82,7 +83,9 @@ class SerieService:
             Sincroniza las series con las diferentes fuentes de datos            
             1. con el proveedor de datos obtener el modulo y la clase para poder hacer la sincronizacion, por ejemplo: service/markets_data_providers/ibkr/ibkr_serie_service.py -> InteractiveBrokersSerieService.load(...).
             2.- Obtener SymbolModel con cod_symbol
-            3.- Ejecutar .load de la clase obtenida en el punto 1.
+            3.- Ejecutar .load de la clase obtenida en el punto 1.            
+            4.- Actualizar/insertar model/resumenserie.py - ResumenSerieModel
+
         """
         # 1. Con el proveedor de datos obtener el módulo y la clase
         provider_class = self._get_provider_class(market_data_provider)
@@ -95,12 +98,17 @@ class SerieService:
 
         # 3. Ejecutar .load de la clase obtenida en el punto 1
         provider_service = provider_class()
-        return provider_service.load(
+        resultado = provider_service.load(
             symbol=symbol,
             fch_desde=fch_desde,
             fch_hasta=fch_hasta,
             modo_carga=modo_carga,
         )
+
+        # 4. Actualizar/insertar model/resumenserie.py - ResumenSerieModel
+        ResumenSerieService().guardar(cod_symbol)
+
+        return resultado
 
     def load(self, cod_symbol, df_series, modo_carga):        
         df_series["fch_semana"] = df_series["fch_serie"].apply(lambda x: CodigoSemana.from_fecha(x).to_fecha_inicio_semana())
