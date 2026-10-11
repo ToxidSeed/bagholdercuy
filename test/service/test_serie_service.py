@@ -5,10 +5,11 @@ from model.symbol import SymbolModel
 from service.serie.serie_service import SerieService
 
 
+@patch("service.serie.serie_service.ResumenSerieService")
 @patch("service.serie.serie_service.InteractiveBrokersSerieService")
 @patch("service.serie.serie_service.SymbolReader")
 def test_sincronize_resolves_symbol_and_delegates_to_ibkr(
-    mock_symbol_reader, mock_ibkr_service
+    mock_symbol_reader, mock_ibkr_service, mock_resumen_service
 ):
     symbol = SymbolModel(symbol="AAPL")
     mock_symbol_reader.return_value.get.return_value = symbol
@@ -34,12 +35,14 @@ def test_sincronize_resolves_symbol_and_delegates_to_ibkr(
         fch_hasta=date(2023, 1, 5),
         modo_carga="APPEND",
     )
+    mock_resumen_service.return_value.guardar.assert_called_once_with("AAPL")
 
 
+@patch("service.serie.serie_service.ResumenSerieService")
 @patch("service.serie.serie_service.InteractiveBrokersSerieService")
 @patch("service.serie.serie_service.SymbolReader")
 def test_sincronize_with_explicit_provider_and_positional_args(
-    mock_symbol_reader, mock_ibkr_service
+    mock_symbol_reader, mock_ibkr_service, mock_resumen_service
 ):
     symbol = SymbolModel(symbol="MSFT")
     mock_symbol_reader.return_value.get.return_value = symbol
@@ -65,6 +68,7 @@ def test_sincronize_with_explicit_provider_and_positional_args(
         fch_hasta=date(2023, 2, 10),
         modo_carga="REPLACE",
     )
+    mock_resumen_service.return_value.guardar.assert_called_once_with("MSFT")
 
 
 def test_sincronize_unsupported_provider():
