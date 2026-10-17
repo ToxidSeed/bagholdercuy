@@ -33,17 +33,19 @@ export default {
         this.state.data = this.state.tmp_data       
 
         let cotizacion = await Cotizacion.get_cotizacion(this.state.cod_symbol)                                
-        this.state.imp_accion = cotizacion.imp_cierre        
+        this.state.imp_accion = cotizacion ? cotizacion.imp_cierre : null        
 
         let idx_break = -1
 
-        for (let element of this.state.tmp_data){                        
-            if (element.imp_alerta >=  cotizacion.imp_cierre){
-                idx_break = idx_break + 1        
-                continue
-            }else{                
-                break
-            }            
+        if (cotizacion && cotizacion.imp_cierre !== null && cotizacion.imp_cierre !== undefined) {
+            for (let element of this.state.tmp_data){                        
+                if (element.imp_alerta >=  cotizacion.imp_cierre){
+                    idx_break = idx_break + 1        
+                    continue
+                }else{                
+                    break
+                }            
+            }
         }        
 
         let idx_limite_superior = idx_break - 10

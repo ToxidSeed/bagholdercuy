@@ -114,8 +114,8 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
     * Información: Este endpoint devuelve una lista de todos los CONIDs disponibles en la plataforma de Interactive Brokers, este endpoint es muy útil para obtener el conid de un ticker.
     * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/endpoints/contract/all-conids-by-exchange
 
-  * GET /marketdata/snapshot: 
-    * Información: Este endpoint devuelve una instantánea del mercado para un ticker especificado.
+  * GET /iserver/marketdata/snapshot: 
+    * Información: Devuelve una instantánea del mercado en tiempo real (Top of Book / Level 1) para uno o varios CONIDs especificados.
     * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-api-endpoints/market-data/market-data#snapshot-market-data
 
   * POST /iserver/secdef/search:
@@ -125,6 +125,14 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
   * GET /iserver/marketdata/history:
     * Información: Obtiene datos históricos de mercado (velas/barras) para un CONID y período de tiempo especificado.
     * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/market-data/historical-market-data
+
+  * GET /iserver/secdef/strikes:
+    * Información: Consulta los precios de ejercicio (strikes call y put) disponibles para un CONID de subyacente y mes de expiración especificados.
+    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/contract/secdef-strikes
+
+  * GET /iserver/secdef/info:
+    * Información: Consulta la definición y especificaciones detalladas de contratos (strikes, vencimiento, multiplicador, tradingClass, conid del derivado, etc.) para opciones u otros derivados en IBKR.
+    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/contract/secdef-info
 
 * **Endpoints de nuestra API REST Local**
   * POST `/ibkr/trsrv/all-conids` (ruta completa: `/<BAGHOLDER_APPNAME>/api/v2/ibkr/trsrv/all-conids`):
@@ -136,6 +144,10 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
   * `all_conids(cls, exchange=None, asset_class=None, args=None)`: Realiza la petición de conids a IBKR para el exchange solicitado.
   * `search_contract_by_symbol(cls, symbol=None, name=False, sec_type=None, args=None)`: Busca contratos por símbolo o nombre en la API de IBKR (`POST /iserver/secdef/search`).
   * `historical_market_data(cls, conid=None, period=None, bar=None, exchange=None, start_time=None, outside_rth=None, source=None, args=None)`: Obtiene datos históricos de mercado para un CONID específico (`GET /iserver/marketdata/history`).
+  * `marketdata_snapshot(cls, conids=None, fields=None, conid=None, args=None)`: Obtiene una instantánea de datos de mercado en tiempo real para uno o varios CONIDs (`GET /iserver/marketdata/snapshot`). También accesible como `snapshot(...)`.
+  * `secdef_strikes(cls, conid=None, sec_type="OPT", month=None, exchange=None, args=None)`: Consulta los strikes disponibles para un CONID y mes de expiración (`GET /iserver/secdef/strikes`). También accesible como `strikes(...)`.
+  * `secdef_info(cls, conid=None, sec_type="OPT", month=None, exchange=None, strike=None, right=None, issuer_id=None, args=None)`: Consulta la definición y especificaciones de contrato para derivados (`GET /iserver/secdef/info`). También accesible como `info(...)`.
+
 
 
 ## 2. Flujo de Datos Típico

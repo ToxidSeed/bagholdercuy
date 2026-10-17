@@ -219,8 +219,7 @@ export default {
             }
 
             this.loading = true;
-            const api = new IbkrApi();
-            api.get_contracts(params)
+            IbkrApi.get_contracts(params)
                 .then(httpresp => {
                     const result = httpresp.data && httpresp.data.data ? httpresp.data.data : {};
                     this.data = result.items || [];
@@ -253,8 +252,7 @@ export default {
             this.syncing = true;
             this.statusText = "Syncing";
 
-            const api = new IbkrApi();
-            api.sync_all_conids({ exchange: exchangeToSync })
+            IbkrApi.sync_all_conids({ exchange: exchangeToSync })
                 .then(httpresp => {
                     HttpResponseHandler.showMessage(httpresp);
 

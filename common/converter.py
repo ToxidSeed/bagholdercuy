@@ -18,11 +18,12 @@ def to_bool(item, raise_except=False):
 
 def to_dict(element, clean=True):
     output = None
-    if type(element).__name__ in ['result','LegacyRow', 'Row']:
+    if type(element).__name__ in ['result', 'LegacyRow', 'Row', 'RowMapping']:
+        row_dict = element._asdict() if hasattr(element, "_asdict") else dict(element._mapping if hasattr(element, "_mapping") else element)
         if clean:
-            return to_clean_dict(dict(element))
+            return to_clean_dict(row_dict)
         else:
-            return dict(element)        
+            return row_dict        
     
     if any("Model" == base.__name__ for base in element.__class__.__bases__):
         output = element.__dict__
@@ -76,8 +77,9 @@ def format(indata=None):
         return indata.strftime("%H:%M:%S")
     if type(indata).__name__ == "dict":
         return format_dict(indata)
-    if type(indata).__name__ in ['result','LegacyRow', 'Row']:
-        return format_dict(dict(indata))
+    if type(indata).__name__ in ['result', 'LegacyRow', 'Row', 'RowMapping']:
+        row_dict = indata._asdict() if hasattr(indata, "_asdict") else dict(indata._mapping if hasattr(indata, "_mapping") else indata)
+        return format_dict(row_dict)
     if any("Model" == base.__name__ for base in indata.__class__.__bases__):
         output = indata.__dict__
         output.pop('_sa_instance_state')

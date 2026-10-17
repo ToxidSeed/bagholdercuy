@@ -3,6 +3,7 @@ from model.ibkr_contract import IbkrContractsModel
 from api.ibkr import InteractiveBrokersClient
 
 
+
 class IbkrContractService:
     MAX_PAGE_SIZE = 1000
 
@@ -161,3 +162,6 @@ class IbkrContractService:
             db.session.commit()
 
         return inserted_count
+
+    
+

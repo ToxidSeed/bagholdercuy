@@ -27,6 +27,11 @@ from service.markets_data_providers.ibkr.ibkr_serie_service import (
     InteractiveBrokersSerieService,
 )
 from service.serie.resumenserie import ResumenSerieService
+from service.serie.variaciondiaria import VariacionDiariaService
+from service.serie.seriesemanal import SerieSemanalService
+from service.serie.variacionsemanal import VariacionSemanalService
+from service.serie.seriemensual import SerieMensualService
+from service.serie.variacionmensual import VariacionMensualService
 
 
 class SerieService:
@@ -84,10 +89,15 @@ class SerieService:
             1. con el proveedor de datos obtener el modulo y la clase para poder hacer la sincronizacion, por ejemplo: service/markets_data_providers/ibkr/ibkr_serie_service.py -> InteractiveBrokersSerieService.load(...).
             2.- Obtener SymbolModel con cod_symbol
             3.- Ejecutar .load de la clase obtenida en el punto 1.            
-            4.- Actualizar/insertar model/resumenserie.py - ResumenSerieModel
+            4.- Sincronizar las variaciones diarias service/serie/variaciondiaria.py - VariacionDiariaService 
+            5.- Sincronizar las series semanales service/serie/seriesemanal.py - SerieSemanalService - generar_series
+            6.- Sincronizar las variaciones semanales - service/serie/variacionsemanal.py - VariacionSemanalService - generar_series
+            7.- Sincronizar las series mensuales - service/serie/seriemensual.py - SerieMensualService - generar_series
+            8.- Sincronizar las variaciones mensuales - service/serie/variacionmensual.py - VariacionMensualService - generar_series
+            9.- Actualizar/insertar model/resumenserie.py - ResumenSerieModel
 
         """
-        # 1. Con el proveedor de datos obtener el módulo y la clase
+        # 1. Con el proveedor de datos obtener el modulo y la clase
         provider_class = self._get_provider_class(market_data_provider)
 
         # 2. Obtener SymbolModel con cod_symbol
@@ -105,7 +115,37 @@ class SerieService:
             modo_carga=modo_carga,
         )
 
-        # 4. Actualizar/insertar model/resumenserie.py - ResumenSerieModel
+        fch_inicio_procesamiento = (
+            resultado[0] if isinstance(resultado, (tuple, list)) else resultado
+        )
+
+        if fch_inicio_procesamiento:
+            # 4. Sincronizar las variaciones diarias service/serie/variaciondiaria.py - VariacionDiariaService
+            VariacionDiariaService().generar_variaciones(
+                cod_symbol, fch_inicio_procesamiento
+            )
+
+            # 5. Sincronizar las series semanales service/serie/seriesemanal.py - SerieSemanalService - generar_series
+            SerieSemanalService().generar_series(
+                cod_symbol, fch_inicio_procesamiento
+            )
+
+            # 6. Sincronizar las variaciones semanales - service/serie/variacionsemanal.py - VariacionSemanalService - generar_series
+            VariacionSemanalService().generar_series(
+                cod_symbol, fch_inicio_procesamiento
+            )
+
+            # 7. Sincronizar las series mensuales - service/serie/seriemensual.py - SerieMensualService - generar_series
+            SerieMensualService().generar_series(
+                cod_symbol, fch_inicio_procesamiento
+            )
+
+            # 8. Sincronizar las variaciones mensuales - service/serie/variacionmensual.py - VariacionMensualService - generar_series
+            VariacionMensualService().generar_series(
+                cod_symbol, fch_inicio_procesamiento
+            )
+
+        # 9. Actualizar/insertar model/resumenserie.py - ResumenSerieModel
         ResumenSerieService().guardar(cod_symbol)
 
         return resultado

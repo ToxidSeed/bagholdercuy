@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from service.markets_data_providers.ibkr.ibkr_contracts_service import IbkrContractsService
+from service.markets_data_providers.ibkr.ibkr_contract_service import (
+    IbkrContractService,
+)
 from model.ibkr_contract import IbkrContractsModel
 
 @patch("api.ibkr.InteractiveBrokersClient.all_conids")
@@ -23,7 +25,7 @@ def test_load_contracts_success(mock_commit, mock_add, mock_query, mock_all_coni
     # Simula que ya existe conid 12345 en la BD
     mock_query_result.all.return_value = [(12345,)]
 
-    service = IbkrContractsService()
+    service = IbkrContractService()
     inserted_count = service.load_contracts(exchange="NASDAQ")
 
     # Debería haber insertado sólo 67890 y 11111 (2 contratos)
@@ -41,7 +43,7 @@ def test_load_contracts_api_error(mock_all_conids):
     # Simula un error devuelto por la API de IBKR en un diccionario
     mock_all_conids.return_value = {"error": "Authentication failed"}
 
-    service = IbkrContractsService()
+    service = IbkrContractService()
     with pytest.raises(ValueError, match="Error de la API de IBKR: Authentication failed"):
         service.load_contracts(exchange="NYSE")
 
@@ -50,6 +52,6 @@ def test_load_contracts_invalid_format(mock_all_conids):
     # Simula respuesta con formato incorrecto
     mock_all_conids.return_value = "invalid response string"
 
-    service = IbkrContractsService()
+    service = IbkrContractService()
     with pytest.raises(ValueError, match="Respuesta inesperada de la API de IBKR"):
         service.load_contracts(exchange="NYSE")
