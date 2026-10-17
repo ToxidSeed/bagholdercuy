@@ -21,6 +21,6 @@ def init_module(app, url_prefix):
     bp = Blueprint("symbol_type_bp", __name__)
     api = Api(bp)
 
-    api.add_resource(SymbolTypeController, "")
+    api.add_resource(SymbolTypeController, "", "/", "/list")
 
     app.register_blueprint(bp, url_prefix=f"{url_prefix}/symbol-type")

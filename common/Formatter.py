@@ -34,8 +34,14 @@ class Formatter:
             return indata.strftime("%H:%M:%S")
         elif type(indata).__name__ == "dict":
             return self.format_dict(indata)
-        elif type(indata).__name__ in ['result','LegacyRow', 'Row']:
-            return self.format_dict(dict(indata))
+        elif hasattr(indata, "_asdict") or hasattr(indata, "_mapping") or type(indata).__name__ in ['result', 'LegacyRow', 'Row', 'RowMapping']:
+            if hasattr(indata, "_asdict"):
+                row_dict = indata._asdict()
+            elif hasattr(indata, "_mapping"):
+                row_dict = dict(indata._mapping)
+            else:
+                row_dict = dict(indata)
+            return self.format_dict(row_dict)
         elif any("Model" == base.__name__ for base in indata.__class__.__bases__):
             output = indata.__dict__
             if "_sa_instance_state" in output:

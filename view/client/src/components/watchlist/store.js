@@ -25,12 +25,23 @@ let table_monitoreo = {
         )       
         this.aplicar_cotizacion()                 
     },
-    aplicar_cotizacion:async function(){                  
+    aplicar_cotizacion: async function () {
+        if (!Array.isArray(this.state.monitoreo_activo_data)) {
+            return
+        }
         await Promise.all(this.state.monitoreo_activo_data.map(async (element) => {
-            let cotizacion = await Cotizacion.get_cotizacion(element.cod_symbol)                
-            Vue.set(element, 'imp_actual', cotizacion.imp_cierre)
-            Vue.set(element, 'imp_cierre_anterior', cotizacion.imp_cierre_anterior)            
-        }))        
+            let cotizacion = await Cotizacion.get_cotizacion(element.cod_symbol)
+            if (cotizacion) {
+                Vue.set(element, 'imp_actual', cotizacion.imp_cierre)
+                Vue.set(element, 'imp_cierre_anterior', cotizacion.imp_cierre_anterior)
+                if (cotizacion.imp_variacion !== undefined) {
+                    Vue.set(element, 'imp_variacion', cotizacion.imp_variacion)
+                }
+                if (cotizacion.pct_variacion !== undefined) {
+                    Vue.set(element, 'pct_variacion', cotizacion.pct_variacion)
+                }
+            }
+        }))
     }
 }
 

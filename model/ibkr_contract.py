@@ -18,3 +18,12 @@ class IbkrContractsModel(db.Model):
     __table_args__ = (
         db.UniqueConstraint('conid', 'exchange', name='uk_ibkr_conid_exchange'),
     )
+
+    @classmethod
+    def find_by_symbol(cls, cod_symbol: str):
+        """Busca el contrato en IbkrContractsModel por coincidencia exacta del símbolo."""
+        return (
+            cls.query.filter_by(cod_symbol=cod_symbol)
+            .order_by(cls.fch_hr_registro)
+            .first()
+        )
