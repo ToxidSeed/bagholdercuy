@@ -177,7 +177,17 @@ export default {
             }
         },
         is_selected: function(row) {
-            return this.tableAlertasSymbolStore.state.id_symbol === row.id_symbol
+            const state = this.tableAlertasSymbolStore.state
+            if (row.id_monitoreo && state.id_monitoreo) {
+                return state.id_monitoreo === row.id_monitoreo
+            }
+            if (row.id_symbol && state.id_symbol) {
+                return state.id_symbol === row.id_symbol
+            }
+            if (row.cod_symbol && state.cod_symbol) {
+                return state.cod_symbol === row.cod_symbol
+            }
+            return false
         },
         format_currency: function(val) {
             if (val === null || val === undefined || isNaN(val)) {
@@ -201,13 +211,15 @@ export default {
         format_variacion: function(row) {
             if (!this.has_variacion(row)) return ''
             const sign = row.pct_variacion > 0 ? '+' : ''
-            return `${sign}${(row.pct_variacion * 100).toFixed(2)}%`
+            return `${sign}${Number(row.pct_variacion).toFixed(2)}%`
         },
         get_alertas: function(row) {                        
             winComentariosAlertaStore.cerrar()
 
             this.tableAlertasSymbolStore.set_symbol({
+                id_monitoreo: row.id_monitoreo,
                 id_symbol: row.id_symbol,
+                id_contrato_opcion: row.id_contrato_opcion,
                 cod_symbol: row.cod_symbol,
                 nom_symbol: row.nom_symbol
             })

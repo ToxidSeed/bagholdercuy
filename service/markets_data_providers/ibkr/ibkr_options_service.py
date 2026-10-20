@@ -253,6 +253,32 @@ class IbkrOptionsService:
 
         return sorted(list(set(selected_below + selected_above)))
 
+    @staticmethod
+    def format_osi_symbol(symbol: str, expiry_date, right: str, strike: float) -> str:
+        """
+        Formatea el ticker en formato estándar OSI (ej: AAPL261120C00150000 o SPX261019C05000000).
+        """
+        if not symbol:
+            return ""
+        sym = str(symbol).strip().upper()
+        d_str = ""
+        if isinstance(expiry_date, (datetime, date)):
+            d_str = expiry_date.strftime("%y%m%d")
+        elif expiry_date:
+            raw = str(expiry_date).replace("-", "").strip()
+            d_str = raw[2:8] if len(raw) >= 8 else raw
+
+        r_char = "C" if str(right or "").upper().startswith("C") else "P"
+        try:
+            strike_val = int(round(float(strike) * 1000))
+            strike_str = f"{strike_val:08d}"
+        except (ValueError, TypeError):
+            strike_str = ""
+
+        if sym and d_str and strike_str:
+            return f"{sym}{d_str}{r_char}{strike_str}"
+        return ""
+
     def _fetch_contracts_by_expiration(
         self, conid: int, month: str, strikes: list, fch_expiracion_fallback: str = None
     ) -> dict:
@@ -272,8 +298,6 @@ class IbkrOptionsService:
                     continue
 
                 enriched = dict(contract)
-                if "cod_symbol" not in enriched:
-                    enriched["cod_symbol"] = enriched.get("symbol") or enriched.get("ticker")
                 if "imp_strike" not in enriched:
                     try:
                         enriched["imp_strike"] = float(enriched.get("strike", strike))
@@ -299,6 +323,14 @@ class IbkrOptionsService:
                         enriched["fch_vencimiento"] = contract_date.strftime("%Y%m%d")
                     else:
                         enriched["fch_vencimiento"] = str(fch_expiracion_fallback)
+
+                osi_symbol = self.format_osi_symbol(
+                    symbol=enriched.get("symbol") or enriched.get("ticker") or enriched.get("underlying"),
+                    expiry_date=contract_date or raw_date or fch_expiracion_fallback,
+                    right=enriched.get("right") or enriched.get("side"),
+                    strike=enriched.get("imp_strike", strike),
+                )
+                enriched["cod_symbol"] = osi_symbol or enriched.get("localSymbol") or enriched.get("symbol")
 
                 enriched.setdefault("bid", None)
                 enriched.setdefault("ask", None)

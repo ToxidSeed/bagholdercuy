@@ -266,13 +266,15 @@ export default {
         
         },
         get_cotizacion_subyacente: async function(cod_symbol){                        
-            return this.$http.post(
-                'cotizacion/CotizacionManager/get_cotizacion',{
-                    cod_symbol:cod_symbol
-                },
-                postconfig()
+            return this.$http.get(
+                '/api/v2/cotizaciones',
+                {
+                    ...postconfig(),
+                    params: {
+                        cod_symbol: cod_symbol
+                    }
+                }
             )                        
-            
         }
     } 
 }

@@ -12,6 +12,7 @@ def init_routes(app):
         "controller.ibkr",
         "controller.symbol_type",
         "controller.monitoreo",
+        "controller.cotizacion_controller",
     ]
 
     for mod_name in modules:

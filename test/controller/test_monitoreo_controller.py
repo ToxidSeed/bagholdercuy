@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from flask import Flask
 from controller.monitoreo import init_module, MonitoreoController
 from reader.monitoreo import MonitoreoReader
@@ -144,3 +144,225 @@ def test_monitoreo_post_manager_app_exception(mock_registrar, mock_rollback, cli
     assert data["success"] is False
     assert data["message"] == "El monitoreo ya existe"
     mock_rollback.assert_called_once()
+
+
+@patch("controller.monitoreo.db.session.commit")
+@patch.object(MonitoreoManager, "registrar")
+def test_monitoreo_post_option_success(mock_registrar, mock_commit, client):
+    def fake_registrar(monitoreo_nuevo):
+        monitoreo_nuevo.id_monitoreo = 99
+        monitoreo_nuevo.id_symbol_type = 2
+        return monitoreo_nuevo
+
+    mock_registrar.side_effect = fake_registrar
+
+    response = client.post(
+        "/bagholdercuy/api/v2/monitoreos",
+        json={"id_cuenta": 1, "id_contrato_opcion": 50},
+    )
+    assert response.status_code == 201
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["data"]["id_monitoreo"] == 99
+    assert data["data"]["id_contrato_opcion"] == 50
+    assert data["data"]["id_symbol_type"] == 2
+    mock_commit.assert_called_once()
+
+
+@patch("controller.monitoreo.db.session.commit")
+@patch.object(MonitoreoManager, "registrar")
+def test_monitoreo_post_option_by_attributes_success(mock_registrar, mock_commit, client):
+    def fake_registrar(monitoreo_nuevo):
+        monitoreo_nuevo.id_monitoreo = 101
+        monitoreo_nuevo.id_contrato_opcion = 77
+        monitoreo_nuevo.id_symbol_type = 2
+        return monitoreo_nuevo
+
+    mock_registrar.side_effect = fake_registrar
+
+    response = client.post(
+        "/bagholdercuy/api/v2/monitoreos",
+        json={
+            "id_cuenta": 1,
+            "id_symbol_type": 2,
+            "id_symbol": 10,
+            "cod_symbol": "AAPL261120C00150000",
+            "tipo_opcion": "CALL",
+            "fch_vencimiento": "2026-11-20",
+            "imp_strike": 150.0,
+        },
+    )
+    assert response.status_code == 201
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["data"]["id_monitoreo"] == 101
+    assert data["data"]["id_contrato_opcion"] == 77
+    assert data["data"]["id_symbol_type"] == 2
+    mock_commit.assert_called_once()
+
+
+@patch("manager.monitoreo.db.session.add")
+@patch("manager.monitoreo.db.session.flush")
+@patch("manager.monitoreo.MonitoreoReader")
+@patch("manager.monitoreo.SymbolReader")
+@patch("manager.monitoreo.ContratoOpcionReader")
+def test_monitoreo_manager_registrar_creates_option_contract(
+    mock_opt_reader, mock_sym_reader, mock_mon_reader, mock_flush, mock_add
+):
+    mock_opt_reader.get_contrato.return_value = None
+    mock_sym = MagicMock()
+    mock_sym.id_symbol = 10
+    mock_sym_reader.return_value.get.return_value = mock_sym
+
+    mock_mon_reader_instance = MagicMock()
+    mock_mon_reader_instance.get_by_option.return_value = None
+    mock_mon_reader.return_value = mock_mon_reader_instance
+
+    def fake_flush():
+        for call_args in mock_add.call_args_list:
+            obj = call_args[0][0]
+            if hasattr(obj, "cod_symbol") and not getattr(obj, "id_contrato_opcion", None):
+                obj.id_contrato_opcion = 888
+
+    mock_flush.side_effect = fake_flush
+    mock_opt_reader.get_by_id.return_value = MagicMock(
+        id_contrato_opcion=888, cod_symbol="AAPL261120C00150000"
+    )
+
+    from parser.monitoreo import MonitoreoParser
+
+    parser = MonitoreoParser()
+    mon = parser.parse_args_registrar({
+        "id_cuenta": 1,
+        "id_symbol_type": 2,
+        "id_symbol": 10,
+        "cod_symbol": "AAPL261120C00150000",
+        "tipo_opcion": "CALL",
+        "fch_vencimiento": "2026-11-20",
+        "imp_strike": 150.0,
+    })
+
+    manager = MonitoreoManager()
+    res = manager.registrar(mon)
+
+    assert res.id_contrato_opcion == 888
+    assert res.id_symbol_type == 2
+    assert res.id_symbol is None
+
+
+@patch("manager.monitoreo.db.session.add")
+@patch("manager.monitoreo.db.session.flush")
+@patch("manager.monitoreo.MonitoreoReader")
+@patch("manager.monitoreo.SymbolReader")
+@patch("manager.monitoreo.ContratoOpcionReader")
+def test_monitoreo_manager_registrar_with_id_symbol_subyacente(
+    mock_opt_reader, mock_sym_reader, mock_mon_reader, mock_flush, mock_add
+):
+    from model.contrato_opcion import ContratoOpcionModel
+    from schemas.monitoreo_schema import MonitoreoRegistrarRequest
+
+    mock_opt_reader.get_contrato.return_value = None
+    mock_sym = MagicMock()
+    mock_sym.id_symbol = 25
+    mock_sym_reader.return_value.get.return_value = mock_sym
+
+    mock_mon_reader_instance = MagicMock()
+    mock_mon_reader_instance.get_by_option.return_value = None
+    mock_mon_reader.return_value = mock_mon_reader_instance
+
+    created_option = None
+
+    def fake_flush():
+        nonlocal created_option
+        for call_args in mock_add.call_args_list:
+            obj = call_args[0][0]
+            if isinstance(obj, ContratoOpcionModel):
+                created_option = obj
+                obj.id_contrato_opcion = 999
+
+    mock_flush.side_effect = fake_flush
+    mock_opt_reader.get_by_id.return_value = MagicMock(
+        id_contrato_opcion=999, cod_symbol="SPX261218P05000000"
+    )
+
+    req = MonitoreoRegistrarRequest(
+        id_cuenta=2,
+        id_symbol_type=2,
+        id_symbol_subyacente=25,
+        cod_symbol="SPX261218P05000000",
+        tipo_opcion="PUT",
+        fch_vencimiento="2026-12-18",
+        imp_strike=5000.0,
+    )
+    mon = req.to_model()
+
+    manager = MonitoreoManager()
+    res = manager.registrar(mon)
+
+    assert res.id_contrato_opcion == 999
+    assert res.id_symbol_type == 2
+    assert created_option is not None
+    assert created_option.id_symbol_subyacente == 25
+    assert created_option.id_symbol == 25
+    assert created_option.tipo_opcion == "PUT"
+
+
+@patch("manager.monitoreo.db.session.add")
+@patch("manager.monitoreo.db.session.flush")
+@patch("manager.monitoreo.MonitoreoReader")
+@patch("manager.monitoreo.SymbolReader")
+@patch("manager.monitoreo.ContratoOpcionReader")
+def test_monitoreo_manager_auto_formats_osi_when_cod_symbol_is_underlying(
+    mock_opt_reader, mock_sym_reader, mock_mon_reader, mock_flush, mock_add
+):
+    from model.contrato_opcion import ContratoOpcionModel
+    from schemas.monitoreo_schema import MonitoreoRegistrarRequest
+
+    mock_opt_reader.get_contrato.return_value = None
+    mock_sym = MagicMock()
+    mock_sym.id_symbol = 30
+    mock_sym.symbol = "SPX"
+    mock_sym_reader.return_value.get.return_value = mock_sym
+
+    mock_mon_reader_instance = MagicMock()
+    mock_mon_reader_instance.get_by_option.return_value = None
+    mock_mon_reader.return_value = mock_mon_reader_instance
+
+    created_option = None
+
+    def fake_flush():
+        nonlocal created_option
+        for call_args in mock_add.call_args_list:
+            obj = call_args[0][0]
+            if isinstance(obj, ContratoOpcionModel):
+                created_option = obj
+                obj.id_contrato_opcion = 1010
+
+    mock_flush.side_effect = fake_flush
+    mock_opt_reader.get_by_id.return_value = MagicMock(
+        id_contrato_opcion=1010, cod_symbol="SPX261019C05000000"
+    )
+
+    # El usuario/cliente envió cod_symbol="SPX" (el subyacente por error)
+    req = MonitoreoRegistrarRequest(
+        id_cuenta=3,
+        id_symbol_type=2,
+        id_symbol_subyacente=30,
+        cod_symbol="SPX",
+        tipo_opcion="CALL",
+        fch_vencimiento="2026-10-19",
+        imp_strike=5000.0,
+    )
+    mon = req.to_model()
+
+    manager = MonitoreoManager()
+    res = manager.registrar(mon)
+
+    assert res.id_contrato_opcion == 1010
+    assert created_option is not None
+    # Debe ser el ticker OSI, NUNCA "SPX"
+    assert created_option.cod_symbol == "SPX261019C05000000"
+    assert created_option.id_symbol_subyacente == 30
+
+
+

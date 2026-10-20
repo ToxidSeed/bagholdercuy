@@ -116,12 +116,12 @@ class ContratoOpcionReader:
         )
 
         if cod_tipo_opcion in ["CALL", "PUT", "call", "put"]:
-            stmt.where(
+            stmt = stmt.where(
                 ContratoOpcionModel.tipo_opcion == cod_tipo_opcion.upper()
             )
 
         if fch_expiracion is not None:
-            stmt.where(
+            stmt = stmt.where(
                 ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
 
@@ -130,7 +130,7 @@ class ContratoOpcionReader:
         return records
 
     @staticmethod
-    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=None, limit=0):
+    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, id_symbol_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=None, limit=0):
 
         stmt = db.select(
             ContratoOpcionModel
@@ -139,6 +139,11 @@ class ContratoOpcionReader:
         if id_contrato_opcion is not None:
             stmt = stmt.where(
                 ContratoOpcionModel.id_contrato_opcion == id_contrato_opcion
+            )
+
+        if id_symbol_subyacente is not None:
+            stmt = stmt.where(
+                ContratoOpcionModel.id_symbol_subyacente == id_symbol_subyacente
             )
 
         if cod_subyacente is not None:
@@ -184,5 +189,14 @@ class ContratoOpcionReader:
         result = db.session.execute(stmt)
         record = result.scalars().first()
         return record
+
+    @staticmethod
+    def get_by_id(id_contrato_opcion):
+        stmt = db.select(ContratoOpcionModel).where(
+            ContratoOpcionModel.id_contrato_opcion == id_contrato_opcion
+        )
+        result = db.session.execute(stmt)
+        return result.scalars().first()
+
 
 

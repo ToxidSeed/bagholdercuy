@@ -47,11 +47,7 @@ class SymbolReader:
         return record
 
     def __get_x_id(self, id_symbol):
-        query = db.select(
-            SymbolModel
-        ).where(
-            SymbolModel.id == id_symbol
-        )
+        query = db.select(SymbolModel).where(SymbolModel.id_symbol == id_symbol)
 
         result = db.session.execute(query)
         record = result.scalars().first()
@@ -61,14 +57,10 @@ class SymbolReader:
         id_symbol = args.get("id_symbol")
         cod_symbol = args.get("cod_symbol")
 
-        stmt = db.select(
-            SymbolModel
-        )
+        stmt = db.select(SymbolModel)
 
         if id_symbol is not None:
-            stmt = stmt.where(
-                SymbolModel.id == id_symbol
-            )
+            stmt = stmt.where(SymbolModel.id_symbol == id_symbol)
 
         if cod_symbol is not None:
             stmt = stmt.where(

@@ -25,15 +25,21 @@ Este documento establece las convenciones y estándares obligatorios para la cre
 
 ---
 
-## 4. Serialización y Contratos de Salida (Marshmallow)
+## 4. Lógica de Negocio
+* Por lo general la lógica de negocio debe residir en el paquete **`service`**, el controlador solo debe llamar a la lógica de negocio y retornar el resultado.
+
+---
+
+## 5. Serialización y Contratos de Salida (Marshmallow)
 * Las respuestas que representen conjuntos de datos o registros (por ejemplo, la información detallada de un cliente o una lista de clientes) deben encapsularse mediante contratos de salida utilizando **Marshmallow**.
 * Los esquemas de serialización de salida deben ubicarse estrictamente en la ruta: **`schemas/responses`**.
 
 ---
 
-## 5. Estándar de Respuestas HTTP
+## 6. Estándar de Respuestas HTTP
 * Al heredar de `Resource`, los métodos HTTP (`get`, `post`, `put`, `delete`, etc.) deben retornar respuestas estandarizadas.
 * El formato de retorno debe ajustarse a las convenciones del framework (por ejemplo, retornar un diccionario/objeto serializado convertido a JSON junto con su código de estado HTTP correspondiente).
 * *Ejemplo:* 
   ```python
   return response_data, 200  # O 400 para errores de validación, 404 si no existe, etc.
+
