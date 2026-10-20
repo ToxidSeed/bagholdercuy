@@ -32,6 +32,10 @@ class Monitoreo {
             return httpresp.data.data
         } catch (err) {
             console.error(err)
+            if (err.response) {
+                store.dispatch("incluir_httpresp", err.response)
+            }
+            throw err
         }
     }
 }

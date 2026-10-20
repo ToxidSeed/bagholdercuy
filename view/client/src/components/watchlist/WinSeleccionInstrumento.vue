@@ -125,7 +125,7 @@
                         style="max-height: 420px; overflow-y: auto;">
                         <template v-slot:header="props">
                             <q-tr>
-                                <q-th colspan="3" class="text-center bg-blue-1 text-bold text-blue-10"
+                                <q-th colspan="4" class="text-center bg-blue-1 text-bold text-blue-10"
                                     style="border-right: 2px solid #90caf9;">
                                     <q-icon name="call_made" color="blue-9" class="q-mr-xs" /> CALLS
                                 </q-th>
@@ -133,11 +133,12 @@
                                     style="border-right: 2px solid #e0e0e0; min-width: 90px;">
                                     STRIKE
                                 </q-th>
-                                <q-th colspan="3" class="text-center bg-red-1 text-bold text-red-10">
+                                <q-th colspan="4" class="text-center bg-red-1 text-bold text-red-10">
                                     <q-icon name="call_received" color="red-9" class="q-mr-xs" /> PUTS
                                 </q-th>
                             </q-tr>
                             <q-tr :props="props">
+                                <q-th key="call_action" :props="props" class="bg-blue-1 text-blue-10 text-center" style="width: 42px;"></q-th>
                                 <q-th key="call_bid" :props="props" class="bg-blue-1 text-blue-10 text-right">Bid</q-th>
                                 <q-th key="call_ask" :props="props" class="bg-blue-1 text-blue-10 text-right">Ask</q-th>
                                 <q-th key="call_last" :props="props" class="bg-blue-1 text-blue-10 text-right"
@@ -147,33 +148,52 @@
                                 <q-th key="put_bid" :props="props" class="bg-red-1 text-red-10 text-right">Bid</q-th>
                                 <q-th key="put_ask" :props="props" class="bg-red-1 text-red-10 text-right">Ask</q-th>
                                 <q-th key="put_last" :props="props" class="bg-red-1 text-red-10 text-right">Last</q-th>
+                                <q-th key="put_action" :props="props" class="bg-red-1 text-red-10 text-center" style="width: 42px;"></q-th>
                             </q-tr>
                         </template>
 
                         <template v-slot:body="props">
                             <q-tr :props="props">
-                                <q-td key="call_bid" :props="props" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''">
+                                <q-td key="call_action" :props="props" class="text-center q-pa-none" :class="props.row.is_call_itm ? 'bg-blue-1' : ''">
+                                    <q-btn flat round dense size="sm" icon="add" color="blue-10"
+                                        @click.stop="seleccionar_opcion(props.row, 'CALL')">
+                                        <q-tooltip anchor="top middle" self="bottom middle">Añadir Call ${{ props.row.strike }} al monitoreo</q-tooltip>
+                                    </q-btn>
+                                </q-td>
+                                <q-td key="call_bid" :props="props" class="cursor-pointer" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''"
+                                    @click="seleccionar_opcion(props.row, 'CALL')">
                                     {{ props.row.call_bid }}
                                 </q-td>
-                                <q-td key="call_ask" :props="props" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''">
+                                <q-td key="call_ask" :props="props" class="cursor-pointer" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''"
+                                    @click="seleccionar_opcion(props.row, 'CALL')">
                                     {{ props.row.call_ask }}
                                 </q-td>
-                                <q-td key="call_last" :props="props" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''"
-                                    style="border-right: 2px solid #bbdefb;">
+                                <q-td key="call_last" :props="props" class="cursor-pointer" :class="props.row.is_call_itm ? 'bg-blue-1 text-bold' : ''"
+                                    style="border-right: 2px solid #bbdefb;"
+                                    @click="seleccionar_opcion(props.row, 'CALL')">
                                     {{ props.row.call_last }}
                                 </q-td>
                                 <q-td key="strike" :props="props" class="bg-grey-2 text-bold text-blue-10 text-center"
                                     style="border-right: 2px solid #e0e0e0;">
                                     {{ props.row.strike }}
                                 </q-td>
-                                <q-td key="put_bid" :props="props" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''">
+                                <q-td key="put_bid" :props="props" class="cursor-pointer" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''"
+                                    @click="seleccionar_opcion(props.row, 'PUT')">
                                     {{ props.row.put_bid }}
                                 </q-td>
-                                <q-td key="put_ask" :props="props" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''">
+                                <q-td key="put_ask" :props="props" class="cursor-pointer" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''"
+                                    @click="seleccionar_opcion(props.row, 'PUT')">
                                     {{ props.row.put_ask }}
                                 </q-td>
-                                <q-td key="put_last" :props="props" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''">
+                                <q-td key="put_last" :props="props" class="cursor-pointer" :class="props.row.is_put_itm ? 'bg-red-1 text-bold' : ''"
+                                    @click="seleccionar_opcion(props.row, 'PUT')">
                                     {{ props.row.put_last }}
+                                </q-td>
+                                <q-td key="put_action" :props="props" class="text-center q-pa-none" :class="props.row.is_put_itm ? 'bg-red-1' : ''">
+                                    <q-btn flat round dense size="sm" icon="add" color="red-10"
+                                        @click.stop="seleccionar_opcion(props.row, 'PUT')">
+                                        <q-tooltip anchor="top middle" self="bottom middle">Añadir Put ${{ props.row.strike }} al monitoreo</q-tooltip>
+                                    </q-btn>
                                 </q-td>
                             </q-tr>
                         </template>
@@ -237,13 +257,15 @@ export default {
             cargando_expiraciones: false,
             cargando_strikes: false,
             chain_columns: [
+                { name: "call_action", label: "", field: "call_action", align: "center" },
                 { name: "call_bid", label: "Bid", field: "call_bid", align: "right" },
                 { name: "call_ask", label: "Ask", field: "call_ask", align: "right" },
                 { name: "call_last", label: "Last", field: "call_last", align: "right" },
                 { name: "strike", label: "Strike", field: "strike", align: "center" },
                 { name: "put_bid", label: "Bid", field: "put_bid", align: "right" },
                 { name: "put_ask", label: "Ask", field: "put_ask", align: "right" },
-                { name: "put_last", label: "Last", field: "put_last", align: "right" }
+                { name: "put_last", label: "Last", field: "put_last", align: "right" },
+                { name: "put_action", label: "", field: "put_action", align: "center" }
             ],
             chain_rows: []
         }
@@ -275,7 +297,7 @@ export default {
                 this.obtener_strikes()
             }
         },
-        num_strikes_seleccionado(newval) {
+        num_strikes_seleccionado() {
             if (this.vista === "cadena" && this.instrumento_seleccionado && this.expiracion_seleccionada) {
                 this.obtener_strikes()
             }
@@ -303,14 +325,16 @@ export default {
                 const options = []
                 if (appresponse && appresponse.data) {
                     for (let element of appresponse.data) {
+                        const idSymbol = element["id_symbol"] || element["id"]
                         options.push({
-                            id: element["id"],
-                            id_symbol: element["id"],
+                            id: idSymbol,
+                            id_symbol: idSymbol,
                             symbol: element["symbol"],
                             name: element["name"],
                             tipo: element["asset_type"] || "",
                             asset_type: element["asset_type"] || "",
                             exchange: element["exchange"] || "",
+                            id_symbol_type: element["id_symbol_type"] || 1,
                             value: element["symbol"],
                             label: element["name"]
                         })
@@ -325,7 +349,7 @@ export default {
             })
         },
         seleccionar_item(item) {
-            this.$emit("select-symbol", {
+            const symbolPayload = {
                 id: item.id,
                 id_symbol: item.id,
                 value: item.symbol,
@@ -334,8 +358,76 @@ export default {
                 name: item.name,
                 tipo: item.tipo,
                 asset_type: item.asset_type,
-                exchange: item.exchange
-            })
+                exchange: item.exchange,
+                id_symbol_type: item.id_symbol_type || 1
+            }
+            this.$emit("select-instrumento", symbolPayload)
+            this.open = false
+        },
+        formatear_cod_opcion_osi(symbol, fch_vencimiento, tipo, strike) {
+            const sym = (symbol || '').trim().toUpperCase()
+            let cleanDate = ''
+            if (fch_vencimiento) {
+                const parts = String(fch_vencimiento).replace(/-/g, '')
+                if (parts.length >= 8) {
+                    cleanDate = parts.substring(2, 8)
+                } else if (parts.length === 6) {
+                    cleanDate = parts
+                }
+            }
+            if (!cleanDate) {
+                const now = new Date()
+                cleanDate = `${String(now.getFullYear()).substring(2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+            }
+
+            const tipoChar = (tipo || 'CALL').toUpperCase().startsWith('C') ? 'C' : 'P'
+            const numStrike = Number(strike) || 0
+            const strikeMillis = Math.round(numStrike * 1000)
+            const strikeStr = String(strikeMillis).padStart(8, '0')
+
+            return `${sym}${cleanDate}${tipoChar}${strikeStr}`
+        },
+        seleccionar_opcion(row, tipo) {
+            if (!row) return
+            const strike = row.strike
+            const contract = tipo === 'CALL' ? row.call_contract : row.put_contract
+            const symbol = this.instrumento_seleccionado ? this.instrumento_seleccionado.symbol : ''
+            const id_symbol = this.instrumento_seleccionado
+                ? (this.instrumento_seleccionado.id || this.instrumento_seleccionado.id_symbol)
+                : null
+            const fch = this.expiracion_seleccionada || (contract && (contract.fch_vencimiento || contract.maturityDate)) || ''
+
+            // Validar que cod_symbol sea un ticker OSI real y nunca el símbolo subyacente
+            let cod_symbol = (contract && contract.cod_symbol) ? String(contract.cod_symbol).trim() : ''
+            if (!cod_symbol || cod_symbol === symbol || cod_symbol.length <= symbol.length) {
+                cod_symbol = this.formatear_cod_opcion_osi(symbol, fch, tipo, strike)
+            }
+
+            let fch_iso = fch
+            if (fch && fch.length === 8 && !fch.includes('-')) {
+                fch_iso = `${fch.substring(0, 4)}-${fch.substring(4, 6)}-${fch.substring(6, 8)}`
+            } else if (!fch_iso) {
+                fch_iso = new Date().toISOString().substring(0, 10)
+            }
+
+            const optionPayload = {
+                id_symbol: id_symbol,
+                id_symbol_subyacente: id_symbol,
+                id_contrato_opcion: (contract && contract.id_contrato_opcion) ? contract.id_contrato_opcion : null,
+                conid: (contract && contract.conid) ? Number(contract.conid) : null,
+                cod_symbol: cod_symbol,
+                cod_subyacente: symbol,
+                symbol: cod_symbol,
+                tipo_opcion: tipo.toUpperCase(),
+                fch_vencimiento: fch_iso,
+                imp_strike: Number(strike),
+                tam_contrato: (contract && contract.multiplier) ? Number(contract.multiplier) : 100,
+                cod_moneda: (contract && contract.currency) || 'USD',
+                descripcion: `${symbol} ${fch_iso} $${strike} ${tipo.toUpperCase()}`,
+                id_symbol_type: 2
+            }
+
+            this.$emit("select-instrumento", optionPayload)
             this.open = false
         },
         ver_opciones(item) {
