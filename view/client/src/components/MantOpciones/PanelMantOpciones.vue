@@ -170,7 +170,7 @@ export default {
     methods:{
         btn_guardar_click:function(){
             this.$http.post(
-                '/OpcionesContrato/OpcionesContratoManager/guardar',
+                '/api/v2/contratos-opcion',
                 {
                     cod_symbol: this.cod_symbol,
                     sentido: this.side,

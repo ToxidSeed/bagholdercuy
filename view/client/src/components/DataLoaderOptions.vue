@@ -98,7 +98,7 @@ export default {
             */     
 
             this.loading = true
-            this.$http.post('/OpcionesContrato/SymbolLoader/load',{
+            this.$http.post('/api/v2/contratos-opcion/loader/marketdata',{
                 cod_symbol:this.symbol,
                 fch_expiracion:this.fch_expiracion,
             },

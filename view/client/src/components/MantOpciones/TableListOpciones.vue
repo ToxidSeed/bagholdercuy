@@ -156,16 +156,18 @@ export default {
         get_list_contratos:function(){      
 
             console.log("xxx")      
-            this.$http.post(
-                '/OpcionesContrato/OpcionesContratoManager/get_contratos',
+            this.$http.get(
+                '/api/v2/contratos-opcion',
                 {
-                    id_contrato_opcion: this.id_contrato_opcion,
-                    cod_symbol: this.cod_symbol,
-                    sentidos: this.sentidos,
-                    fch_expiracion: this.fch_expiracion,
-                    imp_ejercicio: this.imp_ejercicio,                    
-                },
-                postconfig()
+                    ...postconfig(),
+                    params: {
+                        id_contrato_opcion: this.id_contrato_opcion,
+                        cod_symbol: this.cod_symbol,
+                        sentidos: this.sentidos,
+                        fch_expiracion: this.fch_expiracion,
+                        imp_ejercicio: this.imp_ejercicio,
+                    }
+                }
             ).then(
                 httpresp => {
                     let appresp = httpresp.data                    

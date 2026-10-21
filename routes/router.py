@@ -13,6 +13,7 @@ def init_routes(app):
         "controller.symbol_type",
         "controller.monitoreo",
         "controller.cotizacion_controller",
+        "controller.contrato_opcion_controller",
     ]
 
     for mod_name in modules:

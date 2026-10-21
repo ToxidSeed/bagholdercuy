@@ -99,7 +99,7 @@ export default {
             console.log(postconfig)
 
             this.$http.post(
-                '/OpcionesContrato/CsvLoader/procesar',form_data,postconfig                
+                '/api/v2/contratos-opcion/loader/csv',form_data,postconfig                
             ).then(httpresp => {
                 this.msgbox = {
                     httpresp: httpresp

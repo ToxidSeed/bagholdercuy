@@ -52,7 +52,7 @@ export default {
     },
     methods:{
         get_opciones:function(){
-            this.$http.post('/OpcionesContratoManager/OpcionesContratoManager/get_resumen_subyacentes').then(
+            this.$http.get('/api/v2/contratos-opcion/resumen-subyacentes').then(
                 httpresp => {
                     let appresp = httpresp.data
                     this.data = appresp.data
