@@ -1,0 +1,19 @@
+meta {
+  name: IbkrContractsController - GET
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/{{appName}}/api/v2/ibkr/contracts?exchange=SMART
+  body: none
+  auth: none
+}
+
+params:query {
+  exchange: SMART
+}
+
+headers {
+  Content-Type: application/json
+}

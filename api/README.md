@@ -97,14 +97,15 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 * **Configuración requerida**: 
     * Variables de Entorno: `IBKR_INTERACTIVE_BROKERS_ENDPOINT`
     * Secrets: Para retail no tiene
-    * Software Adicional: Para clientes retail se requiere **Client Portal Gateway** cuyo enlace es: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/download-and-unzip-the-client-portal-api-gateway
+    * Software Adicional: Para clientes retail se requiere **Client Portal Gateway** cuyo enlace es: https://ibkrcampus.com/docs/web-api/api/web-api/quick-start
+    * Download: https://download2.interactivebrokers.com/portal/clientportal.gw.zip
 
     * Ejecutar el api gateway:
       Ubicarse en la carpeta donde se descargó y ejecutar 
       ```sh
       bin/run.sh root/conf.yaml
       ```
-      Referencia: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-gateway/how-to-download-and-run-the-gateway/run-the-api-gateway
+      Referencia: https://ibkrcampus.com/docs/web-api/api/web-api/quick-start
 
       Por default se levanta en https://localhost:5000/v1/api
 
@@ -114,6 +115,10 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
   * GET /trsrv/all-conids: 
     * Información: Este endpoint devuelve una lista de todos los CONIDs disponibles en la plataforma de Interactive Brokers, este endpoint es muy útil para obtener el conid de un ticker.
     * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/endpoints/contract/all-conids-by-exchange
+
+  * POST /iserver/secdef/search:
+    * Información: Busca contratos/instrumentos financieros por símbolo o nombre para obtener su CONID y detalles de contrato.
+    * documentation: https://interactivebrokers.github.io/cpwebapi/
 
   * GET /marketdata/snapshot: 
     * Información: Este endpoint devuelve una instantánea del mercado para un ticker especificado.
@@ -127,6 +132,7 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 * **Métodos principales**:
   * `get_last_intraday(self, args={})`: Obtiene la última cotización intradía del ticker especificado.
   * `all_conids(cls, exchange=None, asset_class=None, args=None)`: Realiza la petición de conids a IBKR para el exchange solicitado.
+  * `secdef_search(cls, symbol=None, name=None, sec_type=None, more=None, args=None, **kwargs)`: Busca contratos/instrumentos por símbolo o nombre (POST `/iserver/secdef/search`). Aliases: `search`, `iserver_secdef_search`.
 
 ## 2. Flujo de Datos Típico
 

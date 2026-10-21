@@ -1,0 +1,21 @@
+meta {
+  name: IbkrContractsController - POST (Load)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/{{appName}}/api/v2/ibkr/contracts
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "exchange": "SMART"
+  }
+}

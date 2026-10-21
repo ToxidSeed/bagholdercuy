@@ -101,3 +101,11 @@ class IbkrContractsService:
             db.session.commit()
 
         return inserted_count
+
+    def get_all_contracts(self, exchange: str = None) -> list:
+        """
+        Obtiene todos los contratos de IBKR para un exchange o todos si no se especifica o es 'All Exchanges'.
+        """
+        if not exchange or exchange == "All Exchanges":
+            return IbkrContractsModel.query.all()
+        return IbkrContractsModel.query.filter_by(exchange=exchange).all()

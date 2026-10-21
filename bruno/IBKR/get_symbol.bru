@@ -1,0 +1,33 @@
+meta {
+  name: IbkrSymbolController - GET
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/{{appName}}/api/v2/ibkr/symbol?symbol=AAPL&sec_type=STK
+  body: none
+  auth: none
+}
+
+params:query {
+  symbol: AAPL
+  sec_type: STK
+  ~name: false
+  ~more: false
+}
+
+headers {
+  Content-Type: application/json
+}
+
+docs {
+  # IbkrSymbolController: GET
+  Busca contratos / instrumentos financieros por símbolo o nombre en la plataforma de Interactive Brokers (secdef search).
+
+  ### Query Parameters:
+  - `symbol` (string, obligatorio): Ticker o símbolo bursátil a buscar (ej: `AAPL`, `MSFT`, `SPY`).
+  - `sec_type` (string, opcional): Tipo de instrumento financiero (ej: `STK`, `OPT`, `FUT`, `WAR`, `BOND`, `FUND`).
+  - `name` (boolean, opcional): Si es `true`, busca también por nombre de la compañía.
+  - `more` (boolean, opcional): Si es `true`, solicita más resultados si existen.
+}
