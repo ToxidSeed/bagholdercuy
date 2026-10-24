@@ -73,10 +73,52 @@ def test_get_contratos_list_success(mock_get_contratos, client):
     assert data["message"] == "Contratos de opciones obtenidos correctamente."
     assert len(data["data"]) == 2
     assert data["data"][0]["cod_symbol"] == "AAPL261120C00150000"
+    assert data["data"][0]["symbol"] == "AAPL261120C00150000"
+    assert data["data"][0]["id"] == 1
+    assert data["data"][0]["moneda_id"] == "USD"
     assert data["data"][0]["tipo_opcion"] == "CALL"
     assert data["data"][0]["side"] == "CALL"
     assert data["data"][0]["underlying"] == "AAPL"
     assert data["data"][0]["strike"] == 150.0
+
+
+@patch("service.contrato_opcion_service.ContratoOpcionReader.get_contratos")
+def test_get_contratos_with_empty_query_params_success(mock_get_contratos, client):
+    mock_get_contratos.return_value = [
+        _crear_mock_contrato(1, "SPX261022C07735000", "CALL", "SPX", 7735.0),
+    ]
+
+    response = client.get(
+        "/bagholdercuy/api/v2/contratos-opcion?id_contrato_opcion=&cod_symbol=&fch_expiracion=&imp_ejercicio="
+    )
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert len(data["data"]) == 1
+    assert data["data"][0]["symbol"] == "SPX261022C07735000"
+    assert data["data"][0]["moneda_id"] == "USD"
+
+    # Verificar que get_contratos recibió None para los filtros vacíos
+    mock_get_contratos.assert_called_once()
+    _, kwargs = mock_get_contratos.call_args
+    assert kwargs.get("cod_subyacente") is None
+    assert kwargs.get("id_contrato_opcion") is None
+    assert kwargs.get("fch_expiracion") is None
+    assert kwargs.get("imp_ejercicio") is None
+
+
+@patch("service.contrato_opcion_service.ContratoOpcionReader.get_contratos")
+def test_get_contratos_with_dd_mm_yyyy_date_filter(mock_get_contratos, client):
+    from datetime import date
+    mock_get_contratos.return_value = []
+
+    response = client.get(
+        "/bagholdercuy/api/v2/contratos-opcion?fch_expiracion=28/10/2026"
+    )
+    assert response.status_code == 200
+    mock_get_contratos.assert_called_once()
+    _, kwargs = mock_get_contratos.call_args
+    assert kwargs.get("fch_expiracion") == date(2026, 10, 28)
 
 
 @patch("service.contrato_opcion_service.ContratoOpcionReader.get_by_id")

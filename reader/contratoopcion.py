@@ -130,45 +130,60 @@ class ContratoOpcionReader:
         return records
 
     @staticmethod
-    def get_contratos(id_contrato_opcion=None, cod_subyacente=None, id_symbol_subyacente=None, sentidos=[], fch_expiracion=None, imp_ejercicio=None, limit=0):
+    def get_contratos(
+        id_contrato_opcion=None,
+        cod_subyacente=None,
+        id_symbol_subyacente=None,
+        sentidos=[],
+        fch_expiracion=None,
+        imp_ejercicio=None,
+        limit=0,
+    ):
+        stmt = db.select(ContratoOpcionModel)
 
-        stmt = db.select(
-            ContratoOpcionModel
-        )
-
-        if id_contrato_opcion is not None:
+        if id_contrato_opcion:
             stmt = stmt.where(
                 ContratoOpcionModel.id_contrato_opcion == id_contrato_opcion
             )
 
-        if id_symbol_subyacente is not None:
+        if id_symbol_subyacente:
             stmt = stmt.where(
                 ContratoOpcionModel.id_symbol_subyacente == id_symbol_subyacente
             )
 
-        if cod_subyacente is not None:
+        if cod_subyacente and str(cod_subyacente).strip():
+            val = str(cod_subyacente).strip()
             stmt = stmt.where(
-                ContratoOpcionModel.cod_symbol_subyacente == cod_subyacente
+                db.or_(
+                    ContratoOpcionModel.cod_symbol_subyacente == val,
+                    ContratoOpcionModel.cod_symbol == val,
+                )
             )
 
-        if len(sentidos) > 0:
-            sentidos_upper = [s.upper() for s in sentidos]
-            stmt = stmt.where(
-                ContratoOpcionModel.tipo_opcion.in_(sentidos_upper)
-            )
-        
-        if fch_expiracion is not None:
+        if sentidos and len(sentidos) > 0:
+            sentidos_upper = [str(s).upper() for s in sentidos if str(s).strip()]
+            if sentidos_upper:
+                stmt = stmt.where(
+                    ContratoOpcionModel.tipo_opcion.in_(sentidos_upper)
+                )
+
+        if fch_expiracion:
             stmt = stmt.where(
                 ContratoOpcionModel.fch_vencimiento == fch_expiracion
             )
-        
-        if imp_ejercicio is not None:
-            stmt = stmt.where(
-                ContratoOpcionModel.imp_strike == imp_ejercicio
-            )
 
-        if limit > 0:
-            stmt = stmt.limit(limit)
+        if imp_ejercicio is not None and str(imp_ejercicio).strip() != "":
+            try:
+                imp_val = float(imp_ejercicio)
+                if imp_val > 0:
+                    stmt = stmt.where(
+                        ContratoOpcionModel.imp_strike == imp_val
+                    )
+            except (ValueError, TypeError):
+                pass
+
+        if limit and int(limit) > 0:
+            stmt = stmt.limit(int(limit))
 
         stmt = stmt.order_by(
             ContratoOpcionModel.cod_symbol.asc()

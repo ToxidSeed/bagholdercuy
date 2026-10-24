@@ -154,19 +154,18 @@ export default {
             this.$emit('copiar',row)
         },
         get_list_contratos:function(){      
+            const params = {}
+            if (this.id_contrato_opcion) params.id_contrato_opcion = this.id_contrato_opcion
+            if (this.cod_symbol) params.cod_symbol = this.cod_symbol
+            if (this.sentidos && this.sentidos.length > 0) params.sentidos = this.sentidos
+            if (this.fch_expiracion) params.fch_expiracion = this.fch_expiracion
+            if (this.imp_ejercicio && parseFloat(this.imp_ejercicio) > 0) params.imp_ejercicio = this.imp_ejercicio
 
-            console.log("xxx")      
             this.$http.get(
                 '/api/v2/contratos-opcion',
                 {
                     ...postconfig(),
-                    params: {
-                        id_contrato_opcion: this.id_contrato_opcion,
-                        cod_symbol: this.cod_symbol,
-                        sentidos: this.sentidos,
-                        fch_expiracion: this.fch_expiracion,
-                        imp_ejercicio: this.imp_ejercicio,
-                    }
+                    params: params
                 }
             ).then(
                 httpresp => {
@@ -183,11 +182,14 @@ export default {
 
                     this.data = []
                     appresp.data.forEach(element => {                        
-                        element.descripcion = element.description
-                        element.lado = element.side
-                        element.subyacente = element.underlying
-                        //element.fch_expiracion = date.transform(element.expiration_date,ISO_DATE_FORMAT, CLIENT_DATE_FORMAT)
-                        element.fch_expiracion = element.expiration_date
+                        element.id = element.id || element.id_contrato_opcion
+                        element.symbol = element.symbol || element.cod_symbol
+                        element.moneda_id = element.moneda_id || element.cod_moneda
+                        element.descripcion = element.description || element.descripcion
+                        element.lado = element.side || element.tipo_opcion
+                        element.subyacente = element.underlying || element.cod_symbol_subyacente
+                        element.fch_expiracion = element.expiration_date || element.fch_vencimiento
+                        element.strike = element.strike != null ? element.strike : element.imp_strike
                         this.data.push(
                             element
                         )

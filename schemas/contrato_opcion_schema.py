@@ -24,12 +24,25 @@ class ContratoOpcionFiltroRequest(BaseModel):
     )
     limit: Optional[int] = Field(default=200, ge=0, description="Límite de registros")
 
-    @field_validator("id_contrato_opcion", mode="before")
+    @field_validator("id_contrato_opcion", "id_symbol_subyacente", mode="before")
     @classmethod
     def parse_id(cls, v):
         if v in (None, ""):
             return None
-        return int(v)
+        if isinstance(v, str) and not v.strip():
+            return None
+        val = int(v)
+        return val if val > 0 else None
+
+    @field_validator("cod_symbol", mode="before")
+    @classmethod
+    def parse_cod_symbol(cls, v):
+        if v in (None, ""):
+            return None
+        if isinstance(v, str):
+            v_str = v.strip()
+            return v_str if v_str else None
+        return v
 
     @field_validator("fch_expiracion", mode="before")
     @classmethod
@@ -40,7 +53,17 @@ class ContratoOpcionFiltroRequest(BaseModel):
             return v
         if isinstance(v, str):
             v_str = v.strip()
-            return date.fromisoformat(v_str) if v_str else None
+            if not v_str:
+                return None
+            try:
+                return date.fromisoformat(v_str)
+            except ValueError:
+                from datetime import datetime
+
+                try:
+                    return datetime.strptime(v_str, "%d/%m/%Y").date()
+                except ValueError:
+                    return None
         return v
 
     @field_validator("imp_ejercicio", mode="before")
@@ -48,7 +71,18 @@ class ContratoOpcionFiltroRequest(BaseModel):
     def parse_float(cls, v):
         if v in (None, ""):
             return None
-        return float(v)
+        if isinstance(v, str) and not v.strip():
+            return None
+        val = float(v)
+        return val if val > 0 else None
+
+    @field_validator("limit", mode="before")
+    @classmethod
+    def parse_limit(cls, v):
+        if v in (None, ""):
+            return 200
+        val = int(v)
+        return val if val >= 0 else 200
 
     @field_validator("sentidos", mode="before")
     @classmethod
