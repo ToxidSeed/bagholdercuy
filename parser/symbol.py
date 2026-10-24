@@ -19,6 +19,11 @@ class SymbolFinderParser:
 
         cod_symbol = parser.get("cod_symbol", vacio_es_nulo=True)        
         args["cod_symbol"] = cod_symbol
+
+        name = parser.get("name", vacio_es_nulo=True)
+        if name is None:
+            name = parser.get("nombre", vacio_es_nulo=True)
+        args["name"] = name
         
         return args
 

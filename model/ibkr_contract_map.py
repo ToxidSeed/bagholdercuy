@@ -3,6 +3,9 @@ from sqlalchemy.dialects.mysql import BIGINT, DATETIME
 from sqlalchemy import text
 
 
+from sqlalchemy.orm import foreign
+
+
 class IbkrContractMapModel(db.Model):
     __tablename__ = "tb_ibkr_contract_map"
 
@@ -39,6 +42,12 @@ class IbkrContractMapModel(db.Model):
     symbol = db.relationship("SymbolModel", foreign_keys=[id_symbol])
     contrato_opcion = db.relationship(
         "ContratoOpcionModel", foreign_keys=[id_contrato_opcion]
+    )
+    ibkr_contract = db.relationship(
+        "IbkrContractsModel",
+        primaryjoin="foreign(IbkrContractMapModel.conid) == IbkrContractsModel.conid",
+        viewonly=True,
+        uselist=False,
     )
 
     @classmethod

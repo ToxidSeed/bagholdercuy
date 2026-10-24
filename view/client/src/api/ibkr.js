@@ -17,6 +17,12 @@ class Ibkr {
     static get_options_chain(params) {
         return axios.get(`/api/v2/ibkr/options-chain`, { ...postconfig(), params })
     }
+    static sync_contract(params) {
+        return axios.post(`/api/v2/ibkr-contract-map/sync`, params, postconfig())
+    }
+    static get_contract_map(params) {
+        return axios.get(`/api/v2/ibkr-contract-map`, { ...postconfig(), params })
+    }
 }
 
 export default Ibkr;
