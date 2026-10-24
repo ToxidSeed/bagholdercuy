@@ -1,6 +1,7 @@
 from config.extensions import db
 from model.ibkr_contract import IbkrContractsModel
 from api.ibkr import InteractiveBrokersClient
+from common.AppException import AppException
 
 
 
@@ -63,6 +64,125 @@ class IbkrContractService:
                 if contract.fch_hr_registro
                 else None
             ),
+        }
+
+    def sync_contract(self, cod_symbol: str, exchange: str = None) -> dict:
+        """
+        Sincroniza un contrato para un cod_symbol dado:
+        1. Busca en la base de datos local (tb_ibkr_contract).
+        2. Si no existe, consulta la API de Interactive Brokers vía search_contract_by_symbol.
+        3. Si se encuentra, lo registra en tb_ibkr_contract y confirma la transacción.
+        4. Retorna el diccionario del contrato.
+        """
+        if not cod_symbol or not str(cod_symbol).strip():
+            raise AppException(msg="El parámetro 'cod_symbol' es requerido")
+
+        clean_symbol = str(cod_symbol).strip().upper()
+
+        # 1. Buscar en la tabla local
+        contract = (
+            db.session.query(IbkrContractsModel)
+            .filter(IbkrContractsModel.cod_symbol == clean_symbol)
+            .order_by(IbkrContractsModel.fch_hr_registro.desc())
+            .first()
+        )
+        if contract is not None:
+            return self._to_dict(contract)
+
+        # 2. Consultar en la API de IBKR
+        try:
+            remote_data = InteractiveBrokersClient.search_contract_by_symbol(
+                symbol=clean_symbol
+            )
+        except AppException:
+            raise
+        except Exception as e:
+            raise AppException(
+                msg=f"Error al consultar en Interactive Brokers para '{clean_symbol}': {str(e)}"
+            )
+
+        if isinstance(remote_data, dict) and ("error" in remote_data or "message" in remote_data):
+            err_msg = remote_data.get("error") or remote_data.get("message")
+            raise AppException(msg=f"Interactive Brokers devolvió un error: {err_msg}")
+
+        if not isinstance(remote_data, list) or len(remote_data) == 0:
+            raise AppException(
+                msg=f"No se encontró contrato en Interactive Brokers para el symbol '{clean_symbol}'"
+            )
+
+        # 3. Extraer el mejor contrato
+        contract_info = self._extract_contract_info(remote_data, clean_symbol, exchange)
+
+        # 4. Insertar o actualizar en tb_ibkr_contract
+        conid = contract_info["conid"]
+        con_exchange = contract_info["exchange"]
+
+        existing_by_conid = (
+            db.session.query(IbkrContractsModel)
+            .filter(IbkrContractsModel.conid == conid)
+            .first()
+        )
+        if existing_by_conid:
+            existing_by_conid.cod_symbol = clean_symbol
+            existing_by_conid.exchange = con_exchange
+            contract = existing_by_conid
+        else:
+            contract = IbkrContractsModel(
+                conid=conid,
+                cod_symbol=clean_symbol,
+                exchange=con_exchange,
+            )
+            db.session.add(contract)
+
+        db.session.commit()
+        return self._to_dict(contract)
+
+    def _extract_contract_info(
+        self, remote_data: list, cod_symbol: str, preferred_exchange: str = None
+    ) -> dict:
+        """
+        Ubica el mejor contrato que coincida con el cod_symbol y extrae conid y exchange.
+        """
+        valid_candidates = [
+            item for item in remote_data
+            if isinstance(item, dict) and item.get("conid") is not None
+        ]
+        if not valid_candidates:
+            raise AppException(
+                msg=f"No se encontró ningún contrato válido con conid para '{cod_symbol}' en IBKR"
+            )
+
+        # Priorizar coincidencia exacta de ticker
+        exact_matches = [
+            item for item in valid_candidates
+            if str(item.get("symbol", "")).strip().upper() == cod_symbol
+        ]
+        target = exact_matches[0] if exact_matches else valid_candidates[0]
+
+        try:
+            conid = int(target["conid"])
+        except (ValueError, TypeError):
+            raise AppException(
+                msg=f"El conid retornado por IBKR para '{cod_symbol}' no es numérico: {target.get('conid')}"
+            )
+
+        extracted_exchange = preferred_exchange
+        if not extracted_exchange and target.get("exchange"):
+            extracted_exchange = target["exchange"]
+
+        if not extracted_exchange and isinstance(target.get("sections"), list):
+            for s in target["sections"]:
+                if isinstance(s, dict) and s.get("exchange"):
+                    extracted_exchange = s["exchange"]
+                    break
+
+        if not extracted_exchange:
+            extracted_exchange = "SMART"
+
+        return {
+            "conid": conid,
+            "exchange": extracted_exchange,
+            "cod_symbol": cod_symbol,
         }
 
     def load_contracts(self, exchange: str) -> int:
@@ -162,6 +282,7 @@ class IbkrContractService:
             db.session.commit()
 
         return inserted_count
+
 
     
 

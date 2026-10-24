@@ -61,9 +61,22 @@ class IbkrContractsController(Resource):
             if not args:
                 args = request.args.to_dict() or {}
 
+            cod_symbol = args.get("cod_symbol") or args.get("symbol")
+            if cod_symbol:
+                contract = IbkrContractService().sync_contract(
+                    cod_symbol=cod_symbol, exchange=args.get("exchange")
+                )
+                return {
+                    "success": True,
+                    "message": f"Contrato sincronizado correctamente para {cod_symbol}.",
+                    "data": contract,
+                }, 200
+
             exchange = args.get("exchange")
             if not exchange:
-                raise AppException(msg="El parámetro 'exchange' es requerido")
+                raise AppException(
+                    msg="El parámetro 'cod_symbol' o 'exchange' es requerido"
+                )
 
             inserted_count = IbkrContractService().load_contracts(exchange)
             return {
@@ -74,6 +87,9 @@ class IbkrContractsController(Resource):
         except AppException as e:
             db.session.rollback()
             return {"success": False, "message": e.msg, "errors": e.errors}, 400
+        except ValueError as e:
+            db.session.rollback()
+            return {"success": False, "message": str(e)}, 400
         except Exception as e:
             db.session.rollback()
             logger.error(e, exc_info=True)
@@ -364,7 +380,11 @@ def init_module(app, url_prefix):
     api = Api(bp)
 
     api.add_resource(
-        IbkrContractsController, "/trsrv/load-all-conids", "/trsrv/contracts"
+        IbkrContractsController,
+        "/trsrv/load-all-conids",
+        "/trsrv/contracts",
+        "/contracts",
+        "/contracts/sync",
     )
     api.add_resource(
         IbkrExpirationDatesController,

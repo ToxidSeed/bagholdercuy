@@ -55,3 +55,75 @@ def test_load_contracts_invalid_format(mock_all_conids):
     service = IbkrContractService()
     with pytest.raises(ValueError, match="Respuesta inesperada de la API de IBKR"):
         service.load_contracts(exchange="NYSE")
+
+
+@patch("config.extensions.db.session.query")
+def test_sync_contract_existing_in_db(mock_query):
+    mock_contract = MagicMock(spec=IbkrContractsModel)
+    mock_contract.conid = 265598
+    mock_contract.cod_symbol = "AAPL"
+    mock_contract.exchange = "SMART"
+    mock_contract.fch_hr_registro = None
+
+    mock_q = MagicMock()
+    mock_query.return_value = mock_q
+    mock_q.filter.return_value = mock_q
+    mock_q.order_by.return_value = mock_q
+    mock_q.first.return_value = mock_contract
+
+    service = IbkrContractService()
+    res = service.sync_contract(cod_symbol="AAPL")
+
+    assert res["conid"] == 265598
+    assert res["cod_symbol"] == "AAPL"
+    assert res["exchange"] == "SMART"
+
+
+@patch("api.ibkr.InteractiveBrokersClient.search_contract_by_symbol")
+@patch("config.extensions.db.session.query")
+@patch("config.extensions.db.session.add")
+@patch("config.extensions.db.session.commit")
+def test_sync_contract_fetch_from_ibkr(mock_commit, mock_add, mock_query, mock_search):
+    # En BD no existe inicialmente
+    mock_q = MagicMock()
+    mock_query.return_value = mock_q
+    mock_q.filter.return_value = mock_q
+    mock_q.order_by.return_value = mock_q
+    mock_q.first.return_value = None
+
+    # IBKR API retorna contrato para NVDA
+    mock_search.return_value = [
+        {
+            "conid": 4815747,
+            "symbol": "NVDA",
+            "exchange": "NASDAQ",
+            "sections": [{"secType": "STK", "exchange": "SMART"}],
+        }
+    ]
+
+    service = IbkrContractService()
+    res = service.sync_contract(cod_symbol="NVDA")
+
+    assert res["conid"] == 4815747
+    assert res["cod_symbol"] == "NVDA"
+    assert res["exchange"] == "NASDAQ"
+    mock_search.assert_called_once_with(symbol="NVDA")
+    mock_add.assert_called_once()
+    mock_commit.assert_called_once()
+
+
+@patch("api.ibkr.InteractiveBrokersClient.search_contract_by_symbol")
+@patch("config.extensions.db.session.query")
+def test_sync_contract_not_found_in_ibkr(mock_query, mock_search):
+    mock_q = MagicMock()
+    mock_query.return_value = mock_q
+    mock_q.filter.return_value = mock_q
+    mock_q.order_by.return_value = mock_q
+    mock_q.first.return_value = None
+
+    mock_search.return_value = []
+
+    service = IbkrContractService()
+    with pytest.raises(Exception, match="No se encontró contrato en Interactive Brokers"):
+        service.sync_contract(cod_symbol="UNKNOWN")
+

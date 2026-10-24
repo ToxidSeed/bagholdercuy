@@ -320,3 +320,35 @@ def test_options_chain_json_decode_error(mock_get_chain, client):
     assert "IBKR Gateway" in data["message"]
 
 
+@patch("controller.ibkr.IbkrContractService.sync_contract")
+def test_contracts_sync_success(mock_sync, client):
+    mock_sync.return_value = {
+        "conid": 265598,
+        "cod_symbol": "AAPL",
+        "exchange": "SMART",
+    }
+
+    response = client.post(
+        "/bagholdercuy/api/v2/ibkr/trsrv/contracts",
+        json={"cod_symbol": "AAPL"},
+    )
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["data"]["conid"] == 265598
+    assert data["data"]["cod_symbol"] == "AAPL"
+    mock_sync.assert_called_once_with(cod_symbol="AAPL", exchange=None)
+
+
+def test_contracts_sync_missing_params(client):
+    response = client.post(
+        "/bagholdercuy/api/v2/ibkr/trsrv/contracts",
+        json={},
+    )
+    assert response.status_code == 400
+    data = response.get_json()
+    assert data["success"] is False
+    assert "El parámetro 'cod_symbol' o 'exchange' es requerido" in data["message"]
+
+
+
