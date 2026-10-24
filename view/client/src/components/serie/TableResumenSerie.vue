@@ -1,7 +1,26 @@
 <template>
     <div>
-        <q-table :columns="columns" :data="store.state.t_resumen.data" :pagination="pagination" row-key="symbol_id"
+        <q-table :columns="columns" :data="store.state.t_resumen.data" :pagination="pagination" :filter="filter" row-key="symbol_id"
             separator="vertical" dense class="no-shadow" wrap-cells>
+            <template v-slot:top>
+                <div class="row full-width items-center justify-between q-py-xs">
+                    <div class="text-subtitle1 text-weight-bold text-blue-10">
+                        Resumen de Series
+                    </div>
+                    <q-input
+                        v-model="filter"
+                        placeholder="Buscar símbolo o estado..."
+                        dense
+                        outlined
+                        clearable
+                        style="max-width: 280px;"
+                    >
+                        <template v-slot:append>
+                            <q-icon name="search" />
+                        </template>
+                    </q-input>
+                </div>
+            </template>
             <template v-slot:body-cell-menu="props">
                 <q-td :props="props">
                     <q-btn flat dense icon="more_vert">
@@ -97,7 +116,8 @@
             </q-card>
         </q-dialog>
         <WinSincronizarSeries v-model="store.state.w_sincronizar.open"
-            :in-cod-symbol="store.state.w_sincronizar.cod_symbol" />
+            :in-cod-symbol="store.state.w_sincronizar.cod_symbol"
+            @sincronizado="recargar_datos" />
     </div>
 </template>
 <script>
@@ -115,6 +135,7 @@ export default {
     data: () => {
         return {
             store: store,
+            filter: "",
             confirm_reparar: false,
             cod_symbol_reparar: "",
             columns: [{
