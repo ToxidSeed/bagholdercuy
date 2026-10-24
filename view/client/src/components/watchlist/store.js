@@ -25,6 +25,12 @@ let table_monitoreo = {
         )       
         this.aplicar_cotizacion()                 
     },
+    eliminar: async function(id_monitoreo){
+        await new Monitoreo().eliminar(id_monitoreo)
+        this.state.monitoreo_activo_data = this.state.monitoreo_activo_data.filter(
+            item => item.id_monitoreo !== id_monitoreo
+        )
+    },
     aplicar_cotizacion: async function () {
         if (!Array.isArray(this.state.monitoreo_activo_data) || this.state.monitoreo_activo_data.length === 0) {
             return

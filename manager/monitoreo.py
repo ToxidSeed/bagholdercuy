@@ -96,6 +96,10 @@ class MonitoreoManager:
                 id_cuenta=monitoreo_nuevo.id_cuenta,
             )
             if monitoreo is not None:
+                if getattr(monitoreo, "flg_activo", 1) == 0:
+                    monitoreo.flg_activo = 1
+                    monitoreo.fch_registro = date.today()
+                    return monitoreo
                 raise AppException(
                     f"El monitoreo para la opción {opcion.cod_symbol} y cuenta {monitoreo_nuevo.id_cuenta} ya existe en la base de datos"
                 )
@@ -148,6 +152,10 @@ class MonitoreoManager:
                 id_cuenta=monitoreo_nuevo.id_cuenta,
             )
             if monitoreo is not None:
+                if getattr(monitoreo, "flg_activo", 1) == 0:
+                    monitoreo.flg_activo = 1
+                    monitoreo.fch_registro = date.today()
+                    return monitoreo
                 raise AppException(
                     f"El monitoreo con symbol {symbol.symbol} y id cuenta {monitoreo_nuevo.id_cuenta} ya existe en la base de datos"
                 )
@@ -163,6 +171,18 @@ class MonitoreoManager:
         if not monitoreo_nuevo.fch_registro:
             monitoreo_nuevo.fch_registro = date.today()
 
+        if not getattr(monitoreo_nuevo, "flg_activo", None):
+            monitoreo_nuevo.flg_activo = 1
+
         db.session.add(monitoreo_nuevo)
         return monitoreo_nuevo
+
+    def desactivar(self, id_monitoreo: int) -> MonitoreoModel:
+        monitoreo = MonitoreoReader().get(id_monitoreo=id_monitoreo)
+        if monitoreo is None:
+            raise AppException(
+                msg=f"No se ha encontrado el monitoreo con id {id_monitoreo}"
+            )
+        monitoreo.flg_activo = 0
+        return monitoreo
 

@@ -62,6 +62,7 @@ class MonitoreoReader:
                 MonitoreoModel.id_contrato_opcion,
                 MonitoreoModel.id_cuenta,
                 MonitoreoModel.fch_registro,
+                MonitoreoModel.flg_activo,
                 func.coalesce(
                     SymbolModel.symbol, ContratoOpcionModel.cod_symbol
                 ).label("cod_symbol"),
@@ -85,7 +86,10 @@ class MonitoreoReader:
                 ConfiguracionAlertaModel,
                 MonitoreoModel.id_monitoreo == ConfiguracionAlertaModel.id_monitoreo,
             )
-            .where(MonitoreoModel.id_cuenta == id_cuenta)
+            .where(
+                MonitoreoModel.id_cuenta == id_cuenta,
+                MonitoreoModel.flg_activo == opcionales.get("flg_activo", 1),
+            )
         )
 
         if "id_symbol" in opcionales and opcionales.get("id_symbol") is not None:

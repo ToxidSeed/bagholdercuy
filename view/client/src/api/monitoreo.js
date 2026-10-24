@@ -38,6 +38,23 @@ class Monitoreo {
             throw err
         }
     }
+
+    eliminar = async function(id_monitoreo) {
+        try {
+            const httpresp = await axios.delete(
+                `/api/v2/monitoreos/${id_monitoreo}`,
+                postconfig()
+            )
+            store.dispatch("incluir_httpresp", httpresp)
+            return httpresp.data
+        } catch (err) {
+            console.error(err)
+            if (err.response) {
+                store.dispatch("incluir_httpresp", err.response)
+            }
+            throw err
+        }
+    }
 }
 
 export default Monitoreo
