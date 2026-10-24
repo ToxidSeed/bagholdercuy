@@ -365,4 +365,84 @@ def test_monitoreo_manager_auto_formats_osi_when_cod_symbol_is_underlying(
     assert created_option.id_symbol_subyacente == 30
 
 
+# =====================================================================
+# Tests para DELETE /monitoreos/<id> (Eliminación lógica)
+# =====================================================================
+
+@patch("controller.monitoreo.db.session.commit")
+@patch.object(MonitoreoManager, "desactivar")
+def test_monitoreo_delete_success(mock_desactivar, mock_commit, client):
+    mock_desactivar.return_value = MagicMock(id_monitoreo=42, flg_activo=0)
+
+    response = client.delete("/bagholdercuy/api/v2/monitoreos/42")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert data["message"] == "Se ha eliminado el monitoreo correctamente."
+    assert data["data"]["id_monitoreo"] == 42
+    mock_desactivar.assert_called_once_with(id_monitoreo=42)
+    mock_commit.assert_called_once()
+
+
+def test_monitoreo_delete_missing_id(client):
+    response = client.delete("/bagholdercuy/api/v2/monitoreos")
+    assert response.status_code == 400
+    data = response.get_json()
+    assert data["success"] is False
+    assert "Debe proporcionar el id_monitoreo a eliminar" in data["message"]
+
+
+@patch("controller.monitoreo.db.session.rollback")
+@patch.object(MonitoreoManager, "desactivar")
+def test_monitoreo_delete_not_found(mock_desactivar, mock_rollback, client):
+    mock_desactivar.side_effect = AppException("No se ha encontrado el monitoreo con id 999")
+
+    response = client.delete("/bagholdercuy/api/v2/monitoreos/999")
+    assert response.status_code == 400
+    data = response.get_json()
+    assert data["success"] is False
+    assert "No se ha encontrado el monitoreo con id 999" in data["message"]
+    mock_rollback.assert_called_once()
+
+
+@patch.object(MonitoreoReader, "get")
+def test_monitoreo_manager_desactivar(mock_get):
+    fake_monitoreo = MagicMock(id_monitoreo=55, flg_activo=1)
+    mock_get.return_value = fake_monitoreo
+
+    manager = MonitoreoManager()
+    res = manager.desactivar(id_monitoreo=55)
+
+    assert res.flg_activo == 0
+    mock_get.assert_called_once_with(id_monitoreo=55)
+
+
+@patch.object(MonitoreoReader, "get_by_symbol")
+@patch("manager.monitoreo.SymbolReader")
+def test_monitoreo_manager_reactivar_si_inactivo(mock_sym_reader_cls, mock_get_by_symbol):
+    mock_sym_reader = MagicMock()
+    mock_sym_reader_cls.return_value = mock_sym_reader
+    mock_sym_reader.get.return_value = MagicMock(id_symbol=10, symbol="AAPL", id_symbol_type=1)
+
+    inactive_record = MagicMock(id_monitoreo=12, id_symbol=10, id_cuenta=1, flg_activo=0)
+    mock_get_by_symbol.return_value = inactive_record
+
+    mon = MagicMock(
+        id_symbol=10,
+        id_cuenta=1,
+        id_contrato_opcion=None,
+        id_symbol_type=1,
+        contrato_opcion_data=None,
+        fch_registro=None,
+        flg_activo=1,
+    )
+
+    manager = MonitoreoManager()
+    res = manager.registrar(mon)
+
+    assert res.id_monitoreo == 12
+    assert res.flg_activo == 1
+
+
+
 

@@ -82,10 +82,21 @@
                                     </q-btn>
                                 </div>
                                 
-                                <div class="text-right">
-                                    <div class="text-subtitle1 text-weight-bolder text-dark">
+                                <div class="row items-center justify-end no-wrap">
+                                    <div class="text-subtitle1 text-weight-bolder text-dark q-mr-xs">
                                         {{ format_currency(props.row.imp_actual) }}
                                     </div>
+                                    <q-btn 
+                                        icon="delete_outline" 
+                                        flat 
+                                        round 
+                                        dense 
+                                        size="sm"
+                                        class="btn-eliminar-monitoreo"
+                                        @click.stop="abrir_dialogo_eliminar(props.row)"
+                                    >
+                                        <q-tooltip>Eliminar de monitoreo</q-tooltip>
+                                    </q-btn>
                                 </div>
                             </div>
 
@@ -116,6 +127,40 @@
                 </q-tr>                                                                    
             </template>
         </q-table>      
+
+        <!-- Diálogo de Confirmación de Eliminación Lógica -->
+        <q-dialog v-model="confirmDeleteDialog.open" persistent>
+            <q-card style="min-width: 360px; max-width: 440px;" class="q-pa-sm">
+                <q-card-section class="row items-center no-wrap">
+                    <q-avatar icon="delete_sweep" color="red-1" text-color="negative" />
+                    <div class="q-ml-md">
+                        <div class="text-subtitle1 text-weight-bold">
+                            Eliminar de monitoreo
+                        </div>
+                        <div class="text-caption text-grey-7 q-mt-xs">
+                            ¿Estás seguro de que deseas quitar 
+                            <span class="text-weight-bold text-dark">{{ confirmDeleteDialog.row ? confirmDeleteDialog.row.cod_symbol : '' }}</span> 
+                            de la lista de monitoreo activo?
+                        </div>
+                        <div v-if="confirmDeleteDialog.row && confirmDeleteDialog.row.id_config_alerta" class="text-caption text-amber-9 q-mt-sm">
+                            <q-icon name="info" size="xs" class="q-mr-xs" />
+                            Las alertas y comentarios configurados se mantendrán archivados.
+                        </div>
+                    </div>
+                </q-card-section>
+
+                <q-card-actions align="right" class="q-pt-none">
+                    <q-btn flat label="Cancelar" color="grey-7" v-close-popup :disable="confirmDeleteDialog.loading" />
+                    <q-btn 
+                        flat 
+                        label="Eliminar" 
+                        color="negative" 
+                        :loading="confirmDeleteDialog.loading"
+                        @click="ejecutar_eliminar"
+                    />
+                </q-card-actions>
+            </q-card>
+        </q-dialog>
     </div>
 </template>
 <script>
@@ -130,6 +175,11 @@ export default {
         return {
             filter: "",
             loading: false,
+            confirmDeleteDialog: {
+                open: false,
+                loading: false,
+                row: null
+            },
             columns: [
                 {
                     name: "cod_symbol",
@@ -237,6 +287,48 @@ export default {
             if (row.id_monitoreo !== undefined && row.id_monitoreo !== "") {
                 this.WinGestorAlertaStore.incluir_alerta(row.id_monitoreo, row.id_symbol)
             }            
+        },
+        abrir_dialogo_eliminar: function(row) {
+            this.confirmDeleteDialog.row = row
+            this.confirmDeleteDialog.open = true
+        },
+        ejecutar_eliminar: async function() {
+            const row = this.confirmDeleteDialog.row
+            if (!row || !row.id_monitoreo) {
+                this.confirmDeleteDialog.open = false
+                return
+            }
+
+            this.confirmDeleteDialog.loading = true
+            try {
+                await this.store.table_monitoreo.eliminar(row.id_monitoreo)
+
+                if (this.is_selected(row)) {
+                    this.tableAlertasSymbolStore.limpiar()
+                    this.winComentariosAlertaStore.cerrar()
+                }
+
+                this.$q.notify({
+                    type: 'positive',
+                    message: `Se quitó ${row.cod_symbol} de la lista de monitoreo`,
+                    position: 'top',
+                    timeout: 2500
+                })
+                this.confirmDeleteDialog.open = false
+            } catch (error) {
+                console.error("Error al eliminar monitoreo:", error)
+                const errorMsg = error.response && error.response.data && error.response.data.message
+                    ? error.response.data.message
+                    : (error.message || "No se pudo eliminar el instrumento del monitoreo")
+                this.$q.notify({
+                    type: 'warning',
+                    message: errorMsg,
+                    position: 'top',
+                    timeout: 3000
+                })
+            } finally {
+                this.confirmDeleteDialog.loading = false
+            }
         }
     }
 }
@@ -280,5 +372,19 @@ export default {
 
 .prev-close-text {
     font-size: 11px;
+}
+
+.btn-eliminar-monitoreo {
+    opacity: 0.25;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    color: #757575;
+}
+
+.monitoreo-card:hover .btn-eliminar-monitoreo {
+    opacity: 1;
+}
+
+.btn-eliminar-monitoreo:hover {
+    color: #c10015 !important;
 }
 </style>

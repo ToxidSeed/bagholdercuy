@@ -86,6 +86,36 @@ class MonitoreoController(Resource):
             logger.error(e, exc_info=True)
             return {"success": False, "message": f"Error no controlado: {str(e)}"}, 500
 
+    def delete(self, id_monitoreo=None):
+        try:
+            if id_monitoreo is None:
+                args = request.args.to_dict() if request.args else {}
+                if not args and request.is_json:
+                    args = request.get_json(silent=True) or {}
+                id_monitoreo = args.get("id_monitoreo")
+
+            if not id_monitoreo:
+                return {
+                    "success": False,
+                    "message": "Debe proporcionar el id_monitoreo a eliminar.",
+                }, 400
+
+            MonitoreoManager().desactivar(id_monitoreo=int(id_monitoreo))
+            db.session.commit()
+
+            return {
+                "success": True,
+                "message": "Se ha eliminado el monitoreo correctamente.",
+                "data": {"id_monitoreo": int(id_monitoreo)},
+            }, 200
+        except AppException as e:
+            db.session.rollback()
+            return {"success": False, "message": e.msg, "errors": e.errors}, 400
+        except Exception as e:
+            db.session.rollback()
+            logger.error(e, exc_info=True)
+            return {"success": False, "message": f"Error no controlado: {str(e)}"}, 500
+
 
 def init_module(app, url_prefix):
     bp = Blueprint("monitoreos_bp", __name__)
@@ -95,5 +125,7 @@ def init_module(app, url_prefix):
         MonitoreoController,
         "",
         "/",
+        "/<int:id_monitoreo>",
     )
     app.register_blueprint(bp, url_prefix=f"{url_prefix}/monitoreos")
+

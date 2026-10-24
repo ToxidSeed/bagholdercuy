@@ -60,6 +60,7 @@ class MonitoreoRegistrarRequest(BaseModel):
     def to_model(self) -> MonitoreoModel:
         monitoreo = MonitoreoModel()
         monitoreo.id_cuenta = self.id_cuenta
+        monitoreo.flg_activo = 1
 
         if self.id_contrato_opcion is None and (
             self.id_symbol_type == 2

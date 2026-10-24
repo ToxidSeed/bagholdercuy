@@ -22,6 +22,7 @@ class MonitoreoModel(db.Model):
         nullable=True,
     )
     fch_registro = db.Column(db.Date)
+    flg_activo = db.Column(db.SmallInteger, default=1)
 
     # Relaciones
     symbol_type = db.relationship("SymbolTypeModel", foreign_keys=[id_symbol_type])

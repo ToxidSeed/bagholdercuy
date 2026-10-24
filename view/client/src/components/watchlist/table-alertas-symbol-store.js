@@ -5,6 +5,7 @@ import GestorObjeto from "@/common/gestor-objeto"
 export default {
     state:{
         title:"",
+        id_monitoreo:"",
         id_symbol:"",
         cod_symbol:"",
         nom_symbol:"",
@@ -16,9 +17,21 @@ export default {
         tmp_data:[]
     },
     set_symbol: function(param){
+        this.state.id_monitoreo = param.id_monitoreo || ""
         this.state.id_symbol = param.id_symbol
         this.state.cod_symbol = param.cod_symbol
         this.state.nom_symbol = param.nom_symbol
+    },
+    limpiar: function(){
+        this.state.title = ""
+        this.state.id_monitoreo = ""
+        this.state.id_symbol = ""
+        this.state.cod_symbol = ""
+        this.state.nom_symbol = ""
+        this.state.imp_accion = 0
+        this.state.cotizacion = {}
+        this.state.data = []
+        this.state.tmp_data = []
     },
     fetch_data: async function(params){         
         this.state.imp_accion = 0
