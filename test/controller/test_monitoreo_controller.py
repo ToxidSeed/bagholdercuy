@@ -78,6 +78,35 @@ def test_monitoreo_get_with_optional_params(mock_get_activo, client):
     mock_get_activo.assert_called_once_with(id_cuenta=1, opcionales={"id_symbol": 10})
 
 
+@patch.object(MonitoreoReader, "get_monitoreo_activo")
+def test_monitoreo_get_calculates_dias_expiracion(mock_get_activo, client):
+    from datetime import date, timedelta
+
+    venc = date.today() + timedelta(days=5)
+    mock_get_activo.return_value = [
+        {
+            "id_monitoreo": 4,
+            "id_symbol_type": 2,
+            "id_contrato_opcion": 2,
+            "id_cuenta": 3,
+            "cod_symbol": "SPX261028P07570000",
+            "fch_vencimiento": venc.isoformat(),
+            "tipo_opcion": "PUT",
+            "imp_strike": 7570.0,
+        }
+    ]
+
+    response = client.get("/bagholdercuy/api/v2/monitoreos?id_cuenta=3")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert len(data["data"]) == 1
+    assert data["data"][0]["dias_expiracion"] == 5
+    assert data["data"][0]["fch_vencimiento"] == venc.isoformat()
+    assert data["data"][0]["tipo_opcion"] == "PUT"
+    assert data["data"][0]["imp_strike"] == 7570.0
+
+
 def test_monitoreo_get_missing_id_cuenta(client):
     response = client.get("/bagholdercuy/api/v2/monitoreos")
     assert response.status_code == 400
