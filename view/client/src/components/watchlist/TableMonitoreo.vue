@@ -100,6 +100,38 @@
                                 </div>
                             </div>
 
+                            <!-- Fila Expiración (solo para contratos de opción o con vencimiento) -->
+                            <div v-if="has_expiracion(props.row)" class="row items-center justify-between no-wrap q-mt-xs">
+                                <div class="row items-center q-gutter-x-xs no-wrap">
+                                    <q-badge 
+                                        :color="badge_expiracion_color(props.row)"
+                                        class="q-px-xs text-weight-bold dte-badge"
+                                    >
+                                        <q-icon name="timer" size="12px" class="q-mr-xs" />
+                                        {{ format_dias_expiracion(props.row) }}
+                                        <q-tooltip>
+                                            Vencimiento: {{ format_fecha_vencimiento(props.row) }}
+                                        </q-tooltip>
+                                    </q-badge>
+                                    <span class="text-caption text-grey-7 expiration-date-label">
+                                        Vence: {{ format_fecha_vencimiento(props.row) }}
+                                    </span>
+                                </div>
+
+                                <div v-if="props.row.tipo_opcion" class="row items-center q-gutter-x-xs no-wrap text-caption">
+                                    <q-badge 
+                                        :color="props.row.tipo_opcion.toUpperCase() === 'CALL' ? 'teal-8' : 'deep-orange-8'"
+                                        outline
+                                        class="text-weight-bold q-px-xs option-type-badge"
+                                    >
+                                        {{ props.row.tipo_opcion.toUpperCase() }}
+                                    </q-badge>
+                                    <span v-if="props.row.imp_strike !== null && props.row.imp_strike !== undefined" class="text-weight-bold text-grey-8 strike-label">
+                                        ${{ Number(props.row.imp_strike).toFixed(2) }}
+                                    </span>
+                                </div>
+                            </div>
+
                             <!-- Fila Inferior: Nombre y Rendimiento / Cierre anterior -->
                             <div class="row items-center justify-between no-wrap q-mt-xs">
                                 <div class="text-caption text-grey-7 truncate-name" :title="props.row.nom_symbol">
@@ -192,6 +224,14 @@ export default {
                     label: "Nom. Symbol",
                     align: "left",
                     field: "nom_symbol"
+                },
+                {
+                    name: "tipo_opcion",
+                    field: "tipo_opcion"
+                },
+                {
+                    name: "fch_vencimiento",
+                    field: "fch_vencimiento"
                 }
             ],
             pagination: {
@@ -263,6 +303,68 @@ export default {
             const sign = row.pct_variacion > 0 ? '+' : ''
             return `${sign}${Number(row.pct_variacion).toFixed(2)}%`
         },
+        get_dias_expiracion: function(row) {
+            if (row.dias_expiracion !== undefined && row.dias_expiracion !== null) {
+                return Number(row.dias_expiracion)
+            }
+            const fch = row.fch_vencimiento || this.parse_osi_date(row.cod_symbol)
+            if (fch) {
+                const parts = String(fch).split(/[-T ]/)[0].split('-')
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0], 10)
+                    const month = parseInt(parts[1], 10) - 1
+                    const day = parseInt(parts[2], 10)
+                    const expDate = new Date(year, month, day)
+                    const now = new Date()
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+                    const diffTime = expDate.getTime() - today.getTime()
+                    return Math.round(diffTime / (1000 * 60 * 60 * 24))
+                }
+            }
+            return null
+        },
+        parse_osi_date: function(symbol) {
+            if (!symbol || typeof symbol !== 'string') return null
+            const match = symbol.match(/(\d{2})(\d{2})(\d{2})[CPcp]\d{8}$/)
+            if (match) {
+                const year = `20${match[1]}`
+                const month = match[2]
+                const day = match[3]
+                return `${year}-${month}-${day}`
+            }
+            return null
+        },
+        has_expiracion: function(row) {
+            return this.get_dias_expiracion(row) !== null || (row.id_symbol_type === 2 && Boolean(row.fch_vencimiento))
+        },
+        format_dias_expiracion: function(row) {
+            const dias = this.get_dias_expiracion(row)
+            if (dias === null) return ''
+            if (dias === 0) return 'Expira hoy'
+            if (dias === 1) return '1 día'
+            if (dias > 1) return `${dias} días`
+            if (dias === -1) return 'Expiró ayer'
+            return `Expiró hace ${Math.abs(dias)} días`
+        },
+        badge_expiracion_color: function(row) {
+            const dias = this.get_dias_expiracion(row)
+            if (dias === null) return 'grey-6'
+            if (dias < 0) return 'grey-7'
+            if (dias <= 2) return 'negative'
+            if (dias <= 7) return 'amber-9'
+            if (dias <= 30) return 'primary'
+            return 'teal-8'
+        },
+        format_fecha_vencimiento: function(row) {
+            const raw = row.fch_vencimiento || this.parse_osi_date(row.cod_symbol)
+            if (!raw) return ''
+            const clean = String(raw).split(/[-T ]/)[0]
+            const parts = clean.split('-')
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`
+            }
+            return clean
+        },
         get_alertas: function(row) {                        
             winComentariosAlertaStore.cerrar()
 
@@ -271,7 +373,11 @@ export default {
                 id_symbol: row.id_symbol,
                 id_contrato_opcion: row.id_contrato_opcion,
                 cod_symbol: row.cod_symbol,
-                nom_symbol: row.nom_symbol
+                nom_symbol: row.nom_symbol,
+                fch_vencimiento: row.fch_vencimiento || this.parse_osi_date(row.cod_symbol),
+                dias_expiracion: this.get_dias_expiracion(row),
+                tipo_opcion: row.tipo_opcion,
+                imp_strike: row.imp_strike
             })
 
             this.tableAlertasSymbolStore.fetch_data({                 
@@ -386,5 +492,24 @@ export default {
 
 .btn-eliminar-monitoreo:hover {
     color: #c10015 !important;
+}
+
+.dte-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.option-type-badge {
+    font-size: 10px;
+    padding: 1px 4px;
+}
+
+.expiration-date-label {
+    font-size: 11px;
+}
+
+.strike-label {
+    font-size: 11px;
 }
 </style>

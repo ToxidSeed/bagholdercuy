@@ -29,10 +29,37 @@ class MonitoreoController(Resource):
             )
 
             raw_response = Response().from_raw_data(records)
+            data = raw_response.get("data", [])
+
+            from datetime import date, datetime
+            today = date.today()
+            for item in data:
+                fch_venc = item.get("fch_vencimiento")
+                if fch_venc:
+                    try:
+                        if isinstance(fch_venc, str):
+                            venc_date = date.fromisoformat(fch_venc[:10])
+                        elif isinstance(fch_venc, datetime):
+                            venc_date = fch_venc.date()
+                        elif isinstance(fch_venc, date):
+                            venc_date = fch_venc
+                        else:
+                            venc_date = None
+
+                        if venc_date:
+                            item["dias_expiracion"] = (venc_date - today).days
+                            item["fch_vencimiento"] = venc_date.isoformat()
+                        else:
+                            item["dias_expiracion"] = None
+                    except Exception:
+                        item["dias_expiracion"] = None
+                else:
+                    item["dias_expiracion"] = None
+
             return {
                 "success": True,
                 "message": "Monitoreo activo obtenido correctamente.",
-                "data": raw_response.get("data", []),
+                "data": data,
             }, 200
         except ValidationError as e:
             errors_list = [

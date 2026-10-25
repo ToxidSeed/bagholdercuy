@@ -71,6 +71,9 @@ class MonitoreoReader:
                     ContratoOpcionModel.descripcion,
                     ContratoOpcionModel.cod_symbol,
                 ).label("nom_symbol"),
+                ContratoOpcionModel.fch_vencimiento.label("fch_vencimiento"),
+                ContratoOpcionModel.tipo_opcion.label("tipo_opcion"),
+                ContratoOpcionModel.imp_strike.label("imp_strike"),
                 ConfiguracionAlertaModel.id_config_alerta,
             )
             .select_from(MonitoreoModel)

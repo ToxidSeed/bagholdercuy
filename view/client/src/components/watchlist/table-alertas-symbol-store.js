@@ -7,8 +7,13 @@ export default {
         title:"",
         id_monitoreo:"",
         id_symbol:"",
+        id_contrato_opcion:null,
         cod_symbol:"",
         nom_symbol:"",
+        fch_vencimiento:null,
+        dias_expiracion:null,
+        tipo_opcion:null,
+        imp_strike:null,
         imp_accion:0,
         cotizacion:{
 
@@ -19,15 +24,25 @@ export default {
     set_symbol: function(param){
         this.state.id_monitoreo = param.id_monitoreo || ""
         this.state.id_symbol = param.id_symbol
+        this.state.id_contrato_opcion = param.id_contrato_opcion || null
         this.state.cod_symbol = param.cod_symbol
         this.state.nom_symbol = param.nom_symbol
+        this.state.fch_vencimiento = param.fch_vencimiento || null
+        this.state.dias_expiracion = param.dias_expiracion !== undefined ? param.dias_expiracion : null
+        this.state.tipo_opcion = param.tipo_opcion || null
+        this.state.imp_strike = param.imp_strike !== undefined ? param.imp_strike : null
     },
     limpiar: function(){
         this.state.title = ""
         this.state.id_monitoreo = ""
         this.state.id_symbol = ""
+        this.state.id_contrato_opcion = null
         this.state.cod_symbol = ""
         this.state.nom_symbol = ""
+        this.state.fch_vencimiento = null
+        this.state.dias_expiracion = null
+        this.state.tipo_opcion = null
+        this.state.imp_strike = null
         this.state.imp_accion = 0
         this.state.cotizacion = {}
         this.state.data = []
