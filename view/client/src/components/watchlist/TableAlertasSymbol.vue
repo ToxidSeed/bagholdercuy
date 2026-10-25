@@ -14,9 +14,20 @@
             <template v-slot:top>
                 <q-toolbar class="q-pa-none q-ma-none">
                     <q-toolbar-title class="q-pa-none q-ma-none">
-                        <div v-if="titulo_default_visible == false">
-                            <span class="text-blue-10">{{tableAlertasSymbolStore.state.cod_symbol}}</span>
-                            {{tableAlertasSymbolStore.state.nom_symbol}}
+                        <div v-if="titulo_default_visible == false" class="row items-center q-gutter-x-sm">
+                            <span class="text-blue-10 text-weight-bold">{{tableAlertasSymbolStore.state.cod_symbol}}</span>
+                            <span class="text-grey-9">{{tableAlertasSymbolStore.state.nom_symbol}}</span>
+                            <q-badge
+                                v-if="has_expiracion_alerta"
+                                :color="badge_expiracion_alerta_color"
+                                class="q-px-xs text-weight-bold"
+                            >
+                                <q-icon name="timer" size="12px" class="q-mr-xs" />
+                                {{ format_dias_expiracion_alerta }}
+                                <q-tooltip v-if="tableAlertasSymbolStore.state.fch_vencimiento">
+                                    Vencimiento: {{ format_fecha_vencimiento_alerta }}
+                                </q-tooltip>
+                            </q-badge>
                         </div>
                         <div class="text-blue-10" v-if="titulo_default_visible == true">
                             Alertas
@@ -90,6 +101,59 @@ export default {
             }else{
                 return false
             }
+        },
+        has_expiracion_alerta: function() {
+            return this.get_dias_expiracion_alerta !== null
+        },
+        get_dias_expiracion_alerta: function() {
+            const dias = tableAlertasSymbolStore.state.dias_expiracion
+            if (dias !== null && dias !== undefined) {
+                return Number(dias)
+            }
+            const fch = tableAlertasSymbolStore.state.fch_vencimiento
+            if (fch) {
+                const clean = String(fch).split(/[-T ]/)[0]
+                const parts = clean.split('-')
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0], 10)
+                    const month = parseInt(parts[1], 10) - 1
+                    const day = parseInt(parts[2], 10)
+                    const expDate = new Date(year, month, day)
+                    const now = new Date()
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+                    const diffTime = expDate.getTime() - today.getTime()
+                    return Math.round(diffTime / (1000 * 60 * 60 * 24))
+                }
+            }
+            return null
+        },
+        format_dias_expiracion_alerta: function() {
+            const dias = this.get_dias_expiracion_alerta
+            if (dias === null) return ''
+            if (dias === 0) return 'Expira hoy'
+            if (dias === 1) return '1 día'
+            if (dias > 1) return `${dias} días`
+            if (dias === -1) return 'Expiró ayer'
+            return `Expiró hace ${Math.abs(dias)} días`
+        },
+        badge_expiracion_alerta_color: function() {
+            const dias = this.get_dias_expiracion_alerta
+            if (dias === null) return 'grey-6'
+            if (dias < 0) return 'grey-7'
+            if (dias <= 2) return 'negative'
+            if (dias <= 7) return 'amber-9'
+            if (dias <= 30) return 'primary'
+            return 'teal-8'
+        },
+        format_fecha_vencimiento_alerta: function() {
+            const fch = tableAlertasSymbolStore.state.fch_vencimiento
+            if (!fch) return ''
+            const clean = String(fch).split(/[-T ]/)[0]
+            const parts = clean.split('-')
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`
+            }
+            return clean
         }
     },
     data(){

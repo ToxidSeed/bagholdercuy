@@ -110,7 +110,7 @@ class ContratoOpcionService:
     def get_resumen_subyacentes(self) -> List[Any]:
         results = (
             db.session.query(
-                ContratoOpcionModel.cod_symbol_subyacente,
+                ContratoOpcionModel.cod_symbol_subyacente.label("cod_symbol_subyacente"),
                 func.max(ContratoOpcionModel.fch_registro).label("fch_registro"),
                 func.max(ContratoOpcionModel.fch_vencimiento).label("fch_vencimiento"),
             )
