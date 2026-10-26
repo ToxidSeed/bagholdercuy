@@ -100,21 +100,26 @@ export default {
             this.sel_rango("RANGOS_FECHAS")
         },  
         calc_fechas_rango: function(rango_item){            
-            if(rango_item.codigo == "ULTIMOS_100_DIAS"){
-                const now = new Date();
-                const fch_100_dias = date.addDays(now, -100)
-                this.fch_hasta = date.format(now, "DD/MM/YYYY")
-                this.fch_desde = date.format(fch_100_dias, "DD/MM/YYYY")                    
-            }else if(rango_item.codigo == "ULTIMOS_15_DIAS"){
-                const now = new Date();
+            const now = new Date();
+            if(rango_item.codigo == "ULTIMOS_15_DIAS"){
                 const fch_15_dias = date.addDays(now, -15)
                 this.fch_hasta = date.format(now, "DD/MM/YYYY")
                 this.fch_desde = date.format(fch_15_dias, "DD/MM/YYYY")                    
             }else if(rango_item.codigo == "ULTIMOS_30_DIAS"){
-                const now = new Date();
                 const fch_dias = date.addDays(now, -30)
                 this.fch_hasta = date.format(now, "DD/MM/YYYY")
                 this.fch_desde = date.format(fch_dias, "DD/MM/YYYY")                    
+            }else if(rango_item.codigo == "ULTIMOS_100_DIAS"){
+                const fch_100_dias = date.addDays(now, -100)
+                this.fch_hasta = date.format(now, "DD/MM/YYYY")
+                this.fch_desde = date.format(fch_100_dias, "DD/MM/YYYY")                    
+            }else if(rango_item.codigo == "ULTIMOS_365_DIAS"){
+                const fch_365_dias = date.addDays(now, -365)
+                this.fch_hasta = date.format(now, "DD/MM/YYYY")
+                this.fch_desde = date.format(fch_365_dias, "DD/MM/YYYY")
+            }else if(rango_item.codigo == "ANYO_EN_CURSO"){
+                this.fch_hasta = date.format(now, "DD/MM/YYYY")
+                this.fch_desde = date.format(new Date(now.getFullYear(), 0, 1), "DD/MM/YYYY")
             }
         },
         sel_rango:function(rango_codigo){
