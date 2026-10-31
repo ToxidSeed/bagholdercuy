@@ -29,6 +29,8 @@ import PanelSerieLoader from '@/components/serie/PanelSerieLoader.vue'
 
 //Simulacion de rentabilidad
 import PanelSimulacionRentabilidadOpciones from "@/components/simulacion-rentabilidad/opciones/PanelSimulacionRentabilidadOpciones.vue"
+import PanelAnalisisOpciones from "@/components/simulacion-opciones/PanelAnalisisOpciones.vue"
+import PanelEstrategiaOpciones from "@/components/simulacion-opciones/PanelEstrategiaOpciones.vue"
 
 //Rentabilidad operaciones
 import PanelRentabilidadOperaciones from '@/components/informes/PanelRentabilidadOperaciones.vue';
@@ -289,6 +291,14 @@ const routes = [
             component: PanelSimulacionRentabilidadOpciones
           }
         ]
+      }, {
+        path: "/simulacion-analisis-opciones",
+        name: "simulacion-analisis-opciones",
+        component: PanelAnalisisOpciones
+      }, {
+        path: "/simulacion-estrategia-opciones",
+        name: "simulacion-estrategia-opciones",
+        component: PanelEstrategiaOpciones
       }, {
         path: "/rentabilidadoperaciones", component: PanelRentabilidadOperaciones,
         name: "rentabilidad-operaciones",
