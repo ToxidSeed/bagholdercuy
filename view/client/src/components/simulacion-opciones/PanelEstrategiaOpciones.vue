@@ -4,7 +4,7 @@
     <!-- TOOLBAR PRINCIPAL -->
     <q-toolbar class="bg-white rounded-borders shadow-1 q-mb-xs q-py-none" style="min-height: 40px;">
       <q-avatar icon="alt_route" color="blue-10" text-color="white" size="26px" class="q-mr-xs" />
-      <q-toolbar-title class="text-subtitle1 text-weight-bold text-blue-10">
+      <q-toolbar-title class="text-subtitle1 text-weight-bold text-dark">
         Simulación · Estrategias de Opciones
       </q-toolbar-title>
 
@@ -60,11 +60,11 @@
           
           <!-- Lado Izquierdo: Ticker, Tipo y Nombre -->
           <div class="col-auto row items-center q-gutter-xs no-wrap q-pl-xs">
-            <q-avatar size="28px" color="blue-10" text-color="white" class="text-weight-bold">
+            <q-avatar size="28px" color="blue-grey-10" text-color="white" class="text-weight-bold">
               {{ instrumento.symbol.substring(0, 2) }}
             </q-avatar>
-            <span class="text-subtitle1 text-weight-bolder text-blue-10">{{ instrumento.symbol }}</span>
-            <q-badge color="amber-8" text-color="dark" class="text-caption text-weight-bold">
+            <span class="text-subtitle1 text-weight-bolder text-dark">{{ instrumento.symbol }}</span>
+            <q-badge color="grey-3" text-color="grey-9" class="text-caption text-weight-bold border-grey">
               {{ instrumento.asset_type || 'STOCK' }}
             </q-badge>
             <span v-if="instrumento.name" class="text-caption text-grey-8 ellipsis gt-xs" style="max-width: 180px;">
@@ -75,7 +75,7 @@
               dense
               round
               size="sm"
-              color="primary"
+              color="grey-7"
               icon="swap_horiz"
               @click="abrir_asistente_nuevo_instrumento"
             >
@@ -89,7 +89,7 @@
             <!-- 1. Cierre Anterior -->
             <div class="metric-pill">
               <span class="text-caption text-grey-6 q-mr-xs">Cierre Ant:</span>
-              <span class="text-body2 text-weight-bolder text-grey-9">${{ formatear_numero(cotizacion.imp_cierre_anterior) }}</span>
+              <span class="text-body2 text-weight-bolder text-grey-9">{{ formatear_cotizacion(cotizacion.imp_cierre_anterior) }}</span>
             </div>
 
             <q-separator vertical class="gt-xs" />
@@ -97,32 +97,33 @@
             <!-- 2. Apertura -->
             <div class="metric-pill">
               <span class="text-caption text-grey-6 q-mr-xs">Apertura:</span>
-              <span class="text-body2 text-weight-bolder text-grey-9">${{ formatear_numero(cotizacion.imp_apertura) }}</span>
+              <span class="text-body2 text-weight-bolder text-grey-9">{{ formatear_cotizacion(cotizacion.imp_apertura) }}</span>
             </div>
 
             <q-separator vertical class="gt-xs" />
 
             <!-- 3. Máximo -->
             <div class="metric-pill">
-              <span class="text-caption text-green-9 q-mr-xs">Máx:</span>
-              <span class="text-body2 text-weight-bolder text-green-9">${{ formatear_numero(cotizacion.imp_maximo) }}</span>
+              <span class="text-caption text-grey-6 q-mr-xs">Máx:</span>
+              <span class="text-body2 text-weight-bolder text-grey-9">{{ formatear_cotizacion(cotizacion.imp_maximo) }}</span>
             </div>
 
             <q-separator vertical class="gt-xs" />
 
             <!-- 4. Mínimo -->
             <div class="metric-pill">
-              <span class="text-caption text-red-9 q-mr-xs">Mín:</span>
-              <span class="text-body2 text-weight-bolder text-red-9">${{ formatear_numero(cotizacion.imp_minimo) }}</span>
+              <span class="text-caption text-grey-6 q-mr-xs">Mín:</span>
+              <span class="text-body2 text-weight-bolder text-grey-9">{{ formatear_cotizacion(cotizacion.imp_minimo) }}</span>
             </div>
 
             <q-separator vertical class="gt-xs" />
 
             <!-- 5. Cierre o Último Valor -->
-            <div class="metric-pill bg-blue-1 q-px-sm q-py-xs rounded-borders row items-center">
-              <span class="text-caption text-blue-10 text-weight-bold q-mr-xs">Último:</span>
-              <span class="text-subtitle2 text-weight-bolder text-blue-10 q-mr-xs">${{ formatear_numero(cotizacion.imp_cierre) }}</span>
+            <div class="metric-pill bg-grey-2 q-px-sm q-py-xs rounded-borders row items-center border-grey">
+              <span class="text-caption text-grey-7 text-weight-bold q-mr-xs">Último:</span>
+              <span class="text-subtitle2 text-weight-bolder text-dark q-mr-xs">{{ formatear_cotizacion(cotizacion.imp_cierre) }}</span>
               <q-badge
+                v-if="cotizacion.imp_variacion !== null"
                 :color="cotizacion.imp_variacion >= 0 ? 'positive' : 'negative'"
                 dense
                 text-color="white"
@@ -130,7 +131,7 @@
               >
                 <q-icon :name="cotizacion.imp_variacion >= 0 ? 'arrow_drop_up' : 'arrow_drop_down'" size="14px" />
                 <span>{{ cotizacion.imp_variacion >= 0 ? '+' : '' }}{{ formatear_numero(cotizacion.imp_variacion) }}</span>
-                <span class="q-ml-xs">({{ cotizacion.pct_variacion >= 0 ? '+' : '' }}{{ formatear_numero(cotizacion.pct_variacion) }}%)</span>
+                <span v-if="cotizacion.pct_variacion !== null" class="q-ml-xs">({{ cotizacion.pct_variacion >= 0 ? '+' : '' }}{{ formatear_numero(cotizacion.pct_variacion) }}%)</span>
               </q-badge>
             </div>
 
@@ -142,7 +143,7 @@
               flat
               dense
               round
-              color="primary"
+              color="grey-7"
               icon="refresh"
               size="sm"
               :loading="cargando_cotizacion"
@@ -160,16 +161,55 @@
       <!-- ======================================================== -->
       <div class="row items-center justify-between q-my-xs q-px-xs">
         <div class="row items-center q-gutter-xs">
-          <q-icon name="view_week" color="blue-10" size="20px" />
-          <span class="text-subtitle1 text-weight-bold text-blue-10">
+          <q-icon name="view_week" color="grey-8" size="20px" />
+          <span class="text-subtitle1 text-weight-bold text-dark">
             Grupos de Estrategia
           </span>
-          <q-badge color="blue-10" text-color="white" class="text-caption text-weight-bold q-ml-xs">
+          <q-badge color="grey-3" text-color="grey-9" class="text-caption text-weight-bold q-ml-xs border-grey">
             {{ estrategias.length }} {{ estrategias.length === 1 ? 'grupo' : 'grupos' }}
           </q-badge>
         </div>
 
         <div class="row items-center q-gutter-xs">
+          <!-- Botón Guardar Estrategia Global -->
+          <q-btn
+            outline
+            dense
+            color="grey-8"
+            icon="save"
+            label="Guardar Estrategia"
+            class="q-px-sm text-weight-medium bg-white"
+            size="sm"
+            :loading="guardandoEstrategia"
+            :disable="estrategias.length === 0 || guardandoEstrategia"
+            @click="abrir_dialogo_guardar_estrategia()"
+          >
+            <q-tooltip>Guardar el estado actual de la estrategia (todos los grupos)</q-tooltip>
+          </q-btn>
+
+          <!-- Botón Ver Estrategias Guardadas -->
+          <q-btn
+            outline
+            dense
+            color="grey-8"
+            icon="bookmark"
+            label="Estrategias Guardadas"
+            size="sm"
+            class="q-px-sm text-weight-medium bg-white"
+            @click="dialogoEstrategiasGuardadasOpen = true"
+          >
+            <q-badge
+              v-if="estrategias_guardadas.length > 0"
+              color="blue-grey-9"
+              text-color="white"
+              floating
+              rounded
+            >
+              {{ estrategias_guardadas.length }}
+            </q-badge>
+            <q-tooltip>Ver y gestionar estrategias guardadas</q-tooltip>
+          </q-btn>
+
           <!-- Botón Añadir Nuevo Grupo de Estrategia -->
           <q-btn
             unelevated
@@ -185,9 +225,9 @@
 
           <!-- Toggle Expandir / Colapsar todos los grupos -->
           <q-btn
-            outline
+            flat
             dense
-            color="primary"
+            color="grey-7"
             :icon="todos_los_grupos_expandidos ? 'unfold_less' : 'unfold_more'"
             :label="todos_los_grupos_expandidos ? 'Colapsar Grupos' : 'Expandir Grupos'"
             size="sm"
@@ -211,90 +251,109 @@
           <!-- HEADER DEL GRUPO DE ESTRATEGIA -->
           <div class="grupo-header q-pa-sm bg-grey-1 row items-center justify-between no-wrap-md">
             
-            <!-- Izquierda: Identificador del Grupo, Nombre y Plantilla -->
-            <div class="col-12 col-md-auto row items-center q-gutter-xs no-wrap-sm">
+            <!-- Izquierda: Identificador del Grupo, Días a Expiración y Resumen Colapsado de Patas -->
+            <div class="col-12 col-md row items-center q-gutter-xs no-wrap-sm ellipsis">
               <!-- Badge Grupo X -->
-              <q-badge color="blue-10" text-color="white" class="text-caption text-weight-bold q-px-sm q-py-xs">
+              <q-badge color="grey-3" text-color="grey-9" class="text-caption text-weight-bold q-px-sm q-py-xs border-grey">
                 Grupo {{ gIdx + 1 }}
               </q-badge>
 
               <!-- Nombre editable de la Estrategia -->
-              <div class="row items-center no-wrap">
-                <span class="text-subtitle2 text-weight-bolder text-dark q-mx-xs">
-                  {{ estrategia.nombre }}
-                </span>
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="edit"
-                  size="xs"
-                  color="grey-7"
-                  @click="editar_nombre_estrategia(estrategia)"
-                >
-                  <q-tooltip>Renombrar esta estrategia</q-tooltip>
-                </q-btn>
+              <span
+                class="text-caption text-weight-bold text-dark cursor-pointer q-mx-xs hover-underline ellipsis"
+                style="max-width: 220px;"
+                @click="editar_nombre_estrategia(estrategia)"
+              >
+                {{ estrategia.nombre || ('Estrategia ' + (gIdx + 1)) }}
+                <q-icon name="edit" size="11px" class="text-grey-5 q-ml-xs" />
+                <q-tooltip>Click para renombrar estrategia</q-tooltip>
+              </span>
+
+              <!-- DÍAS PARA LA EXPIRACIÓN MÁS PRÓXIMA (DTE) -->
+              <div
+                v-if="calcular_dias_expiracion_minima(estrategia)"
+                class="badge-dias-exp-min row items-center no-wrap text-caption text-weight-bold cursor-pointer"
+                :class="calcular_dias_expiracion_minima(estrategia).badgeClass"
+              >
+                <q-icon name="schedule" size="13px" class="q-mr-xs" />
+                <span>{{ calcular_dias_expiracion_minima(estrategia).textoCorto }}</span>
+                <q-tooltip>{{ calcular_dias_expiracion_minima(estrategia).tooltip }}</q-tooltip>
               </div>
 
-              <!-- Selector de Plantilla de Estrategia -->
-              <q-select
-                v-model="estrategia.tipo"
-                :options="estrategias_disponibles"
-                dense
-                outlined
-                emit-value
-                map-options
-                color="blue-10"
-                class="q-ml-sm"
-                style="min-width: 220px;"
-                @input="tipo => aplicar_plantilla(estrategia, tipo)"
+              <!-- FÓRMULA DE LAS PATAS DE LA ESTRATEGIA CUANDO ESTÁ COLAPSADA -->
+              <div
+                v-if="!estrategia.expandida"
+                class="resumen-colapsado-badge row items-center no-wrap q-ml-xs q-px-sm q-py-xs rounded-borders text-caption text-weight-bolder font-mono cursor-pointer"
+                @click="estrategia.expandida = true"
               >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps" v-on="scope.itemEvents" dense>
-                    <q-item-section avatar>
-                      <q-icon :name="scope.opt.icon || 'timeline'" color="blue-10" size="18px" />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label class="text-weight-medium">{{ scope.opt.label }}</q-item-label>
-                      <q-item-label caption class="text-grey-7">{{ scope.opt.descripcion }}</q-item-label>
-                    </q-item-section>
-                    <q-item-section side>
-                      <q-badge
-                        :color="scope.opt.tipo_badge === 'BULLISH' ? 'positive' : scope.opt.tipo_badge === 'BEARISH' ? 'negative' : 'primary'"
-                        text-color="white"
-                        class="text-caption"
-                      >
-                        {{ scope.opt.tipo_badge }}
-                      </q-badge>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
-
-              <!-- Badge de Sesgo (Bullish/Bearish/Neutral) -->
-              <q-badge
-                :color="obtener_badge_tipo_color(estrategia.tipo)"
-                text-color="white"
-                class="text-caption text-weight-bold gt-xs"
-              >
-                {{ obtener_badge_tipo_label(estrategia.tipo) }}
-              </q-badge>
+                <q-icon name="notes" size="14px" class="q-mr-xs text-grey-7" />
+                <span class="ellipsis" style="max-width: 580px;">
+                  {{ resumen_patas_estrategia(estrategia) }}
+                </span>
+                <q-tooltip>Click para expandir | {{ resumen_patas_estrategia(estrategia) }}</q-tooltip>
+              </div>
             </div>
 
-            <!-- Derecha: Controles de Cards (Resumida / Expandida) y Acciones -->
+            <!-- Derecha: Métricas Financieras (Flujo + Mark + PnL alineados en columna) y Controles -->
             <div class="col-12 col-md-auto row items-center justify-end q-gutter-xs q-mt-xs q-mt-md-none">
               
+              <!-- BLOQUE FIJO DE PRECIOS Y RENDIMIENTO (ANTES DE VISTA CARDS) -->
+              <div
+                v-if="!estrategia.expandida"
+                class="row items-center no-wrap q-gutter-x-xs q-mr-sm"
+              >
+                <!-- 1. BADGE VISUAL DE FLUJO (PREMIUM: ENTRADA / SALIDA A SIMPLE VISTA) -->
+                <div
+                  v-if="resumen_flujo_estrategia(estrategia)"
+                  :class="resumen_flujo_estrategia(estrategia).badgeClass"
+                  class="text-caption text-weight-bolder q-px-sm q-py-xs font-mono row items-center no-wrap"
+                >
+                  <q-icon :name="resumen_flujo_estrategia(estrategia).icon" size="13px" class="q-mr-xs" />
+                  <span>{{ resumen_flujo_estrategia(estrategia).texto }}</span>
+                  <q-tooltip>{{ resumen_flujo_estrategia(estrategia).tooltip }}</q-tooltip>
+                </div>
+
+                <!-- 2. CÁPSULA UNIFICADA: MARK + P&L (OPCIÓN D) -->
+                <div
+                  v-if="calcular_valor_actual_estrategia(estrategia) && calcular_pnl_estrategia(estrategia)"
+                  class="capsula-mark-pnl row items-center no-wrap font-mono shadow-1 rounded-borders text-caption"
+                  :class="calcular_pnl_estrategia(estrategia).capsulaClass"
+                >
+                  <!-- Lado izquierdo: Mark (Precio actual de mercado) -->
+                  <div class="capsula-seccion-mark row items-center q-px-sm q-py-xs">
+                    <q-icon name="show_chart" size="13px" class="q-mr-xs text-grey-5" />
+                    <span>{{ calcular_valor_actual_estrategia(estrategia).texto }}</span>
+                  </div>
+
+                  <!-- Divisor sutil -->
+                  <div class="capsula-divisor"></div>
+
+                  <!-- Lado derecho: P&L (Ganando / Perdiendo) -->
+                  <div class="capsula-seccion-pnl row items-center q-px-sm q-py-xs text-weight-bolder">
+                    <span>{{ calcular_pnl_estrategia(estrategia).texto }}</span>
+                  </div>
+
+                  <q-tooltip>
+                    <div>{{ calcular_valor_actual_estrategia(estrategia).tooltip }}</div>
+                    <div class="text-weight-bold q-mt-xs">{{ calcular_pnl_estrategia(estrategia).tooltip }}</div>
+                  </q-tooltip>
+                </div>
+              </div>
+
+              <!-- Separador vertical discreto entre métricas de precio y controles -->
+              <q-separator v-if="!estrategia.expandida" vertical class="q-mr-xs gt-xs" style="height: 20px;" />
+
               <!-- TOGGLE VERSIÓN RESUMIDA VS EXPANDIDA DE LAS CARDS -->
               <div class="row items-center q-mr-xs">
-                <span class="text-caption text-grey-8 text-weight-medium q-mr-xs gt-xs">Vista Cards:</span>
+                <span class="text-caption text-grey-7 text-weight-medium q-mr-xs gt-xs">Vista:</span>
                 <q-btn-toggle
                   v-model="estrategia.vista_cards"
                   dense
                   unelevated
-                  toggle-color="blue-10"
+                  toggle-color="grey-9"
                   toggle-text-color="white"
-                  color="grey-3"
-                  text-color="grey-8"
+                  color="grey-2"
+                  text-color="grey-7"
                   size="xs"
                   class="text-weight-bold"
                   :options="[
@@ -319,14 +378,16 @@
                 <q-tooltip>Abrir asistente para agregar o modificar contratos a esta estrategia</q-tooltip>
               </q-btn>
 
+              <q-separator vertical class="q-mx-xs gt-xs" style="height: 18px;" />
+
               <!-- Botón Invertir Posiciones Long ⇄ Short -->
               <q-btn
-                outline
-                color="indigo-9"
-                icon="sync_alt"
+                flat
                 dense
+                round
+                color="grey-7"
+                icon="sync_alt"
                 size="sm"
-                class="q-px-xs"
                 :disable="estrategia.contratos.length === 0"
                 @click="invertir_posiciones(estrategia)"
               >
@@ -338,7 +399,7 @@
                 flat
                 dense
                 round
-                color="primary"
+                color="grey-7"
                 icon="content_copy"
                 size="sm"
                 @click="duplicar_estrategia(estrategia)"
@@ -352,9 +413,10 @@
                 flat
                 dense
                 round
-                color="negative"
+                color="grey-6"
                 icon="delete_outline"
                 size="sm"
+                class="hover-text-negative"
                 @click="eliminar_estrategia(estrategia.id)"
               >
                 <q-tooltip>Eliminar este grupo de estrategia</q-tooltip>
@@ -365,7 +427,7 @@
                 flat
                 dense
                 round
-                color="grey-8"
+                color="grey-7"
                 :icon="estrategia.expandida ? 'expand_less' : 'expand_more'"
                 size="sm"
                 @click="estrategia.expandida = !estrategia.expandida"
@@ -389,11 +451,16 @@
               <div class="col-12 col-sm-6 col-md-3">
                 <q-card flat bordered class="q-pa-xs bg-white text-center">
                   <div class="text-caption text-grey-7">Prima Neta (Débito / Crédito)</div>
-                  <div class="text-subtitle2 text-weight-bolder" :class="calcular_metricas(estrategia).debito_neto >= 0 ? 'text-primary' : 'text-positive'">
-                    {{ calcular_metricas(estrategia).debito_neto >= 0 ? '-$' : '+$' }}{{ Math.abs(calcular_metricas(estrategia).debito_neto).toFixed(2) }}
-                    <q-badge :color="calcular_metricas(estrategia).debito_neto >= 0 ? 'blue-9' : 'positive'" text-color="white" class="q-ml-xs text-caption">
+                  <div class="text-subtitle2 text-weight-bolder row items-center justify-center q-gutter-x-xs">
+                    <span :class="calcular_metricas(estrategia).debito_neto >= 0 ? 'text-red-9' : 'text-positive'">
+                      {{ calcular_metricas(estrategia).debito_neto >= 0 ? '-$' : '+$' }}{{ Math.abs(calcular_metricas(estrategia).debito_neto).toFixed(2) }}
+                    </span>
+                    <span
+                      class="text-caption text-weight-bold q-px-xs rounded-borders"
+                      :class="calcular_metricas(estrategia).debito_neto >= 0 ? 'pill-debito' : 'pill-credito'"
+                    >
                       {{ calcular_metricas(estrategia).debito_neto >= 0 ? 'DÉBITO' : 'CRÉDITO' }}
-                    </q-badge>
+                    </span>
                   </div>
                 </q-card>
               </div>
@@ -422,7 +489,7 @@
               <div class="col-12 col-sm-6 col-md-3">
                 <q-card flat bordered class="q-pa-xs bg-white text-center">
                   <div class="text-caption text-grey-7">Punto(s) de Equilibrio (BE)</div>
-                  <div class="text-subtitle2 text-weight-bolder text-blue-10">
+                  <div class="text-subtitle2 text-weight-bolder text-dark">
                     {{ calcular_metricas(estrategia).breakevens }}
                   </div>
                 </q-card>
@@ -439,9 +506,9 @@
                     Patas del {{ estrategia.nombre }} ({{ estrategia.contratos.length }} contratos)
                   </span>
                   <q-badge
-                    :color="estrategia.vista_cards === 'resumida' ? 'blue-8' : 'indigo-8'"
-                    text-color="white"
-                    class="q-ml-xs text-caption text-weight-bold"
+                    color="grey-3"
+                    text-color="grey-9"
+                    class="q-ml-xs text-caption text-weight-bold border-grey"
                   >
                     Modo {{ estrategia.vista_cards === 'resumida' ? 'Resumido' : 'Expandido' }}
                   </q-badge>
@@ -462,7 +529,7 @@
                   No hay contratos asignados a {{ estrategia.nombre }}
                 </div>
                 <div class="text-caption text-grey-6 q-mb-sm">
-                  Seleccione una plantilla predefinida o abra la cadena de opciones.
+                  Abra la cadena de opciones para agregar contratos a esta estrategia.
                 </div>
                 <q-btn
                   unelevated
@@ -489,31 +556,36 @@
                   <!-- ============================================== -->
                   <q-card
                     v-if="estrategia.vista_cards === 'resumida' && !contrato.forzar_expandida"
-                    class="pata-card-resumida shadow-1 full-height column justify-between"
+                    class="pata-card-resumida shadow-1 q-pa-xs column justify-between"
+                    :class="contrato.tipo === 'CALL' ? 'pata-borde-call' : 'pata-borde-put'"
                   >
-                    <!-- Cabecera de Card Resumida -->
-                    <div
-                      class="q-py-xs q-px-sm row items-center justify-between"
-                      :class="contrato.tipo === 'CALL' ? 'bg-blue-1 text-blue-10' : 'bg-purple-1 text-purple-10'"
-                    >
-                      <div class="row items-center no-wrap">
-                        <q-badge
-                          :color="contrato.tipo === 'CALL' ? 'blue-10' : 'purple-10'"
-                          text-color="white"
-                          class="text-weight-bolder text-caption"
+                    <!-- Fila 1: Badges Tipo, Posición, Strike, Vencimiento, ITM y Acciones -->
+                    <div class="row items-center justify-between no-wrap q-gutter-x-xs q-mb-xs">
+                      <div class="row items-center no-wrap q-gutter-x-xs">
+                        <span
+                          class="text-weight-bolder text-caption q-px-xs rounded-borders"
+                          :class="contrato.tipo === 'CALL' ? 'pill-call' : 'pill-put'"
                         >
                           {{ contrato.tipo }}
-                        </q-badge>
-                        <!-- BADGE LONG / SHORT (AZUL / ROJO) -->
-                        <q-badge
-                          :color="contrato.posicion === 'LONG' ? 'blue-10' : 'red-9'"
-                          text-color="white"
-                          class="text-weight-bolder text-caption q-ml-xs"
+                        </span>
+                        <!-- BADGE LONG / SHORT -->
+                        <span
+                          class="text-weight-bolder text-caption q-px-xs rounded-borders"
+                          :class="contrato.posicion === 'LONG' ? 'pill-long' : 'pill-short'"
                         >
                           {{ contrato.posicion }}
-                        </q-badge>
-                        <span class="text-caption text-weight-bolder text-dark q-ml-xs">
+                        </span>
+                        <span class="text-caption text-weight-bolder text-dark">
                           ${{ Number(contrato.strike).toFixed(2) }}
+                        </span>
+                        <span class="text-caption text-grey-8 text-weight-medium">
+                          {{ contrato.expiracion_corta || contrato.fch_vencimiento }}
+                        </span>
+                        <span
+                          class="text-caption q-px-xs rounded-borders text-weight-medium"
+                          :class="contrato.is_itm ? 'pill-itm' : 'pill-otm'"
+                        >
+                          {{ contrato.is_itm ? 'ITM' : 'OTM' }} · {{ formatear_dias_expiracion(contrato) }}
                         </span>
                       </div>
 
@@ -528,7 +600,7 @@
                           color="grey-7"
                           @click="$set(contrato, 'forzar_expandida', true)"
                         >
-                          <q-tooltip>Ver detalles expandidos de esta pata</q-tooltip>
+                          <q-tooltip>Ver detalles expandidos</q-tooltip>
                         </q-btn>
                         <!-- Botón remover pata -->
                         <q-btn
@@ -545,69 +617,52 @@
                       </div>
                     </div>
 
-                    <!-- Cuerpo Resumido -->
-                    <div class="q-pa-xs">
-                      <div class="row items-center justify-between text-caption q-px-xs">
-                        <span class="text-grey-7">Venc: <strong>{{ contrato.expiracion_corta || contrato.fch_vencimiento }}</strong></span>
-                        <q-badge
-                          :color="contrato.is_itm ? 'positive' : 'grey-5'"
-                          text-color="white"
-                          class="text-caption"
-                        >
-                          {{ contrato.is_itm ? 'ITM' : 'OTM' }} · {{ formatear_dias_expiracion(contrato) }}
-                        </q-badge>
-                      </div>
-                      <div class="row items-center justify-between text-caption q-px-xs q-mt-xs">
-                        <span class="text-grey-6">Last: <strong class="text-dark">${{ formatear_numero(contrato.last) }}</strong></span>
-                        <span class="text-grey-6">Δ: <strong class="text-dark">{{ calcular_delta(contrato) }}</strong></span>
-                      </div>
-                    </div>
+                    <!-- Fila 2: Selector LONG / SHORT, Cantidad y Flujo Estimado -->
+                    <div class="row items-center justify-between no-wrap q-gutter-x-xs bg-grey-1 q-px-xs rounded-borders" style="min-height: 26px;">
+                      <!-- Toggle LONG (Azul) / SHORT (Rojo) -->
+                      <q-btn-toggle
+                        v-model="contrato.posicion"
+                        dense
+                        unelevated
+                        :toggle-color="contrato.posicion === 'LONG' ? 'blue-10' : 'red-9'"
+                        toggle-text-color="white"
+                        color="grey-3"
+                        text-color="grey-8"
+                        :options="[
+                          { label: 'LONG', value: 'LONG' },
+                          { label: 'SHORT', value: 'SHORT' }
+                        ]"
+                        size="xs"
+                        class="text-weight-bold"
+                      />
 
-                    <!-- Footer Resumido: Posición Long/Short, Cantidad y Flujo -->
-                    <div class="bg-grey-1 q-pa-xs rounded-borders-bottom">
-                      <div class="row items-center justify-between no-wrap q-gutter-xs">
-                        <!-- TOGGLE LONG (AZUL) / SHORT (ROJO) -->
-                        <q-btn-toggle
-                          v-model="contrato.posicion"
+                      <!-- Cantidad -->
+                      <div class="row items-center no-wrap">
+                        <q-btn
+                          flat
+                          round
                           dense
-                          unelevated
-                          :toggle-color="contrato.posicion === 'LONG' ? 'blue-10' : 'red-9'"
-                          toggle-text-color="white"
-                          color="grey-3"
-                          text-color="grey-8"
-                          :options="[
-                            { label: 'LONG', value: 'LONG' },
-                            { label: 'SHORT', value: 'SHORT' }
-                          ]"
                           size="xs"
-                          class="text-weight-bold"
+                          icon="remove"
+                          @click="decrementar_cantidad(contrato)"
                         />
+                        <span class="text-caption text-weight-bold q-px-xs">{{ contrato.cantidad || 1 }}</span>
+                        <q-btn
+                          flat
+                          round
+                          dense
+                          size="xs"
+                          icon="add"
+                          @click="incrementar_cantidad(contrato)"
+                        />
+                      </div>
 
-                        <!-- Cantidad -->
-                        <div class="row items-center no-wrap">
-                          <q-btn
-                            flat
-                            round
-                            dense
-                            size="xs"
-                            icon="remove"
-                            @click="decrementar_cantidad(contrato)"
-                          />
-                          <span class="text-caption text-weight-bold q-px-xs">{{ contrato.cantidad || 1 }}</span>
-                          <q-btn
-                            flat
-                            round
-                            dense
-                            size="xs"
-                            icon="add"
-                            @click="incrementar_cantidad(contrato)"
-                          />
-                        </div>
-
-                        <!-- Flujo Estimado -->
-                        <div class="text-caption text-weight-bolder" :class="contrato.posicion === 'LONG' ? 'text-blue-10' : 'text-red-9'">
-                          {{ contrato.posicion === 'LONG' ? '-$' : '+$' }}{{ calcular_prima_total(contrato) }}
-                        </div>
+                      <!-- Flujo Estimado (Azul si LONG / Rojo si SHORT) -->
+                      <div
+                        class="text-caption text-weight-bolder"
+                        :class="contrato.posicion === 'LONG' ? 'text-blue-10' : 'text-red-9'"
+                      >
+                        {{ contrato.posicion === 'LONG' ? '-$' : '+$' }}{{ calcular_prima_total(contrato) }}
                       </div>
                     </div>
                   </q-card>
@@ -621,31 +676,28 @@
                   >
                     <!-- Header de la Pata Expandida -->
                     <q-card-section
-                      class="q-py-xs q-px-sm row items-center justify-between"
-                      :class="contrato.tipo === 'CALL' ? 'bg-blue-1 text-blue-10' : 'bg-purple-1 text-purple-10'"
+                      class="q-py-xs q-px-sm row items-center justify-between bg-grey-1"
+                      style="border-bottom: 1px solid #edf2f7;"
                     >
                       <div class="row items-center no-wrap">
                         <q-icon
                           :name="contrato.tipo === 'CALL' ? 'call_made' : 'call_received'"
-                          size="18px"
-                          class="q-mr-xs"
+                          size="16px"
+                          class="q-mr-xs text-grey-7"
                         />
-                        <q-badge
-                          :color="contrato.tipo === 'CALL' ? 'blue-10' : 'purple-10'"
-                          text-color="white"
-                          class="text-weight-bolder text-caption"
+                        <span
+                          class="text-weight-bolder text-caption q-px-xs rounded-borders"
+                          :class="contrato.tipo === 'CALL' ? 'pill-call' : 'pill-put'"
                         >
                           {{ contrato.tipo }}
-                        </q-badge>
-                        <!-- BADGE LONG / SHORT (AZUL / ROJO) -->
-                        <q-badge
-                          :color="contrato.posicion === 'LONG' ? 'blue-10' : 'red-9'"
-                          text-color="white"
-                          class="text-weight-bolder text-caption q-ml-xs"
+                        </span>
+                        <span
+                          class="text-weight-bolder text-caption q-px-xs rounded-borders q-ml-xs"
+                          :class="contrato.posicion === 'LONG' ? 'pill-long' : 'pill-short'"
                         >
                           {{ contrato.posicion }}
-                        </q-badge>
-                        <span class="text-caption text-weight-bold q-ml-xs">
+                        </span>
+                        <span class="text-caption text-weight-bold text-grey-8 q-ml-xs">
                           Pata #{{ idx + 1 }}
                         </span>
                       </div>
@@ -686,13 +738,12 @@
                         <div class="text-caption text-weight-bold font-mono text-grey-9 ellipsis" style="max-width: 170px;">
                           {{ contrato.cod_symbol }}
                         </div>
-                        <q-badge
-                          :color="contrato.is_itm ? 'positive' : 'grey-6'"
-                          text-color="white"
-                          class="text-caption text-weight-bold"
+                        <span
+                          class="text-caption text-weight-medium q-px-xs rounded-borders"
+                          :class="contrato.is_itm ? 'pill-itm' : 'pill-otm'"
                         >
                           {{ contrato.is_itm ? 'ITM' : 'OTM' }}
-                        </q-badge>
+                        </span>
                       </div>
 
                       <!-- Strike y Fecha de Vencimiento -->
@@ -736,7 +787,7 @@
                         </div>
                         <div class="col-4">
                           <div class="text-caption text-grey-6">Last</div>
-                          <div class="text-weight-bolder text-primary">${{ formatear_numero(contrato.last) }}</div>
+                          <div class="text-weight-bolder text-dark">${{ formatear_numero(contrato.last) }}</div>
                         </div>
                       </div>
 
@@ -809,57 +860,7 @@
               </div>
             </div>
 
-            <!-- SUB-SECCIÓN 3: SIMULADOR DE PAYOFF DE ESTA ESTRATEGIA -->
-            <div v-if="estrategia.contratos.length > 0" class="q-mt-sm">
-              <q-expansion-item
-                dense
-                dense-toggle
-                header-class="text-weight-bold text-caption text-blue-10 bg-blue-1 rounded-borders"
-                icon="show_chart"
-                label="Simulador de Payoff a Expiración para este Grupo"
-              >
-                <q-card flat bordered class="q-pa-sm q-mt-xs bg-white">
-                  <div class="row items-center q-col-gutter-md">
-                    <!-- Slider interactivo de precio -->
-                    <div class="col-12 col-md-7">
-                      <div class="row items-center justify-between text-caption text-grey-8 q-mb-xs">
-                        <span>Precio proyectado del subyacente: <strong class="text-primary text-subtitle2">${{ (estrategia.precio_simulado || cotizacion.imp_cierre).toFixed(2) }}</strong></span>
-                        <span>Variación: <strong :class="calcular_variacion_precio_simulado(estrategia) >= 0 ? 'text-positive' : 'text-negative'">{{ calcular_variacion_precio_simulado(estrategia) >= 0 ? '+' : '' }}{{ calcular_variacion_precio_simulado(estrategia).toFixed(2) }}%</strong></span>
-                      </div>
-                      <q-slider
-                        v-model="estrategia.precio_simulado"
-                        :min="rango_precio_simulado.min"
-                        :max="rango_precio_simulado.max"
-                        :step="0.5"
-                        label
-                        color="blue-10"
-                      />
-                      <div class="row justify-between text-caption text-grey-6">
-                        <span>Min: ${{ rango_precio_simulado.min.toFixed(2) }}</span>
-                        <span class="text-weight-bold text-dark">Actual: ${{ cotizacion.imp_cierre.toFixed(2) }}</span>
-                        <span>Max: ${{ rango_precio_simulado.max.toFixed(2) }}</span>
-                      </div>
-                    </div>
 
-                    <!-- Resultado Proyectado -->
-                    <div class="col-12 col-md-5">
-                      <q-card flat bordered class="q-pa-sm text-center" :class="calcular_pnl(estrategia) >= 0 ? 'bg-green-1' : 'bg-red-1'">
-                        <div class="text-caption text-grey-8">Ganancia / Pérdida Proyectada (P&L):</div>
-                        <div class="text-h6 text-weight-bolder" :class="calcular_pnl(estrategia) >= 0 ? 'text-positive' : 'text-negative'">
-                          {{ calcular_pnl(estrategia) >= 0 ? '+$' : '-$' }}{{ Math.abs(calcular_pnl(estrategia)).toFixed(2) }}
-                        </div>
-                        <div class="text-caption text-grey-7">
-                          Retorno (ROI):
-                          <strong :class="calcular_roi(estrategia) >= 0 ? 'text-positive' : 'text-negative'">
-                            {{ calcular_roi(estrategia) >= 0 ? '+' : '' }}{{ calcular_roi(estrategia).toFixed(1) }}%
-                          </strong>
-                        </div>
-                      </q-card>
-                    </div>
-                  </div>
-                </q-card>
-              </q-expansion-item>
-            </div>
 
           </div>
         </q-card>
@@ -875,6 +876,315 @@
       @confirmar="on_confirmar_asistente"
     />
 
+    <!-- ======================================================== -->
+    <!-- DIÁLOGO PARA GUARDAR ESTRATEGIA                          -->
+    <!-- ======================================================== -->
+    <q-dialog v-model="dialogoGuardarOpen" persistent>
+      <q-card style="min-width: 520px; max-width: 660px; width: 92vw;" class="shadow-4">
+        <!-- Cabecera del diálogo -->
+        <q-toolbar class="bg-blue-grey-10 text-white q-py-xs">
+          <q-avatar icon="save" color="blue-grey-8" text-color="white" size="32px" />
+          <q-toolbar-title class="text-subtitle1 text-weight-bold">
+            Guardar Estrategia de Opciones
+          </q-toolbar-title>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-toolbar>
+
+        <q-card-section class="q-pt-md q-pb-xs">
+          <!-- Campos de Entrada -->
+          <div class="row q-col-gutter-sm items-center q-mb-sm">
+            <div class="col-12 col-md-8">
+              <q-input
+                v-model="formularioGuardar.nombre"
+                label="Nombre de la Estrategia *"
+                outlined
+                dense
+                color="blue-10"
+                autofocus
+                placeholder="Ej: Estrategia SPY Multi-Grupo"
+                :rules="[val => !!val && val.trim().length > 0 || 'El nombre es obligatorio']"
+                @keydown.enter.prevent="confirmar_guardar_estrategia"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="label" color="blue-10" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <q-input
+                v-model="formularioGuardar.etiqueta"
+                label="Etiqueta / Categoría"
+                outlined
+                dense
+                color="blue-10"
+                placeholder="Ej: Alcista, Spread, Demo..."
+                @keydown.enter.prevent="confirmar_guardar_estrategia"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="sell" color="blue-10" />
+                </template>
+              </q-input>
+            </div>
+          </div>
+
+          <!-- Resumen del Estado de la Estrategia (Todos los Grupos) -->
+          <div class="q-pa-sm bg-grey-1 rounded-borders border-grey q-mb-sm">
+            <div class="row items-center justify-between text-caption q-mb-xs">
+              <div class="row items-center q-gutter-x-xs">
+                <span class="text-weight-bolder text-blue-10">
+                  {{ instrumento ? instrumento.symbol : 'N/A' }}
+                </span>
+                <span v-if="instrumento && instrumento.name" class="text-grey-7 gt-xs">
+                  ({{ instrumento.name }})
+                </span>
+                <span class="text-grey-7">
+                  · Último: {{ formatear_cotizacion(cotizacion.imp_cierre) }}
+                </span>
+              </div>
+              <div class="row items-center q-gutter-x-xs">
+                <q-badge color="grey-3" text-color="grey-9" class="text-weight-bold border-grey">
+                  {{ estrategias.length }} {{ estrategias.length === 1 ? 'Grupo' : 'Grupos' }}
+                </q-badge>
+                <q-badge color="blue-grey-1" text-color="blue-grey-9" class="text-weight-bold border-grey">
+                  {{ total_contratos_simulacion }} {{ total_contratos_simulacion === 1 ? 'Contrato' : 'Contratos' }}
+                </q-badge>
+              </div>
+            </div>
+
+            <q-separator class="q-my-xs" />
+
+            <!-- Lista y detalle de cada grupo a guardar -->
+            <div style="max-height: 200px; overflow-y: auto;" class="q-pr-xs">
+              <div
+                v-for="(grupo, idx) in estrategias"
+                :key="grupo.id"
+                class="q-py-xs"
+                :class="{ 'border-bottom-light': idx < estrategias.length - 1 }"
+              >
+                <div class="row items-center justify-between text-caption">
+                  <div class="row items-center q-gutter-x-xs">
+                    <q-badge color="blue-grey-9" text-color="white" class="text-caption text-weight-bold">
+                      G{{ idx + 1 }}
+                    </q-badge>
+                    <span class="text-weight-bold text-dark">{{ grupo.nombre || `Grupo ${idx + 1}` }}</span>
+                    <span class="text-grey-6 text-caption">({{ (grupo.contratos || []).length }} patas)</span>
+                  </div>
+                  <div v-if="resumen_flujo_estrategia(grupo)" class="text-caption">
+                    <span
+                      class="text-weight-bold"
+                      :class="resumen_flujo_estrategia(grupo).tipo === 'CREDITO' ? 'text-positive' : 'text-negative'"
+                    >
+                      {{ resumen_flujo_estrategia(grupo).texto }}
+                    </span>
+                  </div>
+                </div>
+                <div class="font-mono text-caption text-grey-8 q-ml-sm q-mt-xs text-weight-medium">
+                  {{ resumen_patas_estrategia(grupo) || 'Sin contratos' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notas opcionales -->
+          <q-input
+            v-model="formularioGuardar.notas"
+            label="Notas / Observaciones (Opcional)"
+            outlined
+            dense
+            type="textarea"
+            rows="2"
+            color="blue-10"
+            placeholder="Añada hipótesis, objetivo de ganancia, stop-loss o fecha estimada..."
+          >
+            <template v-slot:prepend>
+              <q-icon name="edit_note" color="blue-10" />
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-separator class="q-my-xs" />
+
+        <q-card-actions align="right" class="q-px-md q-pb-sm">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn
+            unelevated
+            icon="save"
+            label="Confirmar y Guardar"
+            color="blue-10"
+            class="text-weight-bold q-px-md"
+            :loading="guardandoEstrategia"
+            :disable="guardandoEstrategia"
+            @click="confirmar_guardar_estrategia"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- ======================================================== -->
+    <!-- DIÁLOGO DE ESTRATEGIAS GUARDADAS                         -->
+    <!-- ======================================================== -->
+    <q-dialog v-model="dialogoEstrategiasGuardadasOpen">
+      <q-card style="min-width: 650px; max-width: 850px; width: 92vw;" class="shadow-4">
+        <q-toolbar class="bg-blue-grey-10 text-white q-py-xs">
+          <q-avatar icon="bookmark" color="blue-grey-8" text-color="white" size="32px" />
+          <q-toolbar-title class="text-subtitle1 text-weight-bold">
+            Estrategias Guardadas
+          </q-toolbar-title>
+          <q-badge color="grey-3" text-color="grey-9" class="text-weight-bold q-mr-sm border-grey">
+            {{ estrategias_guardadas.length }} {{ estrategias_guardadas.length === 1 ? 'guardada' : 'guardadas' }}
+          </q-badge>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-toolbar>
+
+        <!-- Barra de búsqueda / filtro -->
+        <div class="q-pa-sm bg-grey-1 row items-center justify-between">
+          <q-input
+            v-model="filtroEstrategiasGuardadas"
+            dense
+            outlined
+            clearable
+            placeholder="Buscar por símbolo, nombre, etiqueta o patas..."
+            class="col-12 col-sm-8 bg-white"
+            color="blue-10"
+          >
+            <template v-slot:prepend>
+              <q-icon name="search" size="18px" color="grey-7" />
+            </template>
+          </q-input>
+
+          <span class="text-caption text-grey-6 gt-xs">
+            Persistido en la base de datos
+          </span>
+        </div>
+
+        <q-separator />
+
+        <!-- Lista de estrategias -->
+        <q-card-section class="q-pa-none" style="max-height: 60vh; overflow-y: auto;">
+          <div v-if="cargandoEstrategiasGuardadas" class="text-center q-pa-xl text-grey-7">
+            <q-spinner color="blue-10" size="2em" />
+            <div class="text-caption q-mt-sm">Cargando estrategias guardadas...</div>
+          </div>
+
+          <!-- Estado vacío -->
+          <div
+            v-else-if="estrategias_guardadas_filtradas.length === 0"
+            class="text-center q-pa-xl text-grey-7"
+          >
+            <q-avatar size="54px" color="blue-1" text-color="blue-10" class="q-mb-sm">
+              <q-icon name="bookmark_border" size="32px" />
+            </q-avatar>
+            <div class="text-subtitle2 text-weight-bold text-dark q-mb-xs">
+              {{ estrategias_guardadas.length === 0 ? 'Aún no tiene estrategias guardadas' : 'No se encontraron estrategias con ese filtro' }}
+            </div>
+            <div class="text-caption text-grey-6" style="max-width: 420px; margin: 0 auto;">
+              {{ estrategias_guardadas.length === 0 ? 'Para guardar una estrategia, configure los grupos en el simulador y haga clic en el botón "Guardar Estrategia".' : 'Intente buscar con otro término.' }}
+            </div>
+          </div>
+
+          <!-- Items guardados -->
+          <q-list v-else separator>
+            <q-item
+              v-for="guardada in estrategias_guardadas_filtradas"
+              :key="guardada.id"
+              class="q-py-sm hover-bg-grey-1"
+            >
+              <q-item-section avatar top>
+                <q-avatar color="blue-10" text-color="white" size="36px" class="text-weight-bold">
+                  {{ guardada.instrumento ? guardada.instrumento.symbol.substring(0, 3) : 'EST' }}
+                </q-avatar>
+              </q-item-section>
+
+              <q-item-section top>
+                <!-- Nombre, Ticker, Tipo y Fecha -->
+                <div class="row items-center q-gutter-x-xs no-wrap q-mb-xs">
+                  <span class="text-subtitle2 text-weight-bolder text-dark ellipsis">
+                    {{ guardada.nombre }}
+                  </span>
+                  <q-badge color="grey-3" text-color="grey-9" class="text-caption text-weight-bold border-grey">
+                    {{ guardada.instrumento ? guardada.instrumento.symbol : 'N/A' }}
+                  </q-badge>
+                  <q-badge v-if="guardada.tipo" color="blue-grey-1" text-color="blue-grey-9" class="text-caption text-weight-bold border-grey">
+                    {{ guardada.tipo }}
+                  </q-badge>
+                  <q-badge color="grey-3" text-color="grey-9" class="text-caption border-grey">
+                    {{ guardada.grupos ? guardada.grupos.length : 1 }} {{ (guardada.grupos ? guardada.grupos.length : 1) === 1 ? 'grupo' : 'grupos' }}
+                  </q-badge>
+                  <q-space />
+                  <span class="text-caption text-grey-6">
+                    <q-icon name="event" size="12px" class="q-mr-xs" />
+                    {{ guardada.fecha_corta || guardada.fecha_guardado }}
+                  </span>
+                </div>
+
+                <!-- Resumen de patas / fórmula -->
+                <div class="font-mono text-caption text-weight-bold text-grey-9 bg-grey-2 q-px-xs q-py-xs rounded-borders q-mb-xs">
+                  {{ guardada.resumen_patas }}
+                </div>
+
+                <!-- Métricas y flujo -->
+                <div class="row items-center q-gutter-x-sm text-caption">
+                  <span v-if="guardada.resumen_flujo" class="text-weight-bold text-dark">
+                    Flujo: {{ guardada.resumen_flujo }}
+                  </span>
+                  <span v-if="guardada.metricas && guardada.metricas.breakevens" class="text-grey-7">
+                    | BE: {{ guardada.metricas.breakevens }}
+                  </span>
+                  <span v-if="guardada.cotizacion_referencia" class="text-grey-7">
+                    | Ref: ${{ formatear_numero(guardada.cotizacion_referencia) }}
+                  </span>
+                  <span class="text-weight-medium text-grey-7">
+                    · {{ contar_total_contratos_guardada(guardada) }} patas
+                  </span>
+                </div>
+
+                <!-- Notas si existen -->
+                <div v-if="guardada.notas" class="text-caption text-grey-8 italic q-mt-xs bg-grey-2 q-px-xs rounded-borders">
+                  <q-icon name="sticky_note_2" size="12px" class="q-mr-xs text-grey-6" />
+                  {{ guardada.notas }}
+                </div>
+              </q-item-section>
+
+              <!-- Acciones: Cargar y Eliminar -->
+              <q-item-section side top class="q-pl-sm column justify-center q-gutter-y-xs">
+                <q-btn
+                  unelevated
+                  color="blue-10"
+                  icon="file_download"
+                  label="Cargar"
+                  size="sm"
+                  class="text-weight-bold"
+                  @click="cargar_estrategia_guardada(guardada)"
+                >
+                  <q-tooltip>Cargar el estado completo de esta estrategia en el simulador</q-tooltip>
+                </q-btn>
+
+                <q-btn
+                  flat
+                  dense
+                  color="negative"
+                  icon="delete_outline"
+                  label="Eliminar"
+                  size="xs"
+                  class="q-px-xs"
+                  @click="eliminar_estrategia_guardada(guardada.id)"
+                >
+                  <q-tooltip>Eliminar esta estrategia guardada</q-tooltip>
+                </q-btn>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-actions align="right" class="q-pa-sm">
+          <q-btn flat label="Cerrar" color="grey-8" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </div>
 </template>
 
@@ -882,6 +1192,7 @@
 import WinAsistenteSeleccionOpciones from "./WinAsistenteSeleccionOpciones.vue"
 import Cotizacion from "@/api/cotizacion.js"
 import VariacionSemanal from "@/api/variacion-semanal.js"
+import SimulacionEstrategiaApi from "@/api/simulacion-estrategia.js"
 import moment from "moment"
 import _ from "lodash"
 
@@ -897,148 +1208,68 @@ export default {
       asistenteContratosIniciales: [],
       asistenteEstrategiaId: null,
 
+      // Modales de Guardar y Ver Estrategias Guardadas
+      dialogoGuardarOpen: false,
+      dialogoEstrategiasGuardadasOpen: false,
+      filtroEstrategiasGuardadas: "",
+      estrategias_guardadas: [],
+      guardandoEstrategia: false,
+      cargandoEstrategiasGuardadas: false,
+      formularioGuardar: {
+        nombre: "",
+        etiqueta: "ESTRATEGIA",
+        notas: ""
+      },
+
       // Instrumento financiero actualmente seleccionado
       instrumento: null,
 
       // Valores de cotización del instrumento
       cotizacion: {
-        imp_cierre_anterior: 0,
-        imp_apertura: 0,
-        imp_maximo: 0,
-        imp_minimo: 0,
-        imp_cierre: 0,
-        imp_variacion: 0,
-        pct_variacion: 0
+        imp_cierre_anterior: null,
+        imp_apertura: null,
+        imp_maximo: null,
+        imp_minimo: null,
+        imp_cierre: null,
+        imp_variacion: null,
+        pct_variacion: null
       },
       cargando_cotizacion: false,
-
-      // Opciones de plantillas de estrategias
-      estrategias_disponibles: [
-        {
-          label: "Personalizada (Custom)",
-          value: "CUSTOM",
-          icon: "tune",
-          tipo_badge: "NEUTRAL",
-          descripcion: "Combine libremente opciones CALL y PUT en posiciones Long o Short"
-        },
-        {
-          label: "Bull Call Spread (Vertical)",
-          value: "BULL_CALL_SPREAD",
-          icon: "trending_up",
-          tipo_badge: "BULLISH",
-          descripcion: "Comprar Call ATM y Vender Call OTM con misma expiración"
-        },
-        {
-          label: "Bear Put Spread (Vertical)",
-          value: "BEAR_PUT_SPREAD",
-          icon: "trending_down",
-          tipo_badge: "BEARISH",
-          descripcion: "Comprar Put ATM y Vender Put OTM con misma expiración"
-        },
-        {
-          label: "Iron Condor",
-          value: "IRON_CONDOR",
-          icon: "compress",
-          tipo_badge: "NEUTRAL",
-          descripcion: "Estrategia no direccional de 4 patas: Bull Put Spread + Bear Call Spread"
-        },
-        {
-          label: "Covered Call (Venta cubierta)",
-          value: "COVERED_CALL",
-          icon: "shield",
-          tipo_badge: "BULLISH",
-          descripcion: "Posición Long Stock + Venta de Call OTM para generar ingresos"
-        },
-        {
-          label: "Bull Put Spread (Crédito)",
-          value: "BULL_PUT_SPREAD",
-          icon: "arrow_upward",
-          tipo_badge: "BULLISH",
-          descripcion: "Vender Put OTM y Comprar Put más OTM para proteger"
-        },
-        {
-          label: "Bear Call Spread (Crédito)",
-          value: "BEAR_CALL_SPREAD",
-          icon: "arrow_downward",
-          tipo_badge: "BEARISH",
-          descripcion: "Vender Call OTM y Comprar Call más OTM para proteger"
-        },
-        {
-          label: "Long Straddle",
-          value: "LONG_STRADDLE",
-          icon: "expand",
-          tipo_badge: "VOLATILIDAD",
-          descripcion: "Comprar Call y Put en el mismo Strike para alta volatilidad"
-        },
-        {
-          label: "Long Strangle",
-          value: "LONG_STRANGLE",
-          icon: "unfold_more",
-          tipo_badge: "VOLATILIDAD",
-          descripcion: "Comprar Call OTM y Put OTM buscando gran movimiento"
-        }
-      ],
 
       // LISTA DE GRUPOS DE ESTRATEGIAS (Grupo 1: Estrategia 1, Grupo 2: Estrategia 2, etc.)
       estrategias: []
     }
   },
   computed: {
-    rango_precio_simulado() {
-      const base = this.cotizacion.imp_cierre || 100
-      return {
-        min: Number((base * 0.8).toFixed(2)),
-        max: Number((base * 1.2).toFixed(2))
-      }
-    },
     todos_los_grupos_expandidos() {
       if (this.estrategias.length === 0) return false
       return this.estrategias.every(e => e.expandida)
+    },
+    total_contratos_simulacion() {
+      return (this.estrategias || []).reduce(
+        (acc, e) => acc + (e.contratos ? e.contratos.length : 0),
+        0
+      )
+    },
+    estrategias_guardadas_filtradas() {
+      if (!this.filtroEstrategiasGuardadas || this.filtroEstrategiasGuardadas.trim() === "") {
+        return this.estrategias_guardadas
+      }
+      const q = this.filtroEstrategiasGuardadas.toLowerCase().trim()
+      return this.estrategias_guardadas.filter(item => {
+        const nom = (item.nombre || "").toLowerCase()
+        const sym = (item.instrumento && item.instrumento.symbol ? item.instrumento.symbol : "").toLowerCase()
+        const tipo = (item.tipo || "").toLowerCase()
+        const notas = (item.notas || "").toLowerCase()
+        const resumen = (item.resumen_patas || "").toLowerCase()
+        return nom.includes(q) || sym.includes(q) || tipo.includes(q) || notas.includes(q) || resumen.includes(q)
+      })
     }
   },
   created() {
-    // Si no hay instrumento, preconfiguramos un estado amigable
-    this.inicializar_grupos_demo("SPY")
+    this.cargar_estrategias_guardadas()
   },
   methods: {
-    inicializar_grupos_demo(symbol) {
-      if (!this.instrumento) {
-        this.instrumento = {
-          symbol: symbol || "SPY",
-          name: "SPDR S&P 500 ETF Trust",
-          asset_type: "ETF"
-        }
-        this.cargar_cotizacion(this.instrumento.symbol)
-      }
-
-      const basePrice = this.cotizacion.imp_cierre || 582.40
-
-      // Grupo 1: Estrategia 1 (Bull Call Spread)
-      const e1 = {
-        id: 1,
-        nombre: "Estrategia 1",
-        tipo: "BULL_CALL_SPREAD",
-        expandida: true,
-        vista_cards: "expandida",
-        contratos: [],
-        precio_simulado: basePrice
-      }
-
-      // Grupo 2: Estrategia 2 (Iron Condor)
-      const e2 = {
-        id: 2,
-        nombre: "Estrategia 2",
-        tipo: "IRON_CONDOR",
-        expandida: true,
-        vista_cards: "resumida",
-        contratos: [],
-        precio_simulado: basePrice
-      }
-
-      this.estrategias = [e1, e2]
-      this.aplicar_plantilla(e1, "BULL_CALL_SPREAD")
-      this.aplicar_plantilla(e2, "IRON_CONDOR")
-    },
     abrir_asistente_nuevo_instrumento() {
       this.asistenteInstrumentoInicial = null
       this.asistenteContratosIniciales = []
@@ -1093,7 +1324,7 @@ export default {
         expandida: true,
         vista_cards: "expandida",
         contratos: [],
-        precio_simulado: this.cotizacion.imp_cierre || 100
+        precio_simulado: this.cotizacion.imp_cierre
       }
       this.estrategias.push(nueva)
     },
@@ -1105,7 +1336,7 @@ export default {
         expandida: true,
         vista_cards: "expandida",
         contratos: contratos || [],
-        precio_simulado: this.cotizacion.imp_cierre || 100
+        precio_simulado: this.cotizacion.imp_cierre
       }
       this.estrategias.push(nueva)
     },
@@ -1119,7 +1350,9 @@ export default {
         expandida: true,
         vista_cards: estrategia.vista_cards || "expandida",
         contratos: clonContratos,
-        precio_simulado: estrategia.precio_simulado || this.cotizacion.imp_cierre
+        precio_simulado: estrategia.precio_simulado !== undefined
+          ? estrategia.precio_simulado
+          : this.cotizacion.imp_cierre
       }
       this.estrategias.push(clon)
     },
@@ -1160,205 +1393,7 @@ export default {
         contrato.cantidad -= 1
       }
     },
-    aplicar_plantilla(estrategia, tipoEstrategia) {
-      if (!this.instrumento) return
-      const basePrice = this.cotizacion.imp_cierre || 100
-      const expDate = moment().add(30, "days").format("YYYY-MM-DD")
-      const expShort = moment().add(30, "days").format("DD MMM")
-      const sym = this.instrumento.symbol
 
-      if (tipoEstrategia === "BULL_CALL_SPREAD") {
-        const s1 = Math.round(basePrice)
-        const s2 = Math.round(basePrice * 1.05)
-        estrategia.contratos = [
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(s1 * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: s1,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 3.20,
-            ask: 3.40,
-            last: 3.30,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: true,
-            delta: "+0.65",
-            theta: "-0.04"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(s2 * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: s2,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 1.10,
-            ask: 1.25,
-            last: 1.18,
-            posicion: "SHORT",
-            cantidad: 1,
-            is_itm: false,
-            delta: "+0.32",
-            theta: "-0.03"
-          }
-        ]
-      } else if (tipoEstrategia === "BEAR_PUT_SPREAD") {
-        const s1 = Math.round(basePrice)
-        const s2 = Math.round(basePrice * 0.95)
-        estrategia.contratos = [
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}P${String(s1 * 1000).padStart(8, "0")}`,
-            tipo: "PUT",
-            strike: s1,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 3.10,
-            ask: 3.30,
-            last: 3.20,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: false,
-            delta: "-0.48",
-            theta: "-0.04"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}P${String(s2 * 1000).padStart(8, "0")}`,
-            tipo: "PUT",
-            strike: s2,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 1.05,
-            ask: 1.20,
-            last: 1.15,
-            posicion: "SHORT",
-            cantidad: 1,
-            is_itm: false,
-            delta: "-0.24",
-            theta: "-0.02"
-          }
-        ]
-      } else if (tipoEstrategia === "IRON_CONDOR") {
-        const sPutBuy = Math.round(basePrice * 0.90)
-        const sPutSell = Math.round(basePrice * 0.95)
-        const sCallSell = Math.round(basePrice * 1.05)
-        const sCallBuy = Math.round(basePrice * 1.10)
-        estrategia.contratos = [
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}P${String(sPutBuy * 1000).padStart(8, "0")}`,
-            tipo: "PUT",
-            strike: sPutBuy,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 0.60,
-            ask: 0.70,
-            last: 0.65,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: false,
-            delta: "-0.15",
-            theta: "-0.02"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}P${String(sPutSell * 1000).padStart(8, "0")}`,
-            tipo: "PUT",
-            strike: sPutSell,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 1.40,
-            ask: 1.55,
-            last: 1.48,
-            posicion: "SHORT",
-            cantidad: 1,
-            is_itm: false,
-            delta: "-0.30",
-            theta: "-0.03"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(sCallSell * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: sCallSell,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 1.35,
-            ask: 1.50,
-            last: 1.42,
-            posicion: "SHORT",
-            cantidad: 1,
-            is_itm: false,
-            delta: "+0.32",
-            theta: "-0.03"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(sCallBuy * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: sCallBuy,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 0.55,
-            ask: 0.65,
-            last: 0.60,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: false,
-            delta: "+0.16",
-            theta: "-0.02"
-          }
-        ]
-      } else if (tipoEstrategia === "COVERED_CALL") {
-        const s = Math.round(basePrice * 1.05)
-        estrategia.contratos = [
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(s * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: s,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 2.10,
-            ask: 2.25,
-            last: 2.18,
-            posicion: "SHORT",
-            cantidad: 1,
-            is_itm: false,
-            delta: "+0.38",
-            theta: "-0.04"
-          }
-        ]
-      } else if (tipoEstrategia === "LONG_STRADDLE") {
-        const s = Math.round(basePrice)
-        estrategia.contratos = [
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}C${String(s * 1000).padStart(8, "0")}`,
-            tipo: "CALL",
-            strike: s,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 4.10,
-            ask: 4.30,
-            last: 4.20,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: true,
-            delta: "+0.55",
-            theta: "-0.05"
-          },
-          {
-            cod_symbol: `${sym}${moment(expDate).format("YYMMDD")}P${String(s * 1000).padStart(8, "0")}`,
-            tipo: "PUT",
-            strike: s,
-            fch_vencimiento: expDate,
-            expiracion_corta: expShort,
-            bid: 3.90,
-            ask: 4.10,
-            last: 4.00,
-            posicion: "LONG",
-            cantidad: 1,
-            is_itm: false,
-            delta: "-0.45",
-            theta: "-0.05"
-          }
-        ]
-      }
-    },
     calcular_metricas(estrategia) {
       if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
         return {
@@ -1420,42 +1455,7 @@ export default {
         breakevens: beStr
       }
     },
-    calcular_pnl(estrategia) {
-      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) return 0
-      const precioProj = estrategia.precio_simulado || this.cotizacion.imp_cierre || 100
-      let totalPnl = 0
 
-      estrategia.contratos.forEach(c => {
-        const strike = Number(c.strike || 0)
-        const premium = Number(c.last || c.ask || c.bid || 1.5)
-        const cantidad = Number(c.cantidad || 1)
-        const factor = c.posicion === "LONG" ? 1 : -1
-
-        let valorIntrinseco = 0
-        if (c.tipo === "CALL") {
-          valorIntrinseco = Math.max(0, precioProj - strike)
-        } else {
-          valorIntrinseco = Math.max(0, strike - precioProj)
-        }
-
-        const payoffPorAccion = factor * (valorIntrinseco - premium)
-        totalPnl += payoffPorAccion * 100 * cantidad
-      })
-
-      return Number(totalPnl.toFixed(2))
-    },
-    calcular_roi(estrategia) {
-      const metricas = this.calcular_metricas(estrategia)
-      const costo = Math.abs(metricas.debito_neto)
-      if (!costo || costo === 0) return 0
-      return (this.calcular_pnl(estrategia) / costo) * 100
-    },
-    calcular_variacion_precio_simulado(estrategia) {
-      const base = this.cotizacion.imp_cierre
-      if (!base) return 0
-      const proj = estrategia.precio_simulado || base
-      return ((proj - base) / base) * 100
-    },
     calcular_prima_total(contrato) {
       const precio = Number(contrato.last || contrato.ask || contrato.bid || 0)
       const cant = Number(contrato.cantidad || 1)
@@ -1498,62 +1498,273 @@ export default {
       if (dias <= 14) return "orange-1"
       return "grey-2"
     },
-    obtener_badge_tipo_color(tipo) {
-      const map = {
-        BULL_CALL_SPREAD: "positive",
-        BULL_PUT_SPREAD: "positive",
-        COVERED_CALL: "positive",
-        BEAR_PUT_SPREAD: "negative",
-        BEAR_CALL_SPREAD: "negative",
-        IRON_CONDOR: "primary",
-        LONG_STRADDLE: "amber-9",
-        LONG_STRANGLE: "amber-9",
-        CUSTOM: "grey-8"
+    calcular_dias_expiracion_minima(estrategia) {
+      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
+        return null
       }
-      return map[tipo] || "primary"
+
+      let minDias = Infinity
+      let fechaMasCercana = null
+
+      estrategia.contratos.forEach(c => {
+        const dias = this.calcular_dias_expiracion(c)
+        if (dias < minDias) {
+          minDias = dias
+          fechaMasCercana = c.expiracion_corta || c.fch_vencimiento
+        }
+      })
+
+      if (minDias === Infinity) return null
+
+      let badgeClass = "badge-dias-normal"
+      if (minDias <= 3) {
+        badgeClass = "badge-dias-urgente"
+      } else if (minDias <= 14) {
+        badgeClass = "badge-dias-alerta"
+      }
+
+      return {
+        dias: minDias,
+        fecha: fechaMasCercana,
+        textoCorto: minDias === 0 ? "0d (hoy)" : `${minDias}d`,
+        badgeClass,
+        tooltip: `Expiración más próxima de la estrategia: ${minDias === 0 ? 'Vence hoy' : minDias + ' días'} (${fechaMasCercana || ''})`
+      }
     },
-    obtener_badge_tipo_label(tipo) {
-      const opt = this.estrategias_disponibles.find(o => o.value === tipo)
-      return opt ? opt.tipo_badge : "ESTRATEGIA"
+    resumen_patas_estrategia(estrategia) {
+      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
+        return "Sin contratos configurados"
+      }
+
+      return estrategia.contratos.map(c => {
+        const accion = c.posicion === "SHORT" ? "SELL" : "BUY"
+        const tipo = c.tipo || "CALL"
+        const strikeNum = Number(c.strike || 0)
+        const strike = strikeNum % 1 === 0 ? strikeNum.toFixed(0) : strikeNum.toFixed(2)
+        const precio = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const cant = Number(c.cantidad || 1)
+        const primaTotal = Math.round(precio * 100 * cant)
+        const cantTxt = cant > 1 ? ` (${cant}x)` : ""
+        return `${accion} ${tipo} ${strike} $${primaTotal}${cantTxt}`
+      }).join(" / ")
+    },
+    resumen_flujo_estrategia(estrategia) {
+      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
+        return null
+      }
+
+      let flujoNeto = 0
+      estrategia.contratos.forEach(c => {
+        const precio = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const cant = Number(c.cantidad || 1)
+        const total = precio * 100 * cant
+        if (c.posicion === "SHORT") {
+          flujoNeto += total // Crédito recibido (dinero entra)
+        } else {
+          flujoNeto -= total // Débito pagado (dinero sale)
+        }
+      })
+
+      const monto = Math.round(Math.abs(flujoNeto))
+
+      if (flujoNeto > 0) {
+        return {
+          tipo: "CREDITO",
+          texto: `+$${monto} CR`,
+          tooltip: `Entra dinero a tu balance: recibes un crédito neto de $${monto} (CR)`,
+          icon: "arrow_downward",
+          color: "positive",
+          badgeClass: "badge-flujo-credito"
+        }
+      } else if (flujoNeto < 0) {
+        return {
+          tipo: "DEBITO",
+          texto: `-$${monto} DB`,
+          tooltip: `Sale dinero de tu balance: pagas un débito neto de $${monto} (DB)`,
+          icon: "arrow_upward",
+          color: "negative",
+          badgeClass: "badge-flujo-debito"
+        }
+      } else {
+        return {
+          tipo: "NEUTRO",
+          texto: `$0`,
+          tooltip: "Estrategia con costo/flujo neto cero",
+          icon: "remove",
+          color: "grey-7",
+          badgeClass: "badge-flujo-neutro"
+        }
+      }
+    },
+    calcular_valor_actual_estrategia(estrategia) {
+      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
+        return null
+      }
+
+      let totalLong = 0
+      let totalShort = 0
+
+      estrategia.contratos.forEach(c => {
+        const precio = Number(c.last || (c.bid && c.ask ? (c.bid + c.ask) / 2 : 0) || c.bid || c.ask || 0)
+        const cant = Number(c.cantidad || 1)
+        const valorPata = precio * 100 * cant
+
+        if (c.posicion === "LONG") {
+          totalLong += valorPata
+        } else {
+          totalShort += valorPata
+        }
+      })
+
+      // Valor actual de liquidación a mercado (Mark-to-Market de la combinación)
+      const valorLiquidacion = totalLong - totalShort
+      const valorSpread = Math.abs(valorLiquidacion)
+      const montoFormateado = Math.round(valorSpread)
+
+      const tooltipText = `Mark (Precio actual de mercado): $${valorSpread.toFixed(2)} | Patas LONG: +$${totalLong.toFixed(2)} | Patas SHORT: -$${totalShort.toFixed(2)}`
+
+      return {
+        valor_spread: valorSpread,
+        valor_liquidacion: valorLiquidacion,
+        monto_redondeado: montoFormateado,
+        texto: `Mark: $${montoFormateado}`,
+        tooltip: tooltipText
+      }
+    },
+    calcular_pnl_estrategia(estrategia) {
+      if (!estrategia || !Array.isArray(estrategia.contratos) || estrategia.contratos.length === 0) {
+        return null
+      }
+
+      // 1. Costo/Flujo neto inicial de apertura (>0 débito pagado, <0 crédito cobrado)
+      let costoAperturaNeto = 0
+      estrategia.contratos.forEach(c => {
+        const precioApertura = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const cant = Number(c.cantidad || 1)
+        const total = precioApertura * 100 * cant
+        if (c.posicion === "LONG") {
+          costoAperturaNeto += total
+        } else {
+          costoAperturaNeto -= total
+        }
+      })
+
+      // 2. Valor actual de liquidación de mercado
+      let totalLong = 0
+      let totalShort = 0
+      estrategia.contratos.forEach(c => {
+        const precioActual = Number(c.last || (c.bid && c.ask ? (c.bid + c.ask) / 2 : 0) || c.bid || c.ask || 0)
+        const cant = Number(c.cantidad || 1)
+        const total = precioActual * 100 * cant
+        if (c.posicion === "LONG") {
+          totalLong += total
+        } else {
+          totalShort += total
+        }
+      })
+      const valorLiquidacionActual = totalLong - totalShort
+
+      // 3. P&L No Realizado
+      const pnlTotal = valorLiquidacionActual - costoAperturaNeto
+      const baseCalculo = Math.abs(costoAperturaNeto) || 1
+      const pnlPct = (pnlTotal / baseCalculo) * 100
+
+      const montoAbs = Math.round(Math.abs(pnlTotal))
+      const pctAbs = Math.abs(pnlPct).toFixed(1)
+
+      if (pnlTotal > 0.01) {
+        return {
+          estado: "GANANDO",
+          monto: pnlTotal,
+          pct: pnlPct,
+          texto: `▲ +$${montoAbs} (+${pctAbs}%)`,
+          badgeClass: "badge-pnl-positivo",
+          capsulaClass: "capsula-pnl-positivo",
+          tooltip: `Posición GANANDO: +$${pnlTotal.toFixed(2)} (+${pnlPct.toFixed(1)}%) respecto al costo de apertura`
+        }
+      } else if (pnlTotal < -0.01) {
+        return {
+          estado: "PERDIENDO",
+          monto: pnlTotal,
+          pct: pnlPct,
+          texto: `▼ -$${montoAbs} (-${pctAbs}%)`,
+          badgeClass: "badge-pnl-negativo",
+          capsulaClass: "capsula-pnl-negativo",
+          tooltip: `Posición PERDIENDO: -$${Math.abs(pnlTotal).toFixed(2)} (-${pctAbs}%) respecto al costo de apertura`
+        }
+      } else {
+        return {
+          estado: "NEUTRO",
+          monto: 0,
+          pct: 0,
+          texto: `= $0 (0.0%)`,
+          badgeClass: "badge-pnl-neutro",
+          capsulaClass: "capsula-pnl-neutro",
+          tooltip: "Posición en equilibrio / break-even (P&L: $0.00)"
+        }
+      }
+    },
+    resumen_texto_estrategia(estrategia) {
+      const patas = this.resumen_patas_estrategia(estrategia)
+      const flujo = this.resumen_flujo_estrategia(estrategia)
+      const actual = this.calcular_valor_actual_estrategia(estrategia)
+      const pnl = this.calcular_pnl_estrategia(estrategia)
+      let res = patas
+      if (flujo) res += `: ${flujo.texto}`
+      if (actual) res += ` | ${actual.texto}`
+      if (pnl) res += ` | ${pnl.texto}`
+      return res
     },
     formatear_numero(val) {
       if (val === null || val === undefined || isNaN(Number(val))) return "0.00"
       return Number(val).toFixed(2)
     },
+    formatear_cotizacion(val) {
+      if (val === null || val === undefined || isNaN(Number(val))) return "N/D"
+      return `$${Number(val).toFixed(2)}`
+    },
     cargar_cotizacion(symbol) {
       if (!symbol) return
       this.cargando_cotizacion = true
+      this.cotizacion = {
+        imp_cierre_anterior: null,
+        imp_apertura: null,
+        imp_maximo: null,
+        imp_minimo: null,
+        imp_cierre: null,
+        imp_variacion: null,
+        pct_variacion: null
+      }
 
       Cotizacion.get_cotizacion(symbol)
         .then(data => {
-          if (data) {
-            const cierre = data.imp_cierre || data.last || 0
-            const cierreAnt = data.imp_cierre_anterior || (cierre ? cierre * 0.99 : 0)
-            const variacion = data.imp_variacion !== undefined ? data.imp_variacion : (cierre - cierreAnt)
-            const pct = data.pct_variacion !== undefined ? data.pct_variacion : (cierreAnt ? (variacion / cierreAnt) * 100 : 0)
-
-            this.cotizacion.imp_cierre = cierre
-            this.cotizacion.imp_cierre_anterior = cierreAnt
-            this.cotizacion.imp_variacion = variacion
-            this.cotizacion.pct_variacion = pct
-            this.cotizacion.imp_apertura = data.imp_apertura || cierreAnt
-            this.cotizacion.imp_maximo = data.imp_maximo || Math.max(cierre, cierreAnt) * 1.01
-            this.cotizacion.imp_minimo = data.imp_minimo || Math.min(cierre, cierreAnt) * 0.99
-
+          if (data && data.imp_cierre !== null && data.imp_cierre !== undefined) {
+            this.cotizacion.imp_cierre = Number(data.imp_cierre)
+            this.cotizacion.imp_cierre_anterior = data.imp_cierre_anterior !== null
+              && data.imp_cierre_anterior !== undefined
+              ? Number(data.imp_cierre_anterior)
+              : null
+            this.cotizacion.imp_variacion = data.imp_variacion !== null
+              && data.imp_variacion !== undefined
+              ? Number(data.imp_variacion)
+              : null
+            this.cotizacion.pct_variacion = data.pct_variacion !== null
+              && data.pct_variacion !== undefined
+              ? Number(data.pct_variacion)
+              : null
             this.estrategias.forEach(e => {
-              if (!e.precio_simulado) e.precio_simulado = cierre
+              if (e.precio_simulado === null || e.precio_simulado === undefined) {
+                e.precio_simulado = this.cotizacion.imp_cierre
+              }
             })
-          } else {
-            this.asignar_cotizacion_estimada(symbol)
           }
         })
         .catch(err => {
-          console.debug("No se pudo obtener cotización remota, usando estimación local:", err)
-          this.asignar_cotizacion_estimada(symbol)
+          console.error("No se pudo obtener la cotización del backend:", err)
         })
         .finally(() => {
-          this.consultar_variacion_semanal(symbol)
           this.cargando_cotizacion = false
+          this.consultar_variacion_semanal(symbol)
         })
     },
     consultar_variacion_semanal(symbol) {
@@ -1576,7 +1787,9 @@ export default {
             if (d.imp_cierre) {
               this.cotizacion.imp_cierre = d.imp_cierre
               this.estrategias.forEach(e => {
-                if (!e.precio_simulado) e.precio_simulado = d.imp_cierre
+              if (e.precio_simulado === null || e.precio_simulado === undefined) {
+                e.precio_simulado = d.imp_cierre
+              }
               })
             }
             if (d.imp_variacion_cierre !== undefined) this.cotizacion.imp_variacion = d.imp_variacion_cierre
@@ -1589,32 +1802,239 @@ export default {
         console.debug("Error procesando variación semanal:", e)
       }
     },
-    asignar_cotizacion_estimada(symbol) {
-      let base = 225.50
-      if (symbol === "SPY") base = 582.40
-      else if (symbol === "QQQ") base = 492.80
-      else if (symbol === "NVDA") base = 141.20
-      else if (symbol === "TSLA") base = 255.60
-      else if (symbol === "MSFT") base = 428.10
-      else if (symbol === "SPX") base = 5864.20
-
-      const prev = Number((base * 0.992).toFixed(2))
-      const diff = Number((base - prev).toFixed(2))
-      const pct = Number(((diff / prev) * 100).toFixed(2))
-
-      this.cotizacion = {
-        imp_cierre_anterior: prev,
-        imp_apertura: Number((prev * 1.003).toFixed(2)),
-        imp_maximo: Number((base * 1.008).toFixed(2)),
-        imp_minimo: Number((prev * 0.997).toFixed(2)),
-        imp_cierre: base,
-        imp_variacion: diff,
-        pct_variacion: pct
+    // ========================================================
+    // MÉTODOS PARA GUARDAR Y GESTIONAR ESTRATEGIAS (SOLO GUI)
+    // ========================================================
+    abrir_dialogo_guardar_estrategia() {
+      if (this.estrategias.length === 0) {
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "warning",
+            icon: "warning",
+            message: "No hay grupos de estrategia en el simulador para guardar."
+          })
+        }
+        return
       }
 
-      this.estrategias.forEach(e => {
-        if (!e.precio_simulado) e.precio_simulado = base
-      })
+      const totalContratos = this.total_contratos_simulacion
+      if (totalContratos === 0) {
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "warning",
+            icon: "warning",
+            message: "Ninguno de los grupos tiene contratos asignados. Añada al menos una pata antes de guardar la estrategia."
+          })
+        }
+        return
+      }
+
+      const sym = this.instrumento ? this.instrumento.symbol : ""
+      const cantGrupos = this.estrategias.length
+      const sugerenciaNombre = cantGrupos === 1 && this.estrategias[0].nombre
+        ? this.estrategias[0].nombre
+        : `Estrategia ${sym} (${cantGrupos} ${cantGrupos === 1 ? 'grupo' : 'grupos'})`
+
+      this.formularioGuardar = {
+        nombre: sugerenciaNombre,
+        etiqueta: "ESTRATEGIA",
+        notas: ""
+      }
+      this.dialogoGuardarOpen = true
+    },
+    async confirmar_guardar_estrategia() {
+      if (this.guardandoEstrategia) return
+      if (!this.formularioGuardar.nombre || this.formularioGuardar.nombre.trim().length === 0) {
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "negative",
+            message: "Por favor, ingrese un nombre para la estrategia."
+          })
+        }
+        return
+      }
+
+      this.guardandoEstrategia = true
+      const totalContratos = this.total_contratos_simulacion
+      const payload = {
+        id_subyacente_symbol: this.instrumento && (this.instrumento.id_symbol || this.instrumento.id),
+        cod_subyacente: this.instrumento && this.instrumento.symbol,
+        nombre: this.formularioGuardar.nombre.trim(),
+        etiqueta: (this.formularioGuardar.etiqueta || "ESTRATEGIA").trim(),
+        notas: (this.formularioGuardar.notas || "").trim() || null,
+        moneda_id: (this.instrumento && this.instrumento.moneda_id) || "USD",
+        grupos: this.estrategias.map((grupo, indice) => ({
+          orden: indice + 1,
+          nombre: (grupo.nombre || `Grupo ${indice + 1}`).trim(),
+          tipo: (grupo.tipo || "CUSTOM").trim(),
+          contratos: (grupo.contratos || []).map((contrato, pataIndice) => ({
+            id_contrato_opcion: contrato.id_contrato_opcion || null,
+            cod_symbol: contrato.cod_symbol,
+            tipo_opcion: String(contrato.tipo || contrato.tipo_opcion || "CALL").toUpperCase(),
+            fecha_vencimiento: contrato.fch_vencimiento || contrato.fecha_vencimiento,
+            strike: Number(contrato.strike),
+            posicion: String(contrato.posicion || "LONG").toUpperCase(),
+            cantidad: Number(contrato.cantidad || 1),
+            multiplicador: Number(contrato.multiplicador || 100),
+            precio_apertura: contrato.precio_apertura !== undefined && contrato.precio_apertura !== null
+              ? Number(contrato.precio_apertura)
+              : (contrato.last !== undefined && contrato.last !== null
+                ? Number(contrato.last)
+                : (contrato.ask !== undefined && contrato.ask !== null
+                  ? Number(contrato.ask)
+                  : (contrato.bid !== undefined && contrato.bid !== null ? Number(contrato.bid) : null))),
+            moneda_id: contrato.moneda_id || (this.instrumento && this.instrumento.moneda_id) || "USD",
+            orden: pataIndice + 1
+          }))
+        }))
+      }
+
+      try {
+        const response = await SimulacionEstrategiaApi.guardar(payload)
+        const appResponse = response.data || {}
+        if (!appResponse.success || !appResponse.data) {
+          throw new Error(appResponse.message || "No se pudo guardar la estrategia.")
+        }
+        this.estrategias_guardadas.unshift(appResponse.data)
+        this.dialogoGuardarOpen = false
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "positive",
+            icon: "check_circle",
+            message: `Estrategia "${appResponse.data.nombre}" guardada con éxito`,
+            caption: `${appResponse.data.num_grupos} grupos (${totalContratos} contratos) guardados en la base de datos`,
+            position: "top-right",
+            timeout: 3000
+          })
+        }
+      } catch (err) {
+        console.error("Error guardando estrategia:", err)
+        const message = err.response && err.response.data
+          ? err.response.data.message
+          : err.message
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "negative",
+            icon: "error",
+            message: message || "No se pudo guardar la estrategia.",
+            position: "top-right"
+          })
+        }
+      } finally {
+        this.guardandoEstrategia = false
+      }
+    },
+    async cargar_estrategias_guardadas() {
+      this.cargandoEstrategiasGuardadas = true
+      try {
+        const response = await SimulacionEstrategiaApi.listar()
+        const appResponse = response.data || {}
+        if (!appResponse.success || !Array.isArray(appResponse.data)) {
+          throw new Error(appResponse.message || "No se pudieron cargar las estrategias guardadas.")
+        }
+        this.estrategias_guardadas = appResponse.data
+      } catch (err) {
+        console.error("Error cargando estrategias guardadas:", err)
+        this.estrategias_guardadas = []
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "negative",
+            message: err.response && err.response.data
+              ? err.response.data.message
+              : "No se pudieron cargar las estrategias de la base de datos.",
+            position: "top-right"
+          })
+        }
+      } finally {
+        this.cargandoEstrategiasGuardadas = false
+      }
+    },
+    cargar_estrategia_guardada(guardada) {
+      if (!guardada) return
+
+      // Si tiene un instrumento guardado y es distinto al actual, actualizar instrumento
+      if (guardada.instrumento && (!this.instrumento || this.instrumento.symbol !== guardada.instrumento.symbol)) {
+        this.instrumento = { ...guardada.instrumento }
+        this.cargar_cotizacion(this.instrumento.symbol)
+      }
+
+      if (guardada.grupos && Array.isArray(guardada.grupos) && guardada.grupos.length > 0) {
+        // Restaurar estado completo de todos los grupos
+        const clonGrupos = JSON.parse(JSON.stringify(guardada.grupos))
+        this.estrategias = clonGrupos.map((g, idx) => ({
+          ...g,
+          id: Date.now() + idx,
+          expandida: true,
+          vista_cards: g.vista_cards || "expandida"
+        }))
+      } else if (guardada.contratos && Array.isArray(guardada.contratos)) {
+        // Retrocompatibilidad con guardados antiguos de un solo grupo
+        const clonContratos = JSON.parse(JSON.stringify(guardada.contratos))
+        const nueva = {
+          id: Date.now(),
+          nombre: guardada.nombre || `Estrategia 1`,
+          tipo: guardada.tipo || "CUSTOM",
+          expandida: true,
+          vista_cards: "expandida",
+          contratos: clonContratos,
+          precio_simulado: guardada.cotizacion_referencia || this.cotizacion.imp_cierre,
+          notas: guardada.notas || ""
+        }
+        this.estrategias = [nueva]
+      }
+
+      this.dialogoEstrategiasGuardadasOpen = false
+
+      if (this.$q && this.$q.notify) {
+        const cant = this.estrategias.length
+        this.$q.notify({
+          type: "positive",
+          icon: "file_download_done",
+          message: `Estrategia "${guardada.nombre}" cargada en el simulador`,
+          caption: `Se ${cant === 1 ? 'restauró 1 grupo' : `restauraron ${cant} grupos`} en el simulador`,
+          position: "top-right"
+        })
+      }
+    },
+    contar_total_contratos_guardada(guardada) {
+      if (!guardada) return 0
+      if (guardada.total_contratos !== undefined) return guardada.total_contratos
+      if (guardada.grupos && Array.isArray(guardada.grupos)) {
+        return guardada.grupos.reduce((acc, g) => acc + (g.contratos ? g.contratos.length : 0), 0)
+      }
+      if (guardada.contratos && Array.isArray(guardada.contratos)) {
+        return guardada.contratos.length
+      }
+      return 0
+    },
+    async eliminar_estrategia_guardada(guardadaId) {
+      try {
+        const response = await SimulacionEstrategiaApi.eliminar(guardadaId)
+        const appResponse = response.data || {}
+        if (!appResponse.success) {
+          throw new Error(appResponse.message || "No se pudo eliminar la estrategia.")
+        }
+        this.estrategias_guardadas = this.estrategias_guardadas.filter(g => g.id !== guardadaId)
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "info",
+            icon: "delete",
+            message: "Estrategia eliminada de guardadas",
+            position: "top-right"
+          })
+        }
+      } catch (err) {
+        console.error("Error eliminando estrategia guardada:", err)
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "negative",
+            message: err.response && err.response.data
+              ? err.response.data.message
+              : "No se pudo eliminar la estrategia guardada.",
+            position: "top-right"
+          })
+        }
+      }
     }
   }
 }
@@ -1627,11 +2047,11 @@ export default {
 }
 
 .instrumento-card-compact {
-  border-left: 4px solid #0d47a1;
+  border-left: 4px solid #1e293b;
 }
 
 .grupo-estrategia-card {
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid #334155;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -1661,10 +2081,119 @@ export default {
   border: 1px solid #dcdcdc;
   background-color: #ffffff;
   transition: box-shadow 0.2s ease;
+  min-height: 58px;
+}
+
+.pata-borde-call {
+  border-left: 3px solid #0d47a1;
+}
+
+.pata-borde-put {
+  border-left: 3px solid #7b1fa2;
 }
 
 .pata-card-resumida:hover {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.resumen-colapsado-badge {
+  background-color: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  letter-spacing: 0.2px;
+  transition: all 0.15s ease;
+}
+
+.resumen-colapsado-badge:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* BADGES DE FLUJO: SOFT TINTS SOFISTICADOS */
+.badge-flujo-credito {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  letter-spacing: 0.3px;
+  border-radius: 4px;
+  min-width: 90px;
+  justify-content: center;
+  text-align: center;
+}
+
+.badge-flujo-debito {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  letter-spacing: 0.3px;
+  border-radius: 4px;
+  min-width: 90px;
+  justify-content: center;
+  text-align: center;
+}
+
+.badge-flujo-neutro {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  letter-spacing: 0.3px;
+  border-radius: 4px;
+  min-width: 90px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* CÁPSULA UNIFICADA: MARK + P&L WIDGET SLATE OSCURO */
+.capsula-mark-pnl {
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: 5px;
+  letter-spacing: 0.3px;
+  min-width: 210px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+}
+
+.capsula-seccion-mark {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  min-width: 90px;
+  justify-content: center;
+}
+
+.capsula-divisor {
+  width: 1px;
+  background-color: #334155;
+}
+
+.capsula-seccion-pnl {
+  flex: 1;
+  justify-content: center;
+  background-color: #0f172a;
+}
+
+.capsula-pnl-positivo {
+  border-color: #059669;
+}
+
+.capsula-pnl-positivo .capsula-seccion-pnl {
+  color: #34d399;
+}
+
+.capsula-pnl-negativo {
+  border-color: #dc2626;
+}
+
+.capsula-pnl-negativo .capsula-seccion-pnl {
+  color: #f87171;
+}
+
+.capsula-pnl-neutro {
+  border-color: #475569;
+}
+
+.capsula-pnl-neutro .capsula-seccion-pnl {
+  color: #94a3b8;
 }
 
 .font-mono {
@@ -1673,5 +2202,100 @@ export default {
 
 .border-dashed {
   border: 2px dashed #cfd8dc;
+}
+
+/* BADGE DE DÍAS A EXPIRACIÓN MÍNIMA DE LA ESTRATEGIA (DTE) */
+.badge-dias-exp-min {
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 2px 6px;
+  letter-spacing: 0.2px;
+}
+
+.badge-dias-normal {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.badge-dias-alerta {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badge-dias-urgente {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* SOFT PILLS PARA CONTRATOS */
+.pill-call {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.pill-put {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.pill-long {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.pill-short {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.pill-itm {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.pill-otm {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.pill-credito {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.pill-debito {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.hover-bg-grey-1:hover {
+  background-color: #f8fafc;
+}
+
+.hover-underline:hover {
+  text-decoration: underline;
+}
+
+.hover-text-negative:hover {
+  color: #dc2626 !important;
+}
+
+.border-grey {
+  border: 1px solid #e2e8f0;
+}
+
+.border-bottom-light {
+  border-bottom: 1px solid #e2e8f0;
 }
 </style>

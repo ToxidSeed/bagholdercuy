@@ -120,29 +120,6 @@
             </q-chip>
           </div>
 
-          <!-- Sugerencias rápidas cuando el buscador está vacío -->
-          <div v-if="!filtro_texto && coincidencias.length === 0" class="q-py-sm">
-            <div class="text-caption text-grey-6 text-weight-medium q-mb-xs">
-              Instrumentos populares para análisis de opciones:
-            </div>
-            <div class="row q-gutter-sm">
-              <q-btn
-                v-for="sug in sugerencias_populares"
-                :key="sug.symbol"
-                outline
-                dense
-                no-caps
-                size="sm"
-                color="blue-10"
-                class="q-px-sm"
-                @click="seleccionar_sugerencia(sug)"
-              >
-                <span class="text-weight-bold q-mr-xs">{{ sug.symbol }}</span>
-                <span class="text-caption text-grey-7">{{ sug.tipo }}</span>
-              </q-btn>
-            </div>
-          </div>
-
           <!-- Lista de resultados -->
           <div v-if="coincidencias_filtradas.length > 0" class="q-mt-sm">
             <q-scroll-area style="height: calc(92vh - 280px); min-height: 380px;">
@@ -209,6 +186,11 @@
             <div class="text-caption text-grey-7 q-mt-sm">Buscando instrumentos...</div>
           </div>
 
+          <div v-else-if="error_busqueda" class="text-center text-negative q-pa-xl">
+            <q-icon name="cloud_off" size="40px" class="q-mb-sm" />
+            <div class="text-body2">{{ error_busqueda }}</div>
+          </div>
+
           <div v-else-if="filtro_texto && coincidencias_filtradas.length === 0" class="text-center text-grey-7 q-pa-xl">
             <q-icon name="search_off" size="40px" class="text-grey-5 q-mb-sm" />
             <div class="text-body2">No se encontraron Stocks, ETFs o Índices para "{{ filtro_texto }}"</div>
@@ -263,6 +245,7 @@
                   :loading="cargando_expiraciones || cargando_strikes"
                   emit-value
                   map-options
+                  @input="obtener_strikes"
                 />
               </div>
 
@@ -283,6 +266,13 @@
               </div>
             </div>
           </div>
+
+          <q-banner v-if="error_cadena" dense rounded class="bg-orange-1 text-orange-10 q-mb-sm">
+            <template v-slot:avatar>
+              <q-icon name="info" color="orange-9" />
+            </template>
+            {{ error_cadena }}
+          </q-banner>
 
           <!-- Barra de ayuda para selección múltiple -->
           <div class="row items-center justify-between bg-blue-1 text-blue-10 q-pa-xs rounded-borders q-mb-sm text-caption">
@@ -365,6 +355,7 @@
                   >
                     <q-checkbox
                       :value="esta_contrato_seleccionado(props.row.strike, 'CALL')"
+                      :disable="!props.row.call_contract"
                       color="blue-10"
                       dense
                       size="sm"
@@ -476,6 +467,7 @@
                   >
                     <q-checkbox
                       :value="esta_contrato_seleccionado(props.row.strike, 'PUT')"
+                      :disable="!props.row.put_contract"
                       color="purple-9"
                       dense
                       size="sm"
@@ -553,8 +545,8 @@
 </template>
 
 <script>
-import { headers } from '@/common/common.js'
 import Ibkr from '@/api/ibkr.js'
+import SymbolApi from '@/api/symbol.js'
 import moment from 'moment'
 
 export default {
@@ -582,21 +574,15 @@ export default {
       filtro_texto: "",
       filtro_tipo: "TODOS", // TODOS, STOCK, ETF, INDICE
       cargando_busqueda: false,
+      error_busqueda: "",
+      id_solicitud_busqueda: 0,
       coincidencias: [],
-      sugerencias_populares: [
-        { symbol: "AAPL", name: "Apple Inc.", tipo: "STOCK", asset_type: "STOCK", exchange: "NASDAQ" },
-        { symbol: "SPY", name: "SPDR S&P 500 ETF Trust", tipo: "ETF", asset_type: "ETF", exchange: "ARCA" },
-        { symbol: "QQQ", name: "Invesco QQQ Trust", tipo: "ETF", asset_type: "ETF", exchange: "NASDAQ" },
-        { symbol: "NVDA", name: "NVIDIA Corporation", tipo: "STOCK", asset_type: "STOCK", exchange: "NASDAQ" },
-        { symbol: "MSFT", name: "Microsoft Corporation", tipo: "STOCK", asset_type: "STOCK", exchange: "NASDAQ" },
-        { symbol: "TSLA", name: "Tesla Inc.", tipo: "STOCK", asset_type: "STOCK", exchange: "NASDAQ" },
-        { symbol: "SPX", name: "S&P 500 Index", tipo: "INDICE", asset_type: "INDICE", exchange: "CBOE" }
-      ],
       instrumento_seleccionado: null,
 
       // Estado cadena de opciones
       cargando_expiraciones: false,
       cargando_strikes: false,
+      error_cadena: "",
       expiraciones_disponibles: [],
       expiracion_seleccionada: null,
       num_strikes_seleccionado: 20,
@@ -659,17 +645,13 @@ export default {
           this.paso_actual = 1
           this.filtro_texto = ""
           this.coincidencias = []
+          this.error_busqueda = ""
           this.contratos_seleccionados_temporal = [...this.contratosIniciales]
         }
       }
     },
     open(newval) {
       this.$emit("input", newval)
-    },
-    expiracion_seleccionada(newval) {
-      if (newval && this.paso_actual === 2 && this.instrumento_seleccionado) {
-        this.obtener_strikes()
-      }
     },
     num_strikes_seleccionado() {
       if (this.paso_actual === 2 && this.instrumento_seleccionado && this.expiracion_seleccionada) {
@@ -703,33 +685,29 @@ export default {
       return "blue-10"
     },
     buscar_instrumentos(val) {
-      if (!val || !val.trim()) {
+      const query = String(val || "").trim()
+      const requestId = ++this.id_solicitud_busqueda
+
+      if (!query) {
         this.coincidencias = []
+        this.error_busqueda = ""
         this.cargando_busqueda = false
         return
       }
 
       this.cargando_busqueda = true
-      this.$http.post(
-        'SymbolManager/SymbolFinder/buscar_por_texto',
-        { texto: val.trim() },
-        { headers: headers() }
-      ).then(httpresp => {
+      this.error_busqueda = ""
+      SymbolApi.buscar_por_texto(query).then(httpresp => {
+        if (requestId !== this.id_solicitud_busqueda) return
         const appresponse = httpresp.data
         const items = []
         if (appresponse && Array.isArray(appresponse.data)) {
           for (let el of appresponse.data) {
-            const rawType = String(el.asset_type || "STOCK").toUpperCase()
-            // Filtrar SOLO Stocks, ETFs e Índices (excluir opciones, forex, etc.)
-            const esPermitido = 
-              rawType.includes("STOCK") || 
-              rawType.includes("EQUITY") || 
-              rawType.includes("ACCION") || 
-              rawType.includes("ETF") || 
-              rawType.includes("FUND") || 
-              rawType.includes("INDEX") || 
-              rawType.includes("INDICE") ||
-              !el.asset_type // Por defecto si viene vacío se asume stock
+            const tipoNormalizado = this.normalizar_tipo_activo(
+              el.asset_type,
+              el.id_symbol_type
+            )
+            const esPermitido = ["STOCK", "ETF", "INDICE"].includes(tipoNormalizado)
 
             if (esPermitido) {
               const idSymbol = el.id_symbol || el.id
@@ -738,8 +716,8 @@ export default {
                 id_symbol: idSymbol,
                 symbol: el.symbol,
                 name: el.name || el.symbol,
-                tipo: rawType,
-                asset_type: rawType,
+                tipo: tipoNormalizado,
+                asset_type: tipoNormalizado,
                 exchange: el.exchange || "",
                 id_symbol_type: el.id_symbol_type || 1
               })
@@ -749,81 +727,125 @@ export default {
         this.coincidencias = items
       }).catch(err => {
         console.error("Error buscando instrumentos:", err)
-        // Fallback local con sugerencias si el backend está en desarrollo
-        const q = val.trim().toUpperCase()
-        this.coincidencias = this.sugerencias_populares.filter(s => 
-          s.symbol.includes(q) || s.name.toUpperCase().includes(q)
-        )
+        if (requestId !== this.id_solicitud_busqueda) return
+        this.coincidencias = []
+        this.error_busqueda = "No se pudo consultar el catálogo de instrumentos. Intente nuevamente."
       }).finally(() => {
-        this.cargando_busqueda = false
+        if (requestId === this.id_solicitud_busqueda) {
+          this.cargando_busqueda = false
+        }
       })
     },
-    seleccionar_sugerencia(sug) {
-      this.elegir_instrumento({ ...sug })
+    normalizar_tipo_activo(assetType, idSymbolType) {
+      const tipo = String(assetType || idSymbolType || "").trim().toUpperCase()
+      const tiposPorCodigo = {
+        "1": "STOCK",
+        "2": "ETF",
+        "3": "OPTION"
+      }
+
+      if (tiposPorCodigo[tipo]) return tiposPorCodigo[tipo]
+      if (tipo.includes("ETF") || tipo.includes("FUND") || tipo === "ET") return "ETF"
+      if (tipo.includes("INDEX") || tipo.includes("INDICE") || tipo.includes("IND")) return "INDICE"
+      if (
+        tipo.includes("STOCK") ||
+        tipo.includes("EQUITY") ||
+        tipo.includes("ACCION") ||
+        tipo === "CS"
+      ) return "STOCK"
+
+      // Algunos símbolos del catálogo no tienen tipo asignado; conservar el
+      // comportamiento anterior y tratarlos como acciones.
+      return tipo || "STOCK"
     },
     elegir_instrumento(item) {
       this.instrumento_seleccionado = { ...item }
       this.paso_actual = 2
       this.cargar_cadena_instrumento(this.instrumento_seleccionado)
     },
-    cargar_cadena_instrumento(item) {
+    async cargar_cadena_instrumento(item) {
       this.cargando_expiraciones = true
       this.cargando_strikes = true
+      this.error_cadena = ""
       this.expiraciones_disponibles = []
       this.expiracion_seleccionada = null
       this.chain_rows = []
 
-      // Intentar llamar a Ibkr.get_options_chain
-      Ibkr.get_options_chain({
-        cod_subyacente: item.symbol,
-        num_strikes: this.num_strikes_seleccionado
-      }).then(httpresponse => {
-        const res = httpresponse.data
-        const data = (res && res.data) ? res.data : (res || {})
-        const fechas = (data && Array.isArray(data.fechas_vencimiento))
-          ? data.fechas_vencimiento
-          : (data && Array.isArray(data.exp_dates) ? data.exp_dates : [])
-
-        if (fechas.length > 0) {
-          this.expiraciones_disponibles = fechas.map(f => ({
-            label: `${f} (${this.formatear_expiracion(f)})`,
-            value: f
-          }))
-          this.expiracion_seleccionada = data.fch_vencimiento || fechas[0]
-          this.cargar_datos_cadena(data)
-        } else {
-          this.generar_cadena_mock(item)
+      try {
+        const response = await Ibkr.get_expiration_dates({ cod_symbol: item.symbol })
+        const result = response.data || {}
+        const months = Array.isArray(result.data) ? result.data : []
+        if (!result.success) {
+          throw new Error(result.message || "No se pudieron consultar las expiraciones en IBKR.")
         }
-      }).catch(error => {
-        console.warn("IBKR options chain no disponible en este momento, usando simulador de opciones:", error)
-        this.generar_cadena_mock(item)
-      }).finally(() => {
+        if (months.length === 0) {
+          this.error_cadena = `IBKR no devolvió expiraciones para ${item.symbol}.`
+          return
+        }
+
+        this.expiraciones_disponibles = months.map(month => ({
+          label: this.formatear_mes_expiracion(month),
+          value: month
+        }))
+        this.expiracion_seleccionada = months[0]
+        await this.obtener_strikes()
+      } catch (error) {
+        console.error("No se pudieron cargar expiraciones desde IBKR:", error)
+        this.chain_rows = []
+        this.error_cadena = this.mensaje_error_backend(
+          error,
+          `No se pudieron consultar expiraciones para ${item.symbol}.`
+        )
+      } finally {
         this.cargando_expiraciones = false
         this.cargando_strikes = false
-      })
+      }
     },
-    obtener_strikes() {
+    async obtener_strikes() {
       if (!this.instrumento_seleccionado || !this.expiracion_seleccionada) return
-      
+
       this.cargando_strikes = true
-      Ibkr.get_options_chain({
-        cod_subyacente: this.instrumento_seleccionado.symbol,
-        fch_expiracion: this.expiracion_seleccionada,
-        num_strikes: this.num_strikes_seleccionado
-      }).then(httpresponse => {
-        const res = httpresponse.data
-        const data = (res && res.data) ? res.data : (res || {})
-        this.cargar_datos_cadena(data)
-      }).catch(() => {
-        this.generar_cadena_mock(this.instrumento_seleccionado)
-      }).finally(() => {
+      this.error_cadena = ""
+      this.chain_rows = []
+      try {
+        const response = await Ibkr.get_options_chain({
+          cod_subyacente: this.instrumento_seleccionado.symbol,
+          fch_expiracion: this.expiracion_seleccionada,
+          num_strikes: this.num_strikes_seleccionado
+        })
+        const result = response.data || {}
+        if (!result.success || !result.data) {
+          throw new Error(result.message || "IBKR no devolvió la cadena de opciones.")
+        }
+        this.cargar_datos_cadena(result.data)
+        const selectedMonth = String(this.expiracion_seleccionada).toUpperCase()
+        if (result.data.fch_vencimiento) {
+          this.expiraciones_disponibles = this.expiraciones_disponibles.map(option => (
+            option.value === selectedMonth
+              ? {
+                ...option,
+                label: `${this.formatear_mes_expiracion(selectedMonth)} · ${result.data.fch_vencimiento}`
+              }
+              : option
+          ))
+        }
+      } catch (error) {
+        console.error("No se pudo cargar la cadena de opciones desde IBKR:", error)
+        this.error_cadena = this.mensaje_error_backend(
+          error,
+          `No se pudo cargar la cadena de opciones para ${this.instrumento_seleccionado.symbol}.`
+        )
+      } finally {
         this.cargando_strikes = false
-      })
+      }
     },
     cargar_datos_cadena(data) {
       const rawCalls = Array.isArray(data.calls) ? data.calls : []
       const rawPuts = Array.isArray(data.puts) ? data.puts : []
-      const imp_underlying = typeof data.imp_underlying === "number" ? data.imp_underlying : 200
+      const imp_underlying = Number(data.imp_underlying)
+      const tienePrecioSubyacente = data.imp_underlying !== null
+        && data.imp_underlying !== undefined
+        && Number.isFinite(imp_underlying)
 
       const strikesSet = new Set(Array.isArray(data.strikes) ? data.strikes.map(s => Number(s)) : [])
       rawCalls.forEach(c => {
@@ -837,7 +859,8 @@ export default {
 
       const sortedStrikes = Array.from(strikesSet).sort((a, b) => a - b)
       if (sortedStrikes.length === 0) {
-        this.generar_cadena_mock(this.instrumento_seleccionado)
+        this.chain_rows = []
+        this.error_cadena = "El backend no devolvió contratos para esta expiración."
         return
       }
 
@@ -859,78 +882,40 @@ export default {
 
         return {
           strike: strike,
-          is_call_itm: strike < imp_underlying,
-          is_put_itm: strike > imp_underlying,
+          is_call_itm: tienePrecioSubyacente && strike < imp_underlying,
+          is_put_itm: tienePrecioSubyacente && strike > imp_underlying,
           call_bid: call && call.bid !== undefined ? call.bid : "-",
           call_ask: call && call.ask !== undefined ? call.ask : "-",
-          call_last: call && (call.last !== undefined ? call.last : call.price) || "-",
-          call_vol: call && call.volume !== undefined ? call.volume : Math.floor(Math.random() * 500 + 20),
+          call_last: call && call.last !== undefined && call.last !== null
+            ? call.last
+            : (call && call.price !== undefined && call.price !== null ? call.price : "-"),
+          call_vol: call && call.volume !== undefined && call.volume !== null ? call.volume : "-",
           call_contract: call,
 
           put_bid: put && put.bid !== undefined ? put.bid : "-",
           put_ask: put && put.ask !== undefined ? put.ask : "-",
-          put_last: put && (put.last !== undefined ? put.last : put.price) || "-",
-          put_vol: put && put.volume !== undefined ? put.volume : Math.floor(Math.random() * 500 + 20),
+          put_last: put && put.last !== undefined && put.last !== null
+            ? put.last
+            : (put && put.price !== undefined && put.price !== null ? put.price : "-"),
+          put_vol: put && put.volume !== undefined && put.volume !== null ? put.volume : "-",
           put_contract: put
         }
       })
     },
-    generar_cadena_mock(item) {
-      // Generador de contingencia para pruebas de la GUI si IBKR no está conectado
-      const today = new Date()
-      const d1 = new Date(today.getTime() + 14 * 86400000).toISOString().substring(0, 10)
-      const d2 = new Date(today.getTime() + 35 * 86400000).toISOString().substring(0, 10)
-      const d3 = new Date(today.getTime() + 70 * 86400000).toISOString().substring(0, 10)
-      const d4 = new Date(today.getTime() + 150 * 86400000).toISOString().substring(0, 10)
-
-      this.expiraciones_disponibles = [
-        { label: `${d1} (${this.formatear_expiracion(d1)})`, value: d1 },
-        { label: `${d2} (${this.formatear_expiracion(d2)})`, value: d2 },
-        { label: `${d3} (${this.formatear_expiracion(d3)})`, value: d3 },
-        { label: `${d4} (${this.formatear_expiracion(d4)})`, value: d4 }
-      ]
-      if (!this.expiracion_seleccionada) {
-        this.expiracion_seleccionada = d2
+    formatear_mes_expiracion(month) {
+      const match = String(month || "").toUpperCase().match(/^([A-Z]{3})(\d{2})$/)
+      if (!match) return String(month || "")
+      const meses = {
+        JAN: "Ene", FEB: "Feb", MAR: "Mar", APR: "Abr", MAY: "May", JUN: "Jun",
+        JUL: "Jul", AUG: "Ago", SEP: "Sep", OCT: "Oct", NOV: "Nov", DEC: "Dic"
       }
-
-      // Base de strike de referencia según activo
-      let basePrice = 220
-      if (item && item.symbol === "SPY") basePrice = 580
-      else if (item && item.symbol === "QQQ") basePrice = 490
-      else if (item && item.symbol === "NVDA") basePrice = 140
-      else if (item && item.symbol === "TSLA") basePrice = 250
-      else if (item && item.symbol === "SPX") basePrice = 5850
-
-      const step = basePrice > 1000 ? 25 : (basePrice > 200 ? 5 : 2.5)
-      const numStrikes = this.num_strikes_seleccionado || 20
-      const half = Math.floor(numStrikes / 2)
-
-      const rows = []
-      for (let i = -half; i <= half; i++) {
-        const strike = Number((basePrice + i * step).toFixed(2))
-        const diff = strike - basePrice
-        
-        // Simular precios realistas Call y Put
-        const callBid = Math.max(0.1, Number((Math.max(0, -diff) + 4.5 - diff * 0.15).toFixed(2)))
-        const callAsk = Number((callBid + 0.15).toFixed(2))
-        const putBid = Math.max(0.1, Number((Math.max(0, diff) + 4.5 + diff * 0.15).toFixed(2)))
-        const putAsk = Number((putBid + 0.15).toFixed(2))
-
-        rows.push({
-          strike: strike,
-          is_call_itm: strike < basePrice,
-          is_put_itm: strike > basePrice,
-          call_bid: callBid,
-          call_ask: callAsk,
-          call_last: Number(((callBid + callAsk) / 2).toFixed(2)),
-          call_vol: Math.floor(Math.random() * 800 + 50),
-          put_bid: putBid,
-          put_ask: putAsk,
-          put_last: Number(((putBid + putAsk) / 2).toFixed(2)),
-          put_vol: Math.floor(Math.random() * 800 + 50)
-        })
+      return `${meses[match[1]] || match[1]} 20${match[2]}`
+    },
+    mensaje_error_backend(error, defaultMessage) {
+      if (error && error.response && error.response.data && error.response.data.message) {
+        return error.response.data.message
       }
-      this.chain_rows = rows
+      return error && error.message ? error.message : defaultMessage
     },
     formatear_precio(val) {
       if (val === null || val === undefined || val === "-") return "-"
@@ -939,6 +924,7 @@ export default {
     },
     formatear_cod_opcion_osi(symbol, fch_vencimiento, tipo, strike) {
       const sym = (symbol || '').trim().toUpperCase()
+      if (!sym || !fch_vencimiento || !Number.isFinite(Number(strike))) return ''
       let cleanDate = ''
       if (fch_vencimiento) {
         const parts = String(fch_vencimiento).replace(/-/g, '')
@@ -948,13 +934,10 @@ export default {
           cleanDate = parts
         }
       }
-      if (!cleanDate) {
-        const now = new Date()
-        cleanDate = `${String(now.getFullYear()).substring(2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-      }
+      if (!cleanDate) return ''
 
       const tipoChar = (tipo || 'CALL').toUpperCase().startsWith('C') ? 'C' : 'P'
-      const numStrike = Number(strike) || 0
+      const numStrike = Number(strike)
       const strikeMillis = Math.round(numStrike * 1000)
       const strikeStr = String(strikeMillis).padStart(8, '0')
 
@@ -971,17 +954,42 @@ export default {
       }
       return str
     },
+    obtener_datos_contrato_fila(row, tipo) {
+      return tipo === "CALL" ? row.call_contract : row.put_contract
+    },
+    obtener_codigo_contrato_fila(row, tipo) {
+      const contract = this.obtener_datos_contrato_fila(row, tipo)
+      if (contract && (contract.cod_symbol || contract.symbol)) {
+        return contract.cod_symbol || contract.symbol
+      }
+      const expiry = contract && (contract.fch_vencimiento || contract.expiration_date)
+        ? contract.fch_vencimiento || contract.expiration_date
+        : this.expiracion_seleccionada
+      if (!expiry) return ''
+      return this.formatear_cod_opcion_osi(
+        this.instrumento_seleccionado ? this.instrumento_seleccionado.symbol : "",
+        expiry,
+        tipo,
+        row.strike
+      )
+    },
     esta_contrato_seleccionado(strike, tipo) {
-      const sym = this.instrumento_seleccionado ? this.instrumento_seleccionado.symbol : ''
-      const exp = this.expiracion_seleccionada
-      const cod = this.formatear_cod_opcion_osi(sym, exp, tipo, strike)
+      const row = this.chain_rows.find(item => Number(item.strike) === Number(strike))
+      if (!row) return false
+      const cod = this.obtener_codigo_contrato_fila(row, tipo)
+      if (!cod) return false
       return this.contratos_seleccionados_temporal.some(c => c.cod_symbol === cod)
     },
     toggle_seleccion_contrato(row, tipo) {
       const sym = this.instrumento_seleccionado ? this.instrumento_seleccionado.symbol : ''
-      const exp = this.expiracion_seleccionada
+      const rawContract = this.obtener_datos_contrato_fila(row, tipo)
+      if (!rawContract) return
+      const exp = rawContract && (rawContract.fch_vencimiento || rawContract.expiration_date)
+        ? rawContract.fch_vencimiento || rawContract.expiration_date
+        : this.expiracion_seleccionada
       const strike = row.strike
-      const cod = this.formatear_cod_opcion_osi(sym, exp, tipo, strike)
+      const cod = this.obtener_codigo_contrato_fila(row, tipo)
+      if (!cod) return
 
       const index = this.contratos_seleccionados_temporal.findIndex(c => c.cod_symbol === cod)
       if (index >= 0) {
@@ -989,13 +997,21 @@ export default {
         this.contratos_seleccionados_temporal.splice(index, 1)
       } else {
         // Seleccionar
-        const bid = tipo === 'CALL' ? row.call_bid : row.put_bid
-        const ask = tipo === 'CALL' ? row.call_ask : row.put_ask
-        const last = tipo === 'CALL' ? row.call_last : row.put_last
+        const price_number = val => {
+          if (val === null || val === undefined || val === "-") return null
+          const parsed = Number(val)
+          return Number.isFinite(parsed) ? parsed : null
+        }
+        const bid = price_number(tipo === 'CALL' ? row.call_bid : row.put_bid)
+        const ask = price_number(tipo === 'CALL' ? row.call_ask : row.put_ask)
+        const last = price_number(tipo === 'CALL' ? row.call_last : row.put_last)
         const vol = tipo === 'CALL' ? row.call_vol : row.put_vol
 
         this.contratos_seleccionados_temporal.push({
           cod_symbol: cod,
+          id_contrato_opcion: rawContract && rawContract.id_contrato_opcion
+            ? rawContract.id_contrato_opcion
+            : null,
           symbol_subyacente: sym,
           nombre_subyacente: this.instrumento_seleccionado ? this.instrumento_seleccionado.name : sym,
           tipo: tipo.toUpperCase(),
@@ -1003,10 +1019,11 @@ export default {
           fch_vencimiento: exp,
           expiracion_corta: this.formatear_expiracion(exp),
           dias_expiracion: this.calcular_dias_expiracion_fecha(exp),
-          bid: Number(bid) || 0,
-          ask: Number(ask) || 0,
-          last: Number(last) || 0,
-          volumen: vol || 0,
+          bid: bid,
+          ask: ask,
+          last: last,
+          precio_apertura: last !== null ? last : (ask !== null ? ask : bid),
+          volumen: vol,
           is_itm: tipo === 'CALL' ? row.is_call_itm : row.is_put_itm,
           cantidad: 1,
           posicion: 'LONG' // LONG (compra) | SHORT (venta) para futura simulación
