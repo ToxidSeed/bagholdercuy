@@ -3,6 +3,12 @@ import axios from "axios"
 import store from "@/store/store"
 
 class Symbol{        
+    buscar_por_texto = function(texto){
+        return axios.post("/SymbolManager/SymbolFinder/buscar_por_texto", {
+            texto: texto
+        }, postconfig())
+    }
+
     get_symbol = async function(id_symbol){        
         try{
             let httpresp = await axios.post("/SymbolManager/SymbolFinder/get",{

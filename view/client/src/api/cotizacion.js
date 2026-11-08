@@ -28,13 +28,24 @@ class Cotizacion {
                 provider: params.provider || "ibkr"
             }
             if (params.id_symbol) {
-                queryParams.id_symbol = params.id_symbol
+                queryParams.id_symbol = Array.isArray(params.id_symbol)
+                    ? params.id_symbol.join(",")
+                    : params.id_symbol
             }
-            if (params.id_contrato_opcion) {
-                queryParams.id_contrato_opcion = params.id_contrato_opcion
+            if (params.id_contrato_opcion && params.id_contrato_opcion.length !== 0) {
+                queryParams.id_contrato_opcion = Array.isArray(params.id_contrato_opcion)
+                    ? params.id_contrato_opcion.join(",")
+                    : params.id_contrato_opcion
             }
-            if (params.cod_symbol) {
-                queryParams.cod_symbol = params.cod_symbol
+            if (params.conid && (!Array.isArray(params.conid) || params.conid.length > 0)) {
+                queryParams.conid = Array.isArray(params.conid)
+                    ? params.conid.join(",")
+                    : params.conid
+            }
+            if (params.cod_symbol && (!Array.isArray(params.cod_symbol) || params.cod_symbol.length > 0)) {
+                queryParams.cod_symbol = Array.isArray(params.cod_symbol)
+                    ? params.cod_symbol.join(",")
+                    : params.cod_symbol
             }
 
             const httpresp = await axios.get(

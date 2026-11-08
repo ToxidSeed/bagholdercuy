@@ -110,6 +110,20 @@
             </q-item-section>
             <q-item-section>Rentabilidad</q-item-section>
           </q-item>
+
+          <q-item clickable v-ripple active-class="my-menu-link" to="/simulacion-analisis-opciones" class="menu-item">
+            <q-item-section avatar class="menu-avatar">
+              <q-icon name="analytics" size="16px" />
+            </q-item-section>
+            <q-item-section>Análisis de Opciones</q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple active-class="my-menu-link" to="/simulacion-estrategia-opciones" class="menu-item">
+            <q-item-section avatar class="menu-avatar">
+              <q-icon name="alt_route" size="16px" />
+            </q-item-section>
+            <q-item-section>Estrategia de Opciones</q-item-section>
+          </q-item>
         </q-list>
       </q-expansion-item>
 

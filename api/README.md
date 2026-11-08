@@ -112,11 +112,11 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 * **Endpoints del Gateway de IBKR**
   * GET /trsrv/all-conids: 
     * Información: Este endpoint devuelve una lista de todos los CONIDs disponibles en la plataforma de Interactive Brokers, este endpoint es muy útil para obtener el conid de un ticker.
-    * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/endpoints/contract/all-conids-by-exchange
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/contract/all-conids-by-exchange
 
   * GET /iserver/marketdata/snapshot: 
     * Información: Devuelve una instantánea del mercado en tiempo real (Top of Book / Level 1) para uno o varios CONIDs especificados.
-    * documentation: https://ibkrcampus.com/docs/web-api/web-api-v-1-0-documentation/client-portal-api-endpoints/market-data/market-data#snapshot-market-data
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/market-data/live-market-data-snapshot
 
   * POST /iserver/secdef/search:
     * Información: Busca contratos por símbolo o nombre en Interactive Brokers.
@@ -124,15 +124,15 @@ Este directorio contiene las integraciones y wrappers para interactuar con prove
 
   * GET /iserver/marketdata/history:
     * Información: Obtiene datos históricos de mercado (velas/barras) para un CONID y período de tiempo especificado.
-    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/market-data/historical-market-data
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/market-data/historical-market-data
 
   * GET /iserver/secdef/strikes:
     * Información: Consulta los precios de ejercicio (strikes call y put) disponibles para un CONID de subyacente y mes de expiración especificados.
-    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/contract/secdef-strikes
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/option-chains/step-two-find-potential-strikes
 
   * GET /iserver/secdef/info:
     * Información: Consulta la definición y especificaciones detalladas de contratos (strikes, vencimiento, multiplicador, tradingClass, conid del derivado, etc.) para opciones u otros derivados en IBKR.
-    * documentation: https://ibkrcampus.com/docs/web-api/v1/endpoints/contract/secdef-info
+    * documentation: https://www.interactivebrokers.com/docs/web-api/v1/endpoints/option-chains/step-three-validate-the-contract
 
 * **Endpoints de nuestra API REST Local**
   * POST `/ibkr/trsrv/all-conids` (ruta completa: `/<BAGHOLDER_APPNAME>/api/v2/ibkr/trsrv/all-conids`):
