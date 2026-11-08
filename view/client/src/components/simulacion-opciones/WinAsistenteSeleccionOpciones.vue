@@ -198,6 +198,90 @@
           </div>
         </div>
 
+        <!-- PASO 2A: ELEGIR UN GUARDADO DEL SUBYACENTE O CREAR NUEVO -->
+        <div
+          v-else-if="paso_actual === 2 && mostrar_selector_estrategia_guardada"
+          class="q-pa-md"
+        >
+          <div class="row items-center q-mb-md">
+            <q-avatar
+              size="42px"
+              :color="obtener_color_tipo(instrumento_seleccionado && instrumento_seleccionado.asset_type)"
+              text-color="white"
+              class="text-weight-bold q-mr-sm"
+            >
+              {{ instrumento_seleccionado ? instrumento_seleccionado.symbol.substring(0, 2) : '' }}
+            </q-avatar>
+            <div>
+              <div class="text-subtitle1 text-weight-bold text-blue-10">
+                {{ instrumento_seleccionado ? instrumento_seleccionado.symbol : '' }}
+                <span class="text-grey-7 text-weight-regular">· estrategias guardadas</span>
+              </div>
+              <div class="text-caption text-grey-7">
+                Puedes cargar una estrategia para este subyacente o crear una nueva.
+              </div>
+            </div>
+          </div>
+
+          <div v-if="esperando_estrategias_guardadas" class="text-center q-pa-xl text-grey-7">
+            <q-spinner color="blue-10" size="2em" />
+            <div class="text-caption q-mt-sm">Buscando estrategias guardadas para este subyacente...</div>
+          </div>
+
+          <div v-else>
+            <q-list v-if="estrategias_guardadas_subyacente.length" bordered separator class="rounded-borders">
+              <q-item
+                v-for="guardada in estrategias_guardadas_subyacente"
+                :key="guardada.id"
+                class="q-py-sm"
+              >
+                <q-item-section avatar>
+                  <q-avatar color="blue-grey-1" text-color="blue-grey-9" icon="bookmark" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-weight-bold">{{ guardada.nombre }}</q-item-label>
+                  <q-item-label caption>
+                    {{ guardada.num_grupos || (guardada.grupos && guardada.grupos.length) || 0 }}
+                    {{ (guardada.num_grupos || (guardada.grupos && guardada.grupos.length) || 0) === 1 ? 'grupo' : 'grupos' }}
+                    · {{ guardada.total_contratos || 0 }}
+                    {{ guardada.total_contratos === 1 ? 'contrato' : 'contratos' }}
+                    <span v-if="guardada.tipo"> · {{ guardada.tipo }}</span>
+                  </q-item-label>
+                  <q-item-label v-if="guardada.resumen_patas" caption class="ellipsis-2-lines q-mt-xs">
+                    {{ guardada.resumen_patas }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    unelevated
+                    dense
+                    no-caps
+                    color="blue-10"
+                    icon="file_download"
+                    label="Cargar y editar"
+                    @click="$emit('cargar-estrategia-guardada', guardada)"
+                  />
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+            <div v-else class="text-center text-grey-7 q-pa-lg">
+              No hay estrategias guardadas para {{ instrumento_seleccionado ? instrumento_seleccionado.symbol : 'este subyacente' }}.
+            </div>
+
+            <div class="row justify-end q-mt-md">
+              <q-btn
+                unelevated
+                no-caps
+                color="blue-10"
+                icon="add"
+                label="Crear estrategia nueva con cadena de opciones"
+                @click="continuar_a_cadena_nueva"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- ======================================================== -->
         <!-- PASO 2: CADENA DE OPCIONES (SELECCIÓN MÚLTIPLE)          -->
         <!-- ======================================================== -->
@@ -312,13 +396,13 @@
             >
               <template v-slot:header="props">
                 <q-tr>
-                  <q-th colspan="5" class="text-center bg-blue-1 text-bold text-blue-10" style="border-right: 2px solid #90caf9;">
+                  <q-th colspan="6" class="text-center bg-blue-1 text-bold text-blue-10" style="border-right: 2px solid #90caf9;">
                     <q-icon name="call_made" color="blue-9" class="q-mr-xs" /> CALLS
                   </q-th>
                   <q-th class="text-center bg-grey-3 text-bold text-grey-9" style="border-right: 2px solid #e0e0e0; min-width: 90px;">
                     STRIKE
                   </q-th>
-                  <q-th colspan="5" class="text-center bg-purple-1 text-bold text-purple-10">
+                  <q-th colspan="6" class="text-center bg-purple-1 text-bold text-purple-10">
                     <q-icon name="call_received" color="purple-9" class="q-mr-xs" /> PUTS
                   </q-th>
                 </q-tr>
@@ -326,6 +410,7 @@
                   <!-- CALLS -->
                   <q-th key="call_sel" :props="props" class="bg-blue-1 text-blue-10 text-center" style="width: 44px;">Sel</q-th>
                   <q-th key="call_bid" :props="props" class="bg-blue-1 text-blue-10 text-right">Bid</q-th>
+                  <q-th key="call_mid" :props="props" class="bg-blue-1 text-blue-10 text-right">Mid</q-th>
                   <q-th key="call_ask" :props="props" class="bg-blue-1 text-blue-10 text-right">Ask</q-th>
                   <q-th key="call_last" :props="props" class="bg-blue-1 text-blue-10 text-right">Last</q-th>
                   <q-th key="call_vol" :props="props" class="bg-blue-1 text-blue-10 text-right" style="border-right: 2px solid #90caf9;">Vol</q-th>
@@ -339,6 +424,7 @@
                   <q-th key="put_vol" :props="props" class="bg-purple-1 text-purple-10 text-left">Vol</q-th>
                   <q-th key="put_last" :props="props" class="bg-purple-1 text-purple-10 text-left">Last</q-th>
                   <q-th key="put_bid" :props="props" class="bg-purple-1 text-purple-10 text-right">Bid</q-th>
+                  <q-th key="put_mid" :props="props" class="bg-purple-1 text-purple-10 text-right">Mid</q-th>
                   <q-th key="put_ask" :props="props" class="bg-purple-1 text-purple-10 text-right">Ask</q-th>
                   <q-th key="put_sel" :props="props" class="bg-purple-1 text-purple-10 text-center" style="width: 44px;">Sel</q-th>
                 </q-tr>
@@ -372,6 +458,17 @@
                     @click="toggle_seleccion_contrato(props.row, 'CALL')"
                   >
                     {{ formatear_precio(props.row.call_bid) }}
+                  </q-td>
+
+                  <!-- CALL MID -->
+                  <q-td
+                    key="call_mid"
+                    :props="props"
+                    class="cursor-pointer text-weight-medium"
+                    :class="esta_contrato_seleccionado(props.row.strike, 'CALL') ? 'bg-blue-2 text-weight-bold' : (props.row.is_call_itm ? 'bg-blue-1' : '')"
+                    @click="toggle_seleccion_contrato(props.row, 'CALL')"
+                  >
+                    {{ formatear_precio(props.row.call_mid) }}
                   </q-td>
 
                   <!-- CALL ASK -->
@@ -445,6 +542,17 @@
                     @click="toggle_seleccion_contrato(props.row, 'PUT')"
                   >
                     {{ formatear_precio(props.row.put_bid) }}
+                  </q-td>
+
+                  <!-- PUT MID -->
+                  <q-td
+                    key="put_mid"
+                    :props="props"
+                    class="cursor-pointer text-weight-medium"
+                    :class="esta_contrato_seleccionado(props.row.strike, 'PUT') ? 'bg-purple-2 text-weight-bold' : (props.row.is_put_itm ? 'bg-purple-1' : '')"
+                    @click="toggle_seleccion_contrato(props.row, 'PUT')"
+                  >
+                    {{ formatear_precio(props.row.put_mid) }}
                   </q-td>
 
                   <!-- PUT ASK -->
@@ -530,7 +638,7 @@
           <q-btn flat no-caps label="Cancelar" color="grey-8" v-close-popup />
           
           <q-btn
-            v-if="paso_actual === 2"
+            v-if="paso_actual === 2 && !mostrar_selector_estrategia_guardada"
             unelevated
             no-caps
             color="blue-10"
@@ -565,6 +673,14 @@ export default {
     instrumentoInicial: {
       type: Object,
       default: null
+    },
+    estrategiasGuardadas: {
+      type: Array,
+      default: () => []
+    },
+    cargandoEstrategiasGuardadas: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -578,10 +694,13 @@ export default {
       id_solicitud_busqueda: 0,
       coincidencias: [],
       instrumento_seleccionado: null,
+      mostrar_selector_estrategia_guardada: false,
+      esperando_estrategias_guardadas: false,
 
       // Estado cadena de opciones
       cargando_expiraciones: false,
       cargando_strikes: false,
+      id_solicitud_cadena: 0,
       error_cadena: "",
       expiraciones_disponibles: [],
       expiracion_seleccionada: null,
@@ -597,6 +716,7 @@ export default {
       chain_columns: [
         { name: "call_sel", label: "", field: "call_sel", align: "center" },
         { name: "call_bid", label: "Bid", field: "call_bid", align: "right" },
+        { name: "call_mid", label: "Mid", field: "call_mid", align: "right" },
         { name: "call_ask", label: "Ask", field: "call_ask", align: "right" },
         { name: "call_last", label: "Last", field: "call_last", align: "right" },
         { name: "call_vol", label: "Vol", field: "call_vol", align: "right" },
@@ -604,6 +724,7 @@ export default {
         { name: "put_vol", label: "Vol", field: "put_vol", align: "left" },
         { name: "put_last", label: "Last", field: "put_last", align: "left" },
         { name: "put_bid", label: "Bid", field: "put_bid", align: "right" },
+        { name: "put_mid", label: "Mid", field: "put_mid", align: "right" },
         { name: "put_ask", label: "Ask", field: "put_ask", align: "right" },
         { name: "put_sel", label: "", field: "put_sel", align: "center" }
       ],
@@ -629,12 +750,23 @@ export default {
         }
         return true
       })
+    },
+    estrategias_guardadas_subyacente() {
+      const symbol = String(
+        this.instrumento_seleccionado && this.instrumento_seleccionado.symbol || ""
+      ).toUpperCase()
+      if (!symbol) return []
+      return (this.estrategiasGuardadas || []).filter(guardada =>
+        String(guardada.instrumento && guardada.instrumento.symbol || "").toUpperCase() === symbol
+      )
     }
   },
   watch: {
     value(newval) {
       this.open = newval
       if (newval) {
+        this.mostrar_selector_estrategia_guardada = false
+        this.esperando_estrategias_guardadas = false
         // Inicializar datos
         if (this.instrumentoInicial) {
           this.instrumento_seleccionado = { ...this.instrumentoInicial }
@@ -643,6 +775,7 @@ export default {
           this.cargar_cadena_instrumento(this.instrumento_seleccionado)
         } else {
           this.paso_actual = 1
+          this.instrumento_seleccionado = null
           this.filtro_texto = ""
           this.coincidencias = []
           this.error_busqueda = ""
@@ -657,6 +790,16 @@ export default {
       if (this.paso_actual === 2 && this.instrumento_seleccionado && this.expiracion_seleccionada) {
         this.obtener_strikes()
       }
+    },
+    cargandoEstrategiasGuardadas(newval) {
+      if (!newval && this.esperando_estrategias_guardadas) {
+        this.resolver_paso_tras_seleccionar_subyacente()
+      }
+    },
+    estrategiasGuardadas() {
+      if (this.esperando_estrategias_guardadas && !this.cargandoEstrategiasGuardadas) {
+        this.resolver_paso_tras_seleccionar_subyacente()
+      }
     }
   },
   methods: {
@@ -664,6 +807,11 @@ export default {
       this.filtro_tipo = tipo
     },
     volver_a_paso_1() {
+      this.id_solicitud_cadena += 1
+      this.cargando_expiraciones = false
+      this.cargando_strikes = false
+      this.mostrar_selector_estrategia_guardada = false
+      this.esperando_estrategias_guardadas = false
       this.paso_actual = 1
     },
     obtener_color_tipo(asset_type) {
@@ -761,83 +909,251 @@ export default {
     elegir_instrumento(item) {
       this.instrumento_seleccionado = { ...item }
       this.paso_actual = 2
+      this.mostrar_selector_estrategia_guardada = true
+      this.esperando_estrategias_guardadas = true
+      this.resolver_paso_tras_seleccionar_subyacente()
+    },
+    resolver_paso_tras_seleccionar_subyacente() {
+      if (!this.instrumento_seleccionado || this.cargandoEstrategiasGuardadas) {
+        this.esperando_estrategias_guardadas = Boolean(this.instrumento_seleccionado)
+        return
+      }
+
+      this.esperando_estrategias_guardadas = false
+      if (this.estrategias_guardadas_subyacente.length > 0) {
+        this.mostrar_selector_estrategia_guardada = true
+        return
+      }
+
+      this.mostrar_selector_estrategia_guardada = false
+      this.cargar_cadena_instrumento(this.instrumento_seleccionado)
+    },
+    continuar_a_cadena_nueva() {
+      this.mostrar_selector_estrategia_guardada = false
       this.cargar_cadena_instrumento(this.instrumento_seleccionado)
     },
     async cargar_cadena_instrumento(item) {
+      this.mostrar_selector_estrategia_guardada = false
       this.cargando_expiraciones = true
       this.cargando_strikes = true
       this.error_cadena = ""
       this.expiraciones_disponibles = []
       this.expiracion_seleccionada = null
       this.chain_rows = []
+      const symbol = item.symbol
+      const requestId = ++this.id_solicitud_cadena
 
       try {
-        const response = await Ibkr.get_expiration_dates({ cod_symbol: item.symbol })
+        // Igual que Watchlist: primera llamada sin vencimiento para que el
+        // backend determine la expiración próxima y devuelva las fechas reales.
+        const response = await Ibkr.get_options_chain({
+          cod_subyacente: symbol,
+          num_strikes: this.num_strikes_seleccionado
+        })
         const result = response.data || {}
-        const months = Array.isArray(result.data) ? result.data : []
-        if (!result.success) {
-          throw new Error(result.message || "No se pudieron consultar las expiraciones en IBKR.")
+        const data = result.data || {}
+        if (requestId !== this.id_solicitud_cadena) return
+        if (!result.success || !result.data) {
+          throw new Error(result.message || "No se pudo obtener la cadena inicial de IBKR.")
         }
-        if (months.length === 0) {
-          this.error_cadena = `IBKR no devolvió expiraciones para ${item.symbol}.`
+
+        const dates = Array.isArray(data.fechas_vencimiento)
+          ? data.fechas_vencimiento
+          : (Array.isArray(data.exp_dates) ? data.exp_dates : [])
+        this.expiraciones_disponibles = dates.map(date => ({
+          label: `${date} (${this.formatear_expiracion(date)})`,
+          value: date
+        }))
+        const selectedDate = data.fch_vencimiento || dates[0] || null
+        if (selectedDate && !dates.includes(selectedDate)) {
+          this.expiraciones_disponibles.unshift({
+            label: `${selectedDate} (${this.formatear_expiracion(selectedDate)})`,
+            value: selectedDate
+          })
+        }
+        this.expiracion_seleccionada = selectedDate
+
+        if (dates.length === 0 && !selectedDate) {
+          this.error_cadena = `IBKR no devolvió fechas de expiración para ${symbol}.`
           return
         }
 
-        this.expiraciones_disponibles = months.map(month => ({
-          label: this.formatear_mes_expiracion(month),
-          value: month
-        }))
-        this.expiracion_seleccionada = months[0]
-        await this.obtener_strikes()
+        this.cargar_datos_cadena(data)
       } catch (error) {
-        console.error("No se pudieron cargar expiraciones desde IBKR:", error)
+        console.error("No se pudo cargar la cadena inicial desde IBKR:", error)
         this.chain_rows = []
-        this.error_cadena = this.mensaje_error_backend(
-          error,
-          `No se pudieron consultar expiraciones para ${item.symbol}.`
-        )
+        try {
+          // Fallback igual que Watchlist: recuperar los meses disponibles para
+          // permitir que el usuario seleccione uno y vuelva a pedir la cadena.
+          const expirationResponse = await Ibkr.get_expiration_dates({
+            cod_symbol: symbol
+          })
+          if (requestId !== this.id_solicitud_cadena) return
+          const expirationResult = expirationResponse.data || {}
+          const months = Array.isArray(expirationResult.data) ? expirationResult.data : []
+          if (!expirationResult.success || months.length === 0) {
+            throw new Error(
+              expirationResult.message || `IBKR no devolvió expiraciones para ${symbol}.`
+            )
+          }
+
+          this.expiraciones_disponibles = months.map(month => ({
+            label: this.formatear_mes_expiracion(month),
+            value: month
+          }))
+          this.expiracion_seleccionada = months[0]
+          this.error_cadena = "No se pudo cargar la cadena inicial. Seleccione una expiración para volver a consultarla."
+        } catch (expirationError) {
+          if (requestId !== this.id_solicitud_cadena) return
+          this.expiraciones_disponibles = []
+          this.expiracion_seleccionada = null
+          this.error_cadena = this.mensaje_error_backend(
+            expirationError,
+            `No se pudieron consultar expiraciones para ${symbol}.`
+          )
+        }
       } finally {
-        this.cargando_expiraciones = false
-        this.cargando_strikes = false
+        if (requestId === this.id_solicitud_cadena) {
+          this.cargando_expiraciones = false
+          this.cargando_strikes = false
+        }
       }
     },
     async obtener_strikes() {
       if (!this.instrumento_seleccionado || !this.expiracion_seleccionada) return
 
+      const symbol = this.instrumento_seleccionado.symbol
+      const expiracion = this.expiracion_seleccionada
+      const requestId = ++this.id_solicitud_cadena
       this.cargando_strikes = true
       this.error_cadena = ""
       this.chain_rows = []
       try {
         const response = await Ibkr.get_options_chain({
-          cod_subyacente: this.instrumento_seleccionado.symbol,
-          fch_expiracion: this.expiracion_seleccionada,
+          cod_subyacente: symbol,
+          fch_expiracion: expiracion,
           num_strikes: this.num_strikes_seleccionado
         })
         const result = response.data || {}
+        if (requestId !== this.id_solicitud_cadena) return
         if (!result.success || !result.data) {
           throw new Error(result.message || "IBKR no devolvió la cadena de opciones.")
         }
-        this.cargar_datos_cadena(result.data)
-        const selectedMonth = String(this.expiracion_seleccionada).toUpperCase()
-        if (result.data.fch_vencimiento) {
-          this.expiraciones_disponibles = this.expiraciones_disponibles.map(option => (
-            option.value === selectedMonth
-              ? {
-                ...option,
-                label: `${this.formatear_mes_expiracion(selectedMonth)} · ${result.data.fch_vencimiento}`
-              }
-              : option
-          ))
+        if (
+          requestId !== this.id_solicitud_cadena ||
+          !this.instrumento_seleccionado ||
+          this.instrumento_seleccionado.symbol !== symbol ||
+          this.expiracion_seleccionada !== expiracion
+        ) {
+          return
         }
-      } catch (error) {
-        console.error("No se pudo cargar la cadena de opciones desde IBKR:", error)
-        this.error_cadena = this.mensaje_error_backend(
-          error,
-          `No se pudo cargar la cadena de opciones para ${this.instrumento_seleccionado.symbol}.`
+
+        const data = result.data
+        const dates = Array.isArray(data.fechas_vencimiento)
+          ? data.fechas_vencimiento
+          : (Array.isArray(data.exp_dates) ? data.exp_dates : [])
+        const selectorContieneMeses = this.expiraciones_disponibles.some(option =>
+          /^[A-Z]{3}\d{2}$/i.test(String(option.value))
         )
+        if (dates.length > 0 && selectorContieneMeses) {
+          this.expiraciones_disponibles = dates.map(date => ({
+            label: `${date} (${this.formatear_expiracion(date)})`,
+            value: date
+          }))
+          this.expiracion_seleccionada = data.fch_vencimiento || dates[0]
+        }
+        this.cargar_datos_cadena(data)
+      } catch (error) {
+        if (
+          requestId !== this.id_solicitud_cadena ||
+          !this.instrumento_seleccionado ||
+          this.instrumento_seleccionado.symbol !== symbol ||
+          this.expiracion_seleccionada !== expiracion
+        ) {
+          return
+        }
+        console.error("No se pudo cargar la cadena de opciones desde IBKR:", error)
+        try {
+          // Mantener el fallback de Watchlist: mostrar strikes aunque la API
+          // de definiciones no esté disponible. Esos renglones no tendrán
+          // contrato y la UI los mantiene sin posibilidad de selección.
+          const strikesResponse = await Ibkr.get_strikes({
+            cod_subyacente: symbol,
+            expiracion: expiracion
+          })
+          const strikesResult = strikesResponse.data || {}
+          if (!strikesResult.success || !strikesResult.data) {
+            throw new Error(strikesResult.message || "IBKR no devolvió strikes.")
+          }
+          if (
+            requestId !== this.id_solicitud_cadena ||
+            !this.instrumento_seleccionado ||
+            this.instrumento_seleccionado.symbol !== symbol ||
+            this.expiracion_seleccionada !== expiracion
+          ) {
+            return
+          }
+
+          this.cargar_strikes_disponibles(strikesResult.data)
+          this.error_cadena = "IBKR devolvió los strikes, pero no los datos de los contratos. No se pueden seleccionar hasta cargar la cadena completa."
+        } catch (strikesError) {
+          if (
+            requestId === this.id_solicitud_cadena &&
+            this.instrumento_seleccionado &&
+            this.instrumento_seleccionado.symbol === symbol &&
+            this.expiracion_seleccionada === expiracion
+          ) {
+            this.error_cadena = this.mensaje_error_backend(
+              strikesError,
+              `No se pudo cargar la cadena de opciones para ${symbol}.`
+            )
+          }
+        }
       } finally {
-        this.cargando_strikes = false
+        if (
+          requestId === this.id_solicitud_cadena &&
+          this.instrumento_seleccionado &&
+          this.instrumento_seleccionado.symbol === symbol
+        ) {
+          this.cargando_strikes = false
+        }
       }
+    },
+    cargar_strikes_disponibles(data) {
+      const callStrikes = Array.isArray(data.call) ? data.call : []
+      const putStrikes = Array.isArray(data.put) ? data.put : []
+      const strikes = Array.from(
+        new Set([...callStrikes, ...putStrikes].map(value => Number(value)))
+      ).sort((a, b) => a - b)
+      const callSet = new Set(callStrikes.map(value => Number(value)))
+      const putSet = new Set(putStrikes.map(value => Number(value)))
+
+      this.chain_rows = strikes.map(strike => ({
+        strike: strike,
+        is_call_itm: false,
+        is_put_itm: false,
+        call_bid: callSet.has(strike) ? "-" : "",
+        call_mid: "-",
+        call_ask: callSet.has(strike) ? "-" : "",
+        call_last: callSet.has(strike) ? "-" : "",
+        call_vol: "-",
+        call_contract: null,
+        put_bid: putSet.has(strike) ? "-" : "",
+        put_mid: "-",
+        put_ask: putSet.has(strike) ? "-" : "",
+        put_last: putSet.has(strike) ? "-" : "",
+        put_vol: "-",
+        put_contract: null
+      }))
+    },
+    calcular_mid(bid, ask) {
+      if (bid === null || bid === undefined || ask === null || ask === undefined) {
+        return "-"
+      }
+      const bidNumber = Number(bid)
+      const askNumber = Number(ask)
+      if (!Number.isFinite(bidNumber) || !Number.isFinite(askNumber)) return "-"
+      return (bidNumber + askNumber) / 2
     },
     cargar_datos_cadena(data) {
       const rawCalls = Array.isArray(data.calls) ? data.calls : []
@@ -885,6 +1201,7 @@ export default {
           is_call_itm: tienePrecioSubyacente && strike < imp_underlying,
           is_put_itm: tienePrecioSubyacente && strike > imp_underlying,
           call_bid: call && call.bid !== undefined ? call.bid : "-",
+          call_mid: call ? this.calcular_mid(call.bid, call.ask) : "-",
           call_ask: call && call.ask !== undefined ? call.ask : "-",
           call_last: call && call.last !== undefined && call.last !== null
             ? call.last
@@ -893,6 +1210,7 @@ export default {
           call_contract: call,
 
           put_bid: put && put.bid !== undefined ? put.bid : "-",
+          put_mid: put ? this.calcular_mid(put.bid, put.ask) : "-",
           put_ask: put && put.ask !== undefined ? put.ask : "-",
           put_last: put && put.last !== undefined && put.last !== null
             ? put.last
@@ -1009,6 +1327,7 @@ export default {
 
         this.contratos_seleccionados_temporal.push({
           cod_symbol: cod,
+          conid: rawContract && rawContract.conid ? Number(rawContract.conid) : null,
           id_contrato_opcion: rawContract && rawContract.id_contrato_opcion
             ? rawContract.id_contrato_opcion
             : null,

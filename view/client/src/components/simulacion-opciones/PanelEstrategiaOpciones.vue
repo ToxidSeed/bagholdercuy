@@ -873,7 +873,10 @@
       v-model="asistenteOpen"
       :instrumento-inicial="asistenteInstrumentoInicial"
       :contratos-iniciales="asistenteContratosIniciales"
+      :estrategias-guardadas="estrategias_guardadas"
+      :cargando-estrategias-guardadas="cargandoEstrategiasGuardadas"
       @confirmar="on_confirmar_asistente"
+      @cargar-estrategia-guardada="cargar_estrategia_guardada"
     />
 
     <!-- ======================================================== -->
@@ -885,7 +888,7 @@
         <q-toolbar class="bg-blue-grey-10 text-white q-py-xs">
           <q-avatar icon="save" color="blue-grey-8" text-color="white" size="32px" />
           <q-toolbar-title class="text-subtitle1 text-weight-bold">
-            Guardar Estrategia de Opciones
+            {{ idEstrategiaGuardadaEnEdicion ? 'Actualizar Estrategia Guardada' : 'Guardar Estrategia de Opciones' }}
           </q-toolbar-title>
           <q-btn flat round dense icon="close" v-close-popup />
         </q-toolbar>
@@ -1010,7 +1013,7 @@
           <q-btn
             unelevated
             icon="save"
-            label="Confirmar y Guardar"
+            :label="idEstrategiaGuardadaEnEdicion ? 'Confirmar y Actualizar' : 'Confirmar y Guardar'"
             color="blue-10"
             class="text-weight-bold q-px-md"
             :loading="guardandoEstrategia"
@@ -1215,6 +1218,7 @@ export default {
       estrategias_guardadas: [],
       guardandoEstrategia: false,
       cargandoEstrategiasGuardadas: false,
+      idEstrategiaGuardadaEnEdicion: null,
       formularioGuardar: {
         nombre: "",
         etiqueta: "ESTRATEGIA",
@@ -1235,6 +1239,8 @@ export default {
         pct_variacion: null
       },
       cargando_cotizacion: false,
+      timerCotizaciones: null,
+      actualizandoCotizaciones: false,
 
       // LISTA DE GRUPOS DE ESTRATEGIAS (Grupo 1: Estrategia 1, Grupo 2: Estrategia 2, etc.)
       estrategias: []
@@ -1268,12 +1274,22 @@ export default {
   },
   created() {
     this.cargar_estrategias_guardadas()
+    this.timerCotizaciones = setInterval(() => {
+      this.actualizar_cotizaciones_vivas()
+    }, 5000)
+  },
+  beforeDestroy() {
+    if (this.timerCotizaciones) {
+      clearInterval(this.timerCotizaciones)
+      this.timerCotizaciones = null
+    }
   },
   methods: {
     abrir_asistente_nuevo_instrumento() {
       this.asistenteInstrumentoInicial = null
       this.asistenteContratosIniciales = []
       this.asistenteEstrategiaId = null
+      this.idEstrategiaGuardadaEnEdicion = null
       this.asistenteOpen = true
     },
     abrir_asistente_para_estrategia(estrategia) {
@@ -1303,6 +1319,7 @@ export default {
           const est = this.estrategias.find(e => e.id === this.asistenteEstrategiaId)
           if (est) {
             est.contratos = nuevosContratos
+            this.actualizar_cotizaciones_vivas()
             return
           }
         }
@@ -1313,6 +1330,7 @@ export default {
         } else {
           this.agregar_nueva_estrategia_con_contratos("Estrategia 1", "CUSTOM", nuevosContratos)
         }
+        this.actualizar_cotizaciones_vivas()
       }
     },
     agregar_nueva_estrategia() {
@@ -1408,7 +1426,7 @@ export default {
       let strikes = []
 
       estrategia.contratos.forEach(c => {
-        const precio = Number(c.last || c.ask || c.bid || 1.5)
+        const precio = this.obtener_precio_actual_contrato(c) || 0
         const cantidad = Number(c.cantidad || 1)
         const primaTotal = precio * 100 * cantidad
         if (c.posicion === "LONG") {
@@ -1457,9 +1475,24 @@ export default {
     },
 
     calcular_prima_total(contrato) {
-      const precio = Number(contrato.last || contrato.ask || contrato.bid || 0)
+      const precio = this.obtener_precio_actual_contrato(contrato) || 0
       const cant = Number(contrato.cantidad || 1)
       return (precio * 100 * cant).toFixed(2)
+    },
+    obtener_precio_actual_contrato(contrato) {
+      if (!contrato) return null
+      const last = Number(contrato.last)
+      if (contrato.last !== null && contrato.last !== undefined && Number.isFinite(last)) {
+        return last
+      }
+      const bid = Number(contrato.bid)
+      const ask = Number(contrato.ask)
+      const tieneBid = contrato.bid !== null && contrato.bid !== undefined && Number.isFinite(bid)
+      const tieneAsk = contrato.ask !== null && contrato.ask !== undefined && Number.isFinite(ask)
+      if (tieneBid && tieneAsk) return (bid + ask) / 2
+      if (tieneBid) return bid
+      if (tieneAsk) return ask
+      return null
     },
     calcular_delta(contrato) {
       if (contrato.delta) return contrato.delta
@@ -1541,7 +1574,9 @@ export default {
         const tipo = c.tipo || "CALL"
         const strikeNum = Number(c.strike || 0)
         const strike = strikeNum % 1 === 0 ? strikeNum.toFixed(0) : strikeNum.toFixed(2)
-        const precio = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const precio = c.precio_apertura !== undefined
+          ? Number(c.precio_apertura)
+          : (this.obtener_precio_actual_contrato(c) || 0)
         const cant = Number(c.cantidad || 1)
         const primaTotal = Math.round(precio * 100 * cant)
         const cantTxt = cant > 1 ? ` (${cant}x)` : ""
@@ -1555,7 +1590,9 @@ export default {
 
       let flujoNeto = 0
       estrategia.contratos.forEach(c => {
-        const precio = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const precio = c.precio_apertura !== undefined
+          ? Number(c.precio_apertura)
+          : (this.obtener_precio_actual_contrato(c) || 0)
         const cant = Number(c.cantidad || 1)
         const total = precio * 100 * cant
         if (c.posicion === "SHORT") {
@@ -1605,7 +1642,7 @@ export default {
       let totalShort = 0
 
       estrategia.contratos.forEach(c => {
-        const precio = Number(c.last || (c.bid && c.ask ? (c.bid + c.ask) / 2 : 0) || c.bid || c.ask || 0)
+        const precio = this.obtener_precio_actual_contrato(c) || 0
         const cant = Number(c.cantidad || 1)
         const valorPata = precio * 100 * cant
 
@@ -1639,7 +1676,9 @@ export default {
       // 1. Costo/Flujo neto inicial de apertura (>0 débito pagado, <0 crédito cobrado)
       let costoAperturaNeto = 0
       estrategia.contratos.forEach(c => {
-        const precioApertura = c.precio_apertura !== undefined ? Number(c.precio_apertura) : Number(c.last || c.ask || c.bid || 0)
+        const precioApertura = c.precio_apertura !== undefined
+          ? Number(c.precio_apertura)
+          : (this.obtener_precio_actual_contrato(c) || 0)
         const cant = Number(c.cantidad || 1)
         const total = precioApertura * 100 * cant
         if (c.posicion === "LONG") {
@@ -1653,7 +1692,7 @@ export default {
       let totalLong = 0
       let totalShort = 0
       estrategia.contratos.forEach(c => {
-        const precioActual = Number(c.last || (c.bid && c.ask ? (c.bid + c.ask) / 2 : 0) || c.bid || c.ask || 0)
+        const precioActual = this.obtener_precio_actual_contrato(c) || 0
         const cant = Number(c.cantidad || 1)
         const total = precioActual * 100 * cant
         if (c.posicion === "LONG") {
@@ -1722,6 +1761,87 @@ export default {
     formatear_cotizacion(val) {
       if (val === null || val === undefined || isNaN(Number(val))) return "N/D"
       return `$${Number(val).toFixed(2)}`
+    },
+    async actualizar_cotizaciones_vivas() {
+      if (this.actualizandoCotizaciones || !this.instrumento || !this.instrumento.symbol) return
+
+      const symbol = this.instrumento.symbol
+      const optionQuotesByConid = new Map()
+      const optionIds = new Set()
+      const fallbackSymbols = new Set()
+      const estrategias = this.estrategias || []
+      estrategias.forEach(grupo => {
+        const contratos = grupo.contratos || []
+        contratos.forEach(contrato => {
+          const conid = Number(contrato.conid)
+          if (Number.isInteger(conid) && conid > 0) {
+            if (!optionQuotesByConid.has(conid)) optionQuotesByConid.set(conid, contrato.cod_symbol)
+          } else if (contrato.id_contrato_opcion) {
+            optionIds.add(contrato.id_contrato_opcion)
+          } else if (contrato.cod_symbol) {
+            fallbackSymbols.add(contrato.cod_symbol)
+          }
+        })
+      })
+
+      const quoteParams = {
+        provider: "ibkr",
+        id_symbol: this.instrumento.id_symbol || this.instrumento.id,
+        id_contrato_opcion: Array.from(optionIds),
+        conid: Array.from(optionQuotesByConid.keys()),
+        cod_symbol: [
+          ...Array.from(optionQuotesByConid.values()),
+          ...Array.from(fallbackSymbols),
+          ...((this.instrumento.id_symbol || this.instrumento.id) ? [] : [symbol])
+        ]
+      }
+
+      this.actualizandoCotizaciones = true
+      try {
+        const quotes = await Cotizacion.get_cotizaciones(quoteParams)
+        if (!Array.isArray(quotes) || !this.instrumento || this.instrumento.symbol !== symbol) return
+
+        const quotesByOptionId = new Map()
+        const quotesByCode = new Map()
+        quotes.forEach(quote => {
+          if (quote.id_symbol && String(quote.id_symbol) === String(this.instrumento.id_symbol || this.instrumento.id)) {
+            this.actualizar_cotizacion_subyacente(quote)
+          }
+          if (String(quote.cod_symbol || "").toUpperCase() === String(symbol).toUpperCase()) {
+            this.actualizar_cotizacion_subyacente(quote)
+          }
+          if (quote.id_contrato_opcion) quotesByOptionId.set(String(quote.id_contrato_opcion), quote)
+          if (quote.cod_symbol) quotesByCode.set(String(quote.cod_symbol).toUpperCase(), quote)
+        })
+
+        estrategias.forEach(grupo => {
+          const contratos = grupo.contratos || []
+          contratos.forEach(contrato => {
+            const quote = (contrato.id_contrato_opcion && quotesByOptionId.get(String(contrato.id_contrato_opcion)))
+              || quotesByCode.get(String(contrato.cod_symbol || "").toUpperCase())
+            if (!quote) return
+            contrato.bid = quote.bid !== null && quote.bid !== undefined ? Number(quote.bid) : null
+            contrato.ask = quote.ask !== null && quote.ask !== undefined ? Number(quote.ask) : null
+            contrato.last = quote.last !== null && quote.last !== undefined ? Number(quote.last) : null
+          })
+        })
+      } finally {
+        this.actualizandoCotizaciones = false
+      }
+    },
+    actualizar_cotizacion_subyacente(quote) {
+      if (quote.imp_cierre !== null && quote.imp_cierre !== undefined) {
+        this.cotizacion.imp_cierre = Number(quote.imp_cierre)
+      }
+      if (quote.imp_cierre_anterior !== null && quote.imp_cierre_anterior !== undefined) {
+        this.cotizacion.imp_cierre_anterior = Number(quote.imp_cierre_anterior)
+      }
+      if (quote.imp_variacion !== null && quote.imp_variacion !== undefined) {
+        this.cotizacion.imp_variacion = Number(quote.imp_variacion)
+      }
+      if (quote.pct_variacion !== null && quote.pct_variacion !== undefined) {
+        this.cotizacion.pct_variacion = Number(quote.pct_variacion)
+      }
     },
     cargar_cotizacion(symbol) {
       if (!symbol) return
@@ -1834,11 +1954,14 @@ export default {
       const sugerenciaNombre = cantGrupos === 1 && this.estrategias[0].nombre
         ? this.estrategias[0].nombre
         : `Estrategia ${sym} (${cantGrupos} ${cantGrupos === 1 ? 'grupo' : 'grupos'})`
+      const guardadaEnEdicion = this.estrategias_guardadas.find(
+        guardada => String(guardada.id) === String(this.idEstrategiaGuardadaEnEdicion)
+      )
 
       this.formularioGuardar = {
-        nombre: sugerenciaNombre,
-        etiqueta: "ESTRATEGIA",
-        notas: ""
+        nombre: guardadaEnEdicion ? guardadaEnEdicion.nombre : sugerenciaNombre,
+        etiqueta: guardadaEnEdicion ? (guardadaEnEdicion.tipo || "ESTRATEGIA") : "ESTRATEGIA",
+        notas: guardadaEnEdicion ? (guardadaEnEdicion.notas || "") : ""
       }
       this.dialogoGuardarOpen = true
     },
@@ -1849,6 +1972,21 @@ export default {
           this.$q.notify({
             type: "negative",
             message: "Por favor, ingrese un nombre para la estrategia."
+          })
+        }
+        return
+      }
+
+      const contratoSinFechaValida = (this.estrategias || []).some(grupo =>
+        (grupo.contratos || []).some(contrato => !this.normalizar_fecha_vencimiento(
+          contrato.fch_vencimiento || contrato.fecha_vencimiento
+        ))
+      )
+      if (contratoSinFechaValida) {
+        if (this.$q && this.$q.notify) {
+          this.$q.notify({
+            type: "negative",
+            message: "Hay contratos con una fecha de vencimiento inválida. Vuelva a seleccionar la expiración antes de guardar."
           })
         }
         return
@@ -1871,7 +2009,9 @@ export default {
             id_contrato_opcion: contrato.id_contrato_opcion || null,
             cod_symbol: contrato.cod_symbol,
             tipo_opcion: String(contrato.tipo || contrato.tipo_opcion || "CALL").toUpperCase(),
-            fecha_vencimiento: contrato.fch_vencimiento || contrato.fecha_vencimiento,
+            fecha_vencimiento: this.normalizar_fecha_vencimiento(
+              contrato.fch_vencimiento || contrato.fecha_vencimiento
+            ),
             strike: Number(contrato.strike),
             posicion: String(contrato.posicion || "LONG").toUpperCase(),
             cantidad: Number(contrato.cantidad || 1),
@@ -1890,18 +2030,29 @@ export default {
       }
 
       try {
-        const response = await SimulacionEstrategiaApi.guardar(payload)
+        const idGuardada = this.idEstrategiaGuardadaEnEdicion
+        const response = idGuardada
+          ? await SimulacionEstrategiaApi.actualizar(idGuardada, payload)
+          : await SimulacionEstrategiaApi.guardar(payload)
         const appResponse = response.data || {}
         if (!appResponse.success || !appResponse.data) {
           throw new Error(appResponse.message || "No se pudo guardar la estrategia.")
         }
-        this.estrategias_guardadas.unshift(appResponse.data)
+        const indiceGuardada = this.estrategias_guardadas.findIndex(
+          guardada => String(guardada.id) === String(appResponse.data.id)
+        )
+        if (indiceGuardada >= 0) {
+          this.$set(this.estrategias_guardadas, indiceGuardada, appResponse.data)
+        } else {
+          this.estrategias_guardadas.unshift(appResponse.data)
+        }
+        this.idEstrategiaGuardadaEnEdicion = appResponse.data.id
         this.dialogoGuardarOpen = false
         if (this.$q && this.$q.notify) {
           this.$q.notify({
             type: "positive",
             icon: "check_circle",
-            message: `Estrategia "${appResponse.data.nombre}" guardada con éxito`,
+            message: `Estrategia "${appResponse.data.nombre}" ${idGuardada ? 'actualizada' : 'guardada'} con éxito`,
             caption: `${appResponse.data.num_grupos} grupos (${totalContratos} contratos) guardados en la base de datos`,
             position: "top-right",
             timeout: 3000
@@ -1923,6 +2074,35 @@ export default {
       } finally {
         this.guardandoEstrategia = false
       }
+    },
+    normalizar_fecha_vencimiento(valor) {
+      if (!valor) return null
+
+      if (valor instanceof Date) {
+        if (Number.isNaN(valor.getTime())) return null
+        return valor.toISOString().slice(0, 10)
+      }
+
+      const texto = String(valor).trim()
+      const fechaIso = texto.match(/^(\d{4}-\d{2}-\d{2})/)
+      if (fechaIso) {
+        const fechaParseada = moment(fechaIso[1], "YYYY-MM-DD", true)
+        return fechaParseada.isValid() ? fechaParseada.format("YYYY-MM-DD") : null
+      }
+
+      const fechaCompacta = texto.match(/^(\d{4})(\d{2})(\d{2})$/)
+      if (fechaCompacta) {
+        const fechaNormalizada = `${fechaCompacta[1]}-${fechaCompacta[2]}-${fechaCompacta[3]}`
+        const fechaParseada = moment(fechaNormalizada, "YYYY-MM-DD", true)
+        return fechaParseada.isValid() ? fechaParseada.format("YYYY-MM-DD") : null
+      }
+
+      const fechaParseada = moment(
+        texto,
+        ["YYYY-MM-DD", "YYYYMMDD", "YYYY/MM/DD", "DD/MM/YYYY", "DD-MM-YYYY"],
+        true
+      )
+      return fechaParseada.isValid() ? fechaParseada.format("YYYY-MM-DD") : null
     },
     async cargar_estrategias_guardadas() {
       this.cargandoEstrategiasGuardadas = true
@@ -1951,6 +2131,7 @@ export default {
     },
     cargar_estrategia_guardada(guardada) {
       if (!guardada) return
+      this.idEstrategiaGuardadaEnEdicion = guardada.id
 
       // Si tiene un instrumento guardado y es distinto al actual, actualizar instrumento
       if (guardada.instrumento && (!this.instrumento || this.instrumento.symbol !== guardada.instrumento.symbol)) {
@@ -1984,6 +2165,8 @@ export default {
       }
 
       this.dialogoEstrategiasGuardadasOpen = false
+      this.asistenteOpen = false
+      this.actualizar_cotizaciones_vivas()
 
       if (this.$q && this.$q.notify) {
         const cant = this.estrategias.length
@@ -2015,6 +2198,9 @@ export default {
           throw new Error(appResponse.message || "No se pudo eliminar la estrategia.")
         }
         this.estrategias_guardadas = this.estrategias_guardadas.filter(g => g.id !== guardadaId)
+        if (String(this.idEstrategiaGuardadaEnEdicion) === String(guardadaId)) {
+          this.idEstrategiaGuardadaEnEdicion = null
+        }
         if (this.$q && this.$q.notify) {
           this.$q.notify({
             type: "info",

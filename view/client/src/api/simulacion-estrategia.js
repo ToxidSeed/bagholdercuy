@@ -12,6 +12,10 @@ export default {
     return axios.post(BASE_PATH, payload, postconfig())
   },
 
+  actualizar(idSimulacionEstrategia, payload) {
+    return axios.put(`${BASE_PATH}/${idSimulacionEstrategia}`, payload, postconfig())
+  },
+
   eliminar(idSimulacionEstrategia) {
     return axios.delete(`${BASE_PATH}/${idSimulacionEstrategia}`, postconfig())
   }
